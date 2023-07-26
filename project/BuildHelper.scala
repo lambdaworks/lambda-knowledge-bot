@@ -6,9 +6,7 @@ import ai.kien.python.Python
 object BuildHelper {
   private lazy val python = Python()
 
-  lazy val javaOpts = python.scalapyProperties.get.map { case (k, v) =>
-    s"""-D$k=$v"""
-  }.toSeq
+  lazy val javaOpts = python.scalapyProperties.get.map { case (k, v) => s"""-D$k=$v""" }.toSeq
 
   def stdSettings(prjName: String) =
     Seq(
