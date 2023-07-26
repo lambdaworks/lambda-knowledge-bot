@@ -6,7 +6,9 @@ inThisBuild(
   Seq(
     scalaVersion     := "2.13.11",
     organization     := "io.lambdaworks",
-    organizationName := "LambdaWorks"
+    organizationName := "LambdaWorks",
+    fork := true,
+    javaOptions ++= javaOpts
   )
 )
 
