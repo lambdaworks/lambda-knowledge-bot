@@ -7,7 +7,7 @@ inThisBuild(
     scalaVersion     := "2.13.11",
     organization     := "io.lambdaworks",
     organizationName := "LambdaWorks",
-    fork := true,
+    fork             := true,
     javaOptions ++= javaOpts
   )
 )
