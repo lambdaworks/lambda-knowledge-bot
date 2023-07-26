@@ -27,4 +27,4 @@ jobs:
       - name: Cache Scala dependencies
         uses: coursier/cache-action@v6
       - name: Check code formatting
-        run: ./sbt check
+        run: sbt check
