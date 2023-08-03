@@ -10,7 +10,7 @@ import akka.stream.scaladsl.Source
 import io.lambdaworks.knowledgebot.listener.ListenerService
 import org.apache.commons.codec.digest.HmacUtils
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 final class GitHubPushListenerService(host: String, port: Int, secret: String) extends ListenerService {
   def listen()(implicit ec: ExecutionContext, system: ActorSystem[Nothing]): Source[Unit, NotUsed] = {
