@@ -6,6 +6,7 @@ import me.shadaj.scalapy.py
 class GPTRetriever(retriever: py.Any) extends LLMRetriever {
   def retrieve(query: String): py.Dynamic =
     qaChain(query)
+  def retrieve(query: String): py.Dynamic = qaChain(query)
 
   private val chains     = py.module("langchain.chains")
   private val chatModels = py.module("langchain.chat_models")
