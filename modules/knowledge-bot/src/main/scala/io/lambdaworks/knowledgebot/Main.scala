@@ -63,7 +63,7 @@ object Main {
 
     val sources = Option(llmResponse.bracketAccess("source_documents").as[List[py.Dynamic]])
       .filter(_.nonEmpty)
-      .map { documents =>
+      .fold("") { documents =>
         "\n\n" + "*Relevant documents:* " + documents.map { doc =>
           embedSlackLink(
             doc.metadata.bracketAccess("source").as[String],
@@ -71,7 +71,6 @@ object Main {
           )
         }.distinct.mkString(", ")
       }
-      .getOrElse("")
 
     result + sources
   }
