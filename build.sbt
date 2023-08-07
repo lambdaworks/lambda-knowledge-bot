@@ -22,7 +22,7 @@ addCommandAlias("prepare", "fix; fmt")
 lazy val root =
   project
     .in(file("."))
-    .aggregate(langchain, application)
+    .aggregate(langchain, knowledgeBot)
     .settings(name := "lambda-knowledge-bot")
 
 lazy val langchain =
@@ -36,10 +36,20 @@ lazy val langchain =
       )
     )
 
-lazy val application =
+lazy val knowledgeBot =
   project
-    .in(file("modules/application"))
+    .in(file("modules/knowledge-bot"))
     .settings(
-      stdSettings("application")
+      stdSettings("knowledgeBot"),
+      libraryDependencies ++= Seq(
+        "com.typesafe.akka"             %% "akka-actor-typed"     % "2.8.0",
+        "com.typesafe.akka"             %% "akka-stream"          % "2.8.0",
+        "com.typesafe.akka"             %% "akka-http"            % "10.5.2",
+        "com.typesafe.akka"             %% "akka-http-spray-json" % "10.5.2",
+        "com.typesafe"                   % "config"               % "1.4.2",
+        "org.slf4j"                      % "slf4j-simple"         % "2.0.5",
+        "com.github.slack-scala-client" %% "slack-scala-client"   % "0.4.3",
+        "commons-codec"                  % "commons-codec"        % "1.15"
+      )
     )
     .dependsOn(langchain)
