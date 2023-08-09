@@ -2,64 +2,63 @@ package io.lambdaworks.knowledgebot.vectordb.qdrant
 
 import io.lambdaworks.knowledgebot.fetcher.Document
 import io.lambdaworks.knowledgebot.vectordb.VectorDatabase
+import io.lambdaworks.langchain.LangChainModule
+import io.lambdaworks.langchain.schema.retriever.BaseRetriever
+import io.lambdaworks.qdrantclient.qdrantclient.QdrantClientModule
 import me.shadaj.scalapy.py
-import me.shadaj.scalapy.py.SeqConverters
 
 class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, collectionName: String)
     extends VectorDatabase {
-  def asRetriever: py.Dynamic =
-    vectorstores
+  def asRetriever: BaseRetriever =
+    langchain.vectorstores
       .Qdrant(
         embeddings = embeddings,
         client = client,
-        collection_name = collectionName
+        collectionName = collectionName
       )
-      .as_retriever(search_kwargs = Map("score_threshold" -> 0.8))
+      .asRetriever(scoreThreshold = 0.8)
 
   def upsert(documents: List[Document]): Unit = {
     val mdHeaderSplits =
       documents.flatMap { doc =>
         markdownSplitter
-          .split_text(doc.content)
-          .as[List[py.Dynamic]]
-          .tapEach(_.metadata.bracketUpdate("source", doc.source))
+          .splitText(doc.content)
+          .map(_.updateMetadata("source", doc.source))
       }
 
-    val splits = recursiveTextSplitter.split_documents(mdHeaderSplits.toPythonProxy)
+    val splits = recursiveTextSplitter.splitDocuments(mdHeaderSplits)
 
-    vectorstores.Qdrant.from_documents(
+    langchain.vectorstores.Qdrant.fromDocuments(
       splits,
       embeddings,
       url = clusterUrl,
-      collection_name = collectionName,
-      prefer_grpc = true,
-      api_key = apiKey,
-      force_recreate = true
+      collectionName = collectionName,
+      preferGRPC = true,
+      apiKey = apiKey,
+      forceRecreate = true
     )
   }
 
-  private val openAIEmbeddings = py.module("langchain.embeddings.openai")
-  private val textSplitter     = py.module("langchain.text_splitter")
-  private val qdrantClient     = py.module("qdrant_client")
-  private val vectorstores     = py.module("langchain.vectorstores")
+  private val langchain    = py.module("langchain").as[LangChainModule]
+  private val qdrantClient = py.module("qdrant_client").as[QdrantClientModule]
 
-  private val client = qdrantClient.QdrantClient(url = clusterUrl, api_key = apiKey)
+  private val client = qdrantClient.QdrantClient(url = clusterUrl, apiKey = apiKey)
 
-  private val embeddings = openAIEmbeddings.OpenAIEmbeddings(openai_api_key = openaiApiKey)
+  private val embeddings = langchain.embeddings.openai.OpenAIEmbeddings(openaiApiKey = openaiApiKey)
 
-  private val markdownSplitter = textSplitter.MarkdownHeaderTextSplitter(
-    headers_to_split_on = List(
+  private val markdownSplitter = langchain.textSplitter.MarkdownHeaderTextSplitter(
+    headersToSplitOn = List(
       "#"     -> "topic",
       "##"    -> "subtopic",
       "###"   -> "subtopic",
       "####"  -> "subtopic",
       "#####" -> "subtopic"
-    ).toPythonProxy
+    )
   )
 
-  private val recursiveTextSplitter = textSplitter.RecursiveCharacterTextSplitter(
-    chunk_size = 250,
-    chunk_overlap = 30,
-    separators = List("\n\n", "\n*", "\n", " ", "").toPythonCopy
+  private val recursiveTextSplitter = langchain.textSplitter.RecursiveCharacterTextSplitter(
+    chunkSize = 250,
+    chunkOverlap = 30,
+    separators = List("\n\n", "\n*", "\n", " ", "")
   )
 }

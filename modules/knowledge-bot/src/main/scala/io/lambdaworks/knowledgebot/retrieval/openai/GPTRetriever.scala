@@ -1,26 +1,23 @@
 package io.lambdaworks.knowledgebot.retrieval.openai
 
 import io.lambdaworks.knowledgebot.retrieval.LLMRetriever
+import io.lambdaworks.langchain.LangChainModule
+import io.lambdaworks.langchain.schema.retriever.BaseRetriever
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.SeqConverters
 
-class GPTRetriever(retriever: py.Any) extends LLMRetriever {
-  def retrieve(query: String): py.Dynamic = {
+class GPTRetriever(retriever: BaseRetriever) extends LLMRetriever {
+  def retrieve(query: String): Map[String, py.Any] = {
     val output = qaChain(query)
 
-    if (!llmChain(output.bracketAccess("result").as[String]).bracketAccess("text").as[Boolean]) {
-      output.bracketUpdate("source_documents", List[py.Dynamic]().toPythonProxy)
+    if (!llmChain(output("result").as[String])("text").as[Boolean]) {
+      output.updated("source_documents", List[py.Dynamic]().toPythonProxy)
+    } else {
+      output
     }
-
-    output
   }
 
-  private val chains        = py.module("langchain.chains")
-  private val chatModels    = py.module("langchain.chat_models")
-  private val langchain     = py.module("langchain")
-  private val outputParsers = py.module("langchain.output_parsers")
-
-  private val llm = chatModels.ChatOpenAI(model_name = "gpt-3.5-turbo", temperature = 0)
+  private val langchain = py.module("langchain").as[LangChainModule]
 
   private val classificationPromptTemplate =
     """If the input is asking for more context or it is a negative sentence, return NO. Otherwise return YES.
@@ -41,16 +38,18 @@ class GPTRetriever(retriever: py.Any) extends LLMRetriever {
         |Question: {question}
         |Helpful Answer:""".stripMargin
 
-  private val llmChain = chains.LLMChain(
+  private val llm = langchain.chatModels.ChatOpenAI(modelName = "gpt-3.5-turbo", temperature = 0)
+
+  private val llmChain = langchain.LLMChain(
     llm = llm,
-    prompt = langchain.PromptTemplate.from_template(classificationPromptTemplate),
-    output_parser = outputParsers.BooleanOutputParser()
+    prompt = langchain.PromptTemplate.fromTemplate(classificationPromptTemplate),
+    outputParser = langchain.outputParsers.BooleanOutputParser()
   )
 
-  private val qaChain = chains.RetrievalQA.from_chain_type(
-    llm,
+  private val qaChain = langchain.chains.RetrievalQA.fromChainType(
+    llm = llm,
     retriever = retriever,
-    return_source_documents = true,
-    chain_type_kwargs = Map("prompt" -> langchain.PromptTemplate.from_template(promptTemplate))
+    returnSourceDocuments = true,
+    prompt = langchain.PromptTemplate.fromTemplate(promptTemplate)
   )
 }
