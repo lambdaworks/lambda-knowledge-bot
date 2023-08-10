@@ -2,6 +2,9 @@ package io.lambdaworks.knowledgebot.retrieval.openai
 
 import io.lambdaworks.knowledgebot.retrieval.LLMRetriever
 import io.lambdaworks.langchain.LangChainModule
+import io.lambdaworks.langchain.chains.ChainsModule
+import io.lambdaworks.langchain.chatmodels.ChatModelsModule
+import io.lambdaworks.langchain.outputparsers.OutputParsersModule
 import io.lambdaworks.langchain.schema.retriever.BaseRetriever
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.SeqConverters
@@ -16,8 +19,6 @@ class GPTRetriever(retriever: BaseRetriever) extends LLMRetriever {
       output
     }
   }
-
-  private val langchain = py.module("langchain").as[LangChainModule]
 
   private val classificationPromptTemplate =
     """If the input is asking for more context or it is a negative sentence, return NO. Otherwise return YES.
@@ -38,18 +39,18 @@ class GPTRetriever(retriever: BaseRetriever) extends LLMRetriever {
         |Question: {question}
         |Helpful Answer:""".stripMargin
 
-  private val llm = langchain.chatModels.ChatOpenAI(modelName = "gpt-3.5-turbo", temperature = 0)
+  private val llm = ChatModelsModule.ChatOpenAI(modelName = "gpt-3.5-turbo", temperature = 0)
 
-  private val llmChain = langchain.LLMChain(
+  private val llmChain = LangChainModule.LLMChain(
     llm = llm,
-    prompt = langchain.PromptTemplate.fromTemplate(classificationPromptTemplate),
-    outputParser = langchain.outputParsers.BooleanOutputParser()
+    prompt = LangChainModule.PromptTemplate.fromTemplate(classificationPromptTemplate),
+    outputParser = OutputParsersModule.BooleanOutputParser()
   )
 
-  private val qaChain = langchain.chains.RetrievalQA.fromChainType(
+  private val qaChain = ChainsModule.RetrievalQA.fromChainType(
     llm = llm,
     retriever = retriever,
     returnSourceDocuments = true,
-    prompt = langchain.PromptTemplate.fromTemplate(promptTemplate)
+    prompt = LangChainModule.PromptTemplate.fromTemplate(promptTemplate)
   )
 }

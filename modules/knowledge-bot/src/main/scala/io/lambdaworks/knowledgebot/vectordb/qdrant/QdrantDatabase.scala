@@ -2,15 +2,16 @@ package io.lambdaworks.knowledgebot.vectordb.qdrant
 
 import io.lambdaworks.knowledgebot.fetcher.Document
 import io.lambdaworks.knowledgebot.vectordb.VectorDatabase
-import io.lambdaworks.langchain.LangChainModule
+import io.lambdaworks.langchain.embeddings.EmbeddingsModule
 import io.lambdaworks.langchain.schema.retriever.BaseRetriever
+import io.lambdaworks.langchain.textsplitter.TextSplitterModule
+import io.lambdaworks.langchain.vectorstores.VectorStoresModule
 import io.lambdaworks.qdrantclient.qdrantclient.QdrantClientModule
-import me.shadaj.scalapy.py
 
 class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, collectionName: String)
     extends VectorDatabase {
   def asRetriever: BaseRetriever =
-    langchain.vectorstores
+    VectorStoresModule
       .Qdrant(
         embeddings = embeddings,
         client = client,
@@ -28,7 +29,7 @@ class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, c
 
     val splits = recursiveTextSplitter.splitDocuments(mdHeaderSplits)
 
-    langchain.vectorstores.Qdrant.fromDocuments(
+    VectorStoresModule.Qdrant.fromDocuments(
       splits,
       embeddings,
       url = clusterUrl,
@@ -39,14 +40,11 @@ class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, c
     )
   }
 
-  private val langchain    = py.module("langchain").as[LangChainModule]
-  private val qdrantClient = py.module("qdrant_client").as[QdrantClientModule]
+  private val client = QdrantClientModule.QdrantClient(url = clusterUrl, apiKey = apiKey)
 
-  private val client = qdrantClient.QdrantClient(url = clusterUrl, apiKey = apiKey)
+  private val embeddings = EmbeddingsModule.openai.OpenAIEmbeddings(openaiApiKey = openaiApiKey)
 
-  private val embeddings = langchain.embeddings.openai.OpenAIEmbeddings(openaiApiKey = openaiApiKey)
-
-  private val markdownSplitter = langchain.textSplitter.MarkdownHeaderTextSplitter(
+  private val markdownSplitter = TextSplitterModule.MarkdownHeaderTextSplitter(
     headersToSplitOn = List(
       "#"     -> "topic",
       "##"    -> "subtopic",
@@ -56,7 +54,7 @@ class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, c
     )
   )
 
-  private val recursiveTextSplitter = langchain.textSplitter.RecursiveCharacterTextSplitter(
+  private val recursiveTextSplitter = TextSplitterModule.RecursiveCharacterTextSplitter(
     chunkSize = 250,
     chunkOverlap = 30,
     separators = List("\n\n", "\n*", "\n", " ", "")
