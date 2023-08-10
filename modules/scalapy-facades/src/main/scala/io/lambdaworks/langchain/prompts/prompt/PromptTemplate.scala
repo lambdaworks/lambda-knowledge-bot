@@ -1,4 +1,4 @@
-package io.lambdaworks.langchain.prompts
+package io.lambdaworks.langchain.prompts.prompt
 
 import io.lambdaworks.langchain.schema.prompttemplate.BasePromptTemplate
 import me.shadaj.scalapy.py

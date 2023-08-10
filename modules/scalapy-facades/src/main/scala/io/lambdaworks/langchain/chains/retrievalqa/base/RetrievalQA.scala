@@ -1,7 +1,7 @@
 package io.lambdaworks.langchain.chains.retrievalqa.base
 
 import io.lambdaworks.langchain.chains.base.Chain
-import io.lambdaworks.langchain.prompts.PromptTemplate
+import io.lambdaworks.langchain.prompts.prompt.PromptTemplate
 import io.lambdaworks.langchain.schema.languagemodel.BaseLanguageModel
 import io.lambdaworks.langchain.schema.retriever.BaseRetriever
 import me.shadaj.scalapy.py

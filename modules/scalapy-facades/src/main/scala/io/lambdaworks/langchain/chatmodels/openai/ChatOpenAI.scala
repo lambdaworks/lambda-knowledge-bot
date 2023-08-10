@@ -1,6 +1,6 @@
 package io.lambdaworks.langchain.chatmodels.openai
 
-import io.lambdaworks.langchain.llms.OpenAI
+import io.lambdaworks.langchain.llms.openai.OpenAI
 import io.lambdaworks.langchain.schema.languagemodel.BaseLanguageModel
 import me.shadaj.scalapy.py
 

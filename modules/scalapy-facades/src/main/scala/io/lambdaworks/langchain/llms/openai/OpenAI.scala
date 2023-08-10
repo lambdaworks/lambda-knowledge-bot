@@ -1,4 +1,4 @@
-package io.lambdaworks.langchain.llms
+package io.lambdaworks.langchain.llms.openai
 
 import io.lambdaworks.langchain.schema.languagemodel.BaseLanguageModel
 import me.shadaj.scalapy.py

@@ -1,8 +1,9 @@
-package io.lambdaworks.langchain.vectorstores
+package io.lambdaworks.langchain.vectorstores.qdrant
 
 import io.lambdaworks.langchain.embeddings.base.Embeddings
 import io.lambdaworks.langchain.schema.document.Document
 import io.lambdaworks.langchain.schema.retriever.BaseRetriever
+import io.lambdaworks.langchain.vectorstores.base.VectorStore
 import io.lambdaworks.qdrantclient.qdrantclient.QdrantClient
 import me.shadaj.scalapy.py
 

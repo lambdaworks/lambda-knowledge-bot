@@ -1,4 +1,4 @@
-package io.lambdaworks.langchain.outputparsers
+package io.lambdaworks.langchain.outputparsers.`boolean`
 
 import io.lambdaworks.langchain.schema.outputparser.BaseLLMOutputParser
 import me.shadaj.scalapy.py
