@@ -1,8 +1,9 @@
 package io.lambdaworks.langchain.vectorstores
 
+import io.lambdaworks.langchain.vectorstores.qdrant.Qdrant
 import me.shadaj.scalapy.py
 
 @py.native
-trait VectorStoresModule extends py.Object {
+object VectorStoresModule extends py.StaticModule("langchain.vectorstores") {
   def Qdrant: Qdrant = py.native
 }
