@@ -14,6 +14,7 @@ import io.lambdaworks.knowledgebot.retrieval.LLMRetriever
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
 import io.lambdaworks.knowledgebot.vectordb.VectorDatabase
 import io.lambdaworks.knowledgebot.vectordb.qdrant.QdrantDatabase
+import io.lambdaworks.langchain.schema.document.Document
 import me.shadaj.scalapy.py
 import slack.SlackUtil
 import slack.rtm.SlackRtmClient
@@ -58,16 +59,16 @@ object Main {
   def embedSlackLink(link: String, text: String): String =
     s"<$link|$text>"
 
-  def createSlackMessage(llmResponse: py.Dynamic): String = {
-    val result = llmResponse.bracketAccess("result").as[String]
+  def createSlackMessage(llmResponse: Map[String, py.Any]): String = {
+    val result = llmResponse("result").as[String]
 
-    val sources = Option(llmResponse.bracketAccess("source_documents").as[List[py.Dynamic]])
+    val sources = Option(llmResponse("source_documents").as[List[Document]])
       .filter(_.nonEmpty)
       .fold("") { documents =>
         "\n\n" + "*Relevant documents:* " + documents.map { doc =>
           embedSlackLink(
-            doc.metadata.bracketAccess("source").as[String],
-            doc.metadata.bracketAccess("topic").as[String]
+            doc.metadata("source"),
+            doc.metadata("topic")
           )
         }.distinct.mkString(", ")
       }

@@ -1,9 +1,9 @@
 package io.lambdaworks.knowledgebot.vectordb
 
 import io.lambdaworks.knowledgebot.fetcher.Document
-import me.shadaj.scalapy.py
+import io.lambdaworks.langchain.schema.retriever.BaseRetriever
 
 trait VectorDatabase {
-  def asRetriever: py.Dynamic
+  def asRetriever: BaseRetriever
   def upsert(documents: List[Document]): Unit
 }

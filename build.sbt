@@ -22,14 +22,14 @@ addCommandAlias("prepare", "fix; fmt")
 lazy val root =
   project
     .in(file("."))
-    .aggregate(langchain, knowledgeBot)
+    .aggregate(scalaPyFacades, knowledgeBot)
     .settings(name := "lambda-knowledge-bot")
 
-lazy val langchain =
+lazy val scalaPyFacades =
   project
-    .in(file("modules/langchain"))
+    .in(file("modules/scalapy-facades"))
     .settings(
-      stdSettings("langchain"),
+      stdSettings("scalapy-facades"),
       libraryDependencies ++= Seq(
         "dev.scalapy" %% "scalapy-core"       % "0.5.3",
         "ai.kien"     %% "python-native-libs" % "0.2.4"
@@ -52,4 +52,4 @@ lazy val knowledgeBot =
         "commons-codec"                  % "commons-codec"        % "1.15"
       )
     )
-    .dependsOn(langchain)
+    .dependsOn(scalaPyFacades)
