@@ -56,7 +56,7 @@ class SlackMessageRouterActor(client: SlackRtmClient, feedbackStoreActor: ActorR
               actor.path.name.contentEquals(messageHandlerName(userId))
             }.getOrElse {
               val messageHandlerActor =
-                context.spawn(SlackMessageHandlerActor(client, feedbackStoreActor, userId), messageHandlerName(userId))
+                context.spawn(SlackMessageHandlerActor(client, feedbackStoreActor), messageHandlerName(userId))
 
               messageHandlerActor
             }

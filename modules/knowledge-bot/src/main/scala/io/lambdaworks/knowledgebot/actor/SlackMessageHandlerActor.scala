@@ -28,25 +28,22 @@ object SlackMessageHandlerActor {
 
   val key: ServiceKey[Event] = ServiceKey("SlackMessageHandlerActor")
 
-  def apply(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command], userId: String)(implicit
+  def apply(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command])(implicit
     actorSystem: ActorSystem,
     executionContext: ExecutionContext,
     scheduler: Scheduler
   ): Behavior[Event] =
     Behaviors.setup { context =>
       context.system.receptionist ! Receptionist.Register(key, context.self)
-      context.setReceiveTimeout(5.minutes, InactivityTimeout)
+      context.setReceiveTimeout(30.seconds, InactivityTimeout)
 
       val botActor =
-        context.spawn(SlackKnowledgeBotActor(client, feedbackStoreActor, context.self), botActorName(userId))
+        context.spawn(SlackKnowledgeBotActor(client, feedbackStoreActor, context.self), "SlackKnowledgeBotActor")
 
-      Behaviors.withStash(10) { buffer =>
+      Behaviors.withStash(100) { buffer =>
         new SlackMessageHandlerActor(botActor, client).botFree(buffer)
       }
     }
-
-  private def botActorName(id: String) =
-    s"SlackKnowledgeBotActor-$id"
 }
 
 class SlackMessageHandlerActor(botActor: ActorRef[SlackKnowledgeBotActor.Event], client: SlackRtmClient)(implicit
