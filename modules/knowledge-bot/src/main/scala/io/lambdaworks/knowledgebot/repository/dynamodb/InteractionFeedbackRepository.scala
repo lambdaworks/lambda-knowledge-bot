@@ -4,8 +4,6 @@ import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item}
 import io.lambdaworks.knowledgebot.actor.model.InteractionFeedback
 import io.lambdaworks.knowledgebot.repository.Repository
 
-import java.text.SimpleDateFormat
-
 class InteractionFeedbackRepository(client: DynamoDB, tableName: String) extends Repository[InteractionFeedback] {
   def put(item: InteractionFeedback): Unit = {
     val newItem = new Item()
