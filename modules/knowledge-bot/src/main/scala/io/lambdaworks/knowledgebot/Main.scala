@@ -45,7 +45,7 @@ object Main {
       config.getString("github.token"),
       config.getString("github.user"),
       config.getString("github.repo"),
-      config.getString("clickup.commonDocPath")
+      config.getString("clickup.commonDocUrl")
     )
 
   val vectorDatabase: VectorDatabase = new QdrantDatabase(
