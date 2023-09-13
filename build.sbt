@@ -66,7 +66,7 @@ lazy val knowledgeBot =
               Cmd("RUN", "apt-get install -y python3".split(' '): _*),
               Cmd("RUN", "apt-get install -y python3-pip".split(' '): _*),
               Cmd("RUN", "pip3 install --no-cache --upgrade pip setuptools".split(' '): _*),
-              Cmd("RUN", "pip3 install -r requirements.txt".split(' '): _*)
+              Cmd("RUN", "pip3 install --no-cache-dir -r requirements.txt".split(' '): _*)
             ),
             0
           )
