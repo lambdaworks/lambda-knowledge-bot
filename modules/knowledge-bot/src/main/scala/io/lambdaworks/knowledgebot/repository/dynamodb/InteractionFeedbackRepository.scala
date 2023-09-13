@@ -18,6 +18,8 @@ class InteractionFeedbackRepository(client: DynamoDB, tableName: String) extends
       .withString("Feedback", item.feedback.toString.toUpperCase)
 
     table.putItem(newItem)
+
+    ()
   }
 
   private val table = client.getTable(tableName)

@@ -25,6 +25,8 @@ class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit) extends
     self.token_queue.put(token)
     if (self.token_queue.full().as[Boolean]) {
       self.consumeQueue(self)
+
+      ()
     }
   }
 
