@@ -1,7 +1,7 @@
 package io.lambdaworks.knowledgebot.actor
 
 import akka.actor.typed.receptionist.ServiceKey
-import akka.actor.typed.scaladsl.{ActorContext, Behaviors, StashBuffer}
+import akka.actor.typed.scaladsl.{Behaviors, StashBuffer}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.{ActorSystem, Scheduler}
 import io.lambdaworks.knowledgebot.Main
@@ -12,7 +12,7 @@ import io.lambdaworks.langchain.schema.document.Document
 import me.shadaj.scalapy.py
 import slack.rtm.SlackRtmClient
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
 
@@ -32,13 +32,13 @@ object SlackKnowledgeBotActor {
     client: SlackRtmClient,
     feedbackStoreActor: ActorRef[FeedbackStoreActor.Command],
     messageHandlerActor: ActorRef[SlackMessageHandlerActor.Event]
-  )(implicit actorSystem: ActorSystem, executionContext: ExecutionContext, scheduler: Scheduler): Behavior[Event] =
+  )(implicit actorSystem: ActorSystem): Behavior[Event] =
     Behaviors.setup { context =>
       Behaviors.withStash(500) { buffer =>
         val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_))
         val retrieverActor = context.spawn(LLMRetrieverActor(context.self, retriever), "LLMRetrieverActor")
 
-        new SlackKnowledgeBotActor(buffer, client, context, feedbackStoreActor, messageHandlerActor, retrieverActor)
+        new SlackKnowledgeBotActor(buffer, client, feedbackStoreActor, messageHandlerActor, retrieverActor)
           .free()
       }
     }
@@ -47,14 +47,11 @@ object SlackKnowledgeBotActor {
 class SlackKnowledgeBotActor(
   buffer: StashBuffer[Event],
   client: SlackRtmClient,
-  context: ActorContext[Event],
   feedbackStoreActor: ActorRef[FeedbackStoreActor.Command],
   messageHandlerActor: ActorRef[SlackMessageHandlerActor.Event],
   retrieverActor: ActorRef[LLMRetrieverActor.Request]
 )(implicit
-  actorSystem: ActorSystem,
-  executionContext: ExecutionContext,
-  scheduler: Scheduler
+  actorSystem: ActorSystem
 ) {
   private def free(): Behavior[Event] =
     Behaviors.receiveMessage {
@@ -72,40 +69,45 @@ class SlackKnowledgeBotActor(
     currentMessage: String,
     timestamp: String
   ): Behavior[Event] =
-    Behaviors.receiveMessage {
-      case token: NewToken if token.token.isEmpty =>
-        Behaviors.same
-      case token: NewToken =>
-        val newMessage = currentMessage + token.token
+    Behaviors.receive { (context, message) =>
+      message match {
+        case token: NewToken if token.token.isEmpty =>
+          Behaviors.same
+        case token: NewToken =>
+          val newMessage = currentMessage + token.token
 
-        context.pipeToSelf(client.apiClient.client.updateChatMessage(channel, timestamp, newMessage))(_ =>
-          MessageUpdated
-        )
-
-        waitForMessageUpdate(channel, input, newMessage, timestamp)
-      case response: LLMResponse =>
-        context.pipeToSelf(
-          akka.pattern.retry(
-            attempt = () => {
-              val slackResponse = createSlackMessage(response.response)
-
-              for {
-                _ <-
-                  client.apiClient.client.updateChatMessage(channel, timestamp, slackResponse)
-                _ <- client.apiClient.client.addReactionToMessage("+1", channel, timestamp)
-                _ <- client.apiClient.client.addReactionToMessage("-1", channel, timestamp)
-              } yield slackResponse
-            },
-            attempts = 10,
-            delayFunction = attempted => Option(5.seconds * attempted)
+          context.pipeToSelf(client.apiClient.client.updateChatMessage(channel, timestamp, newMessage))(_ =>
+            MessageUpdated
           )
-        ) { case Success(slackResponse) =>
-          SentResponse(slackResponse)
-        }
 
-        waitForSentResponse(channel, input, timestamp)
-      case _ =>
-        Behaviors.unhandled
+          waitForMessageUpdate(channel, input, newMessage, timestamp)
+        case response: LLMResponse =>
+          implicit val ec: ExecutionContextExecutor = context.executionContext
+          implicit val scheduler: Scheduler         = actorSystem.scheduler
+
+          context.pipeToSelf(
+            akka.pattern.retry(
+              attempt = () => {
+                val slackResponse = createSlackMessage(response.response)
+
+                for {
+                  _ <-
+                    client.apiClient.client.updateChatMessage(channel, timestamp, slackResponse)
+                  _ <- client.apiClient.client.addReactionToMessage("+1", channel, timestamp)
+                  _ <- client.apiClient.client.addReactionToMessage("-1", channel, timestamp)
+                } yield slackResponse
+              },
+              attempts = 10,
+              delayFunction = attempted => Option(5.seconds * attempted)
+            )
+          ) { case Success(slackResponse) =>
+            SentResponse(slackResponse)
+          }
+
+          waitForSentResponse(channel, input, timestamp)
+        case _ =>
+          Behaviors.unhandled
+      }
     }
 
   private def waitForMessageId(input: String): Behavior[Event] =

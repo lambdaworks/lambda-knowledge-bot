@@ -10,10 +10,7 @@ import io.lambdaworks.langchain.{LangChainModule, callbacks}
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 
-import scala.concurrent.ExecutionContext
-
-class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit)(implicit ec: ExecutionContext)
-    extends LLMRetriever {
+class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit) extends LLMRetriever {
   def retrieve(query: String): Map[String, py.Any] = {
     val output = qaChain(query)
 

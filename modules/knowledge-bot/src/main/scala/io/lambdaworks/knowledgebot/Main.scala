@@ -5,7 +5,6 @@ import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.{ActorSystem => UntypedActorSystem, Props, Scheduler}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Merge, Source}
-import com.amazonaws.regions.Regions
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}

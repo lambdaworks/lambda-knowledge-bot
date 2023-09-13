@@ -1,9 +1,9 @@
 package io.lambdaworks.knowledgebot.actor
 
+import akka.actor.ActorSystem
 import akka.actor.typed.receptionist.Receptionist.Find
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.{ActorSystem, Scheduler}
 import akka.util.Timeout
 import io.lambdaworks.knowledgebot.actor.SlackMessageRouterActor.{
   Event,
@@ -15,7 +15,6 @@ import io.lambdaworks.knowledgebot.actor.model.{Feedback, InteractionFeedback, M
 import io.lambdaworks.knowledgebot.repository.Repository
 import slack.rtm.SlackRtmClient
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
 
@@ -30,9 +29,7 @@ object SlackMessageRouterActor {
   final case class InteractionFeedbackEvent(id: SlackMessageId, feedback: Feedback) extends Event
 
   def apply(client: SlackRtmClient, repository: Repository[InteractionFeedback])(implicit
-    actorSystem: ActorSystem,
-    executionContext: ExecutionContext,
-    scheduler: Scheduler
+    actorSystem: ActorSystem
   ): Behavior[Event] =
     Behaviors.setup { context =>
       val feedbackStoreActor = context.spawn(FeedbackStoreActor(repository), "FeedbackStoreActor")
@@ -42,9 +39,7 @@ object SlackMessageRouterActor {
 }
 
 class SlackMessageRouterActor(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command])(implicit
-  actorSystem: ActorSystem,
-  executionContext: ExecutionContext,
-  scheduler: Scheduler
+  actorSystem: ActorSystem
 ) {
   private def route()(implicit timeout: Timeout = 1.second): Behavior[Event] =
     Behaviors.receive { (context, message) =>

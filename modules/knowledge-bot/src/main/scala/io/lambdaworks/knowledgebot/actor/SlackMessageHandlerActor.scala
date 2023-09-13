@@ -1,9 +1,9 @@
 package io.lambdaworks.knowledgebot.actor
 
+import akka.actor.ActorSystem
 import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer}
 import akka.actor.typed.{ActorRef, Behavior}
-import akka.actor.{ActorSystem, Scheduler}
 import io.lambdaworks.knowledgebot.actor.SlackMessageHandlerActor.{
   BotReady,
   Event,
@@ -14,7 +14,7 @@ import io.lambdaworks.knowledgebot.actor.SlackMessageHandlerActor.{
 import io.lambdaworks.knowledgebot.actor.model.{Message, SlackMessageId}
 import slack.rtm.SlackRtmClient
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
 
@@ -29,9 +29,7 @@ object SlackMessageHandlerActor {
   val key: ServiceKey[Event] = ServiceKey("SlackMessageHandlerActor")
 
   def apply(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command])(implicit
-    actorSystem: ActorSystem,
-    executionContext: ExecutionContext,
-    scheduler: Scheduler
+    actorSystem: ActorSystem
   ): Behavior[Event] =
     Behaviors.setup { context =>
       context.system.receptionist ! Receptionist.Register(key, context.self)
@@ -47,42 +45,45 @@ object SlackMessageHandlerActor {
 }
 
 class SlackMessageHandlerActor(botActor: ActorRef[SlackKnowledgeBotActor.Event], client: SlackRtmClient)(implicit
-  actorSystem: ActorSystem,
-  executionContext: ExecutionContext
+  actorSystem: ActorSystem
 ) {
   def botFree(buffer: StashBuffer[Event]): Behavior[Event] =
-    Behaviors.receiveMessage {
-      case NewMessage(Message(id, text)) =>
-        botActor ! SlackKnowledgeBotActor.Prompt(text)
+    Behaviors.receive { (context, message) =>
+      message match {
+        case NewMessage(Message(id, text)) =>
+          botActor ! SlackKnowledgeBotActor.Prompt(text)
 
-        client.apiClient.client
-          .postChatMessage(
+          implicit val executionContext: ExecutionContextExecutor = context.executionContext
+
+          client.apiClient.client
+            .postChatMessage(
+              id.channel,
+              "*Generating response...*",
+              unfurlLinks = Some(false),
+              threadTs = Some(id.timestamp)
+            )
+            .foreach { timestamp =>
+              botActor ! SlackKnowledgeBotActor.ReceivedMessageId(SlackMessageId(id.channel, timestamp))
+            }
+
+          botBusy(buffer)
+        case QueuedMessage(Message(id, text)) =>
+          botActor ! SlackKnowledgeBotActor.Prompt(text)
+          botActor ! SlackKnowledgeBotActor.ReceivedMessageId(id)
+
+          client.apiClient.client.updateChatMessage(
             id.channel,
+            id.timestamp,
             "*Generating response...*",
-            unfurlLinks = Some(false),
             threadTs = Some(id.timestamp)
           )
-          .foreach { timestamp =>
-            botActor ! SlackKnowledgeBotActor.ReceivedMessageId(SlackMessageId(id.channel, timestamp))
-          }
 
-        botBusy(buffer)
-      case QueuedMessage(Message(id, text)) =>
-        botActor ! SlackKnowledgeBotActor.Prompt(text)
-        botActor ! SlackKnowledgeBotActor.ReceivedMessageId(id)
-
-        client.apiClient.client.updateChatMessage(
-          id.channel,
-          id.timestamp,
-          "*Generating response...*",
-          threadTs = Some(id.timestamp)
-        )
-
-        botBusy(buffer)
-      case InactivityTimeout =>
-        Behaviors.stopped
-      case _ =>
-        Behaviors.unhandled
+          botBusy(buffer)
+        case InactivityTimeout =>
+          Behaviors.stopped
+        case _ =>
+          Behaviors.unhandled
+      }
     }
 
   def botBusy(buffer: StashBuffer[Event]): Behavior[Event] =
