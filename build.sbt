@@ -55,6 +55,7 @@ lazy val knowledgeBot =
         "commons-codec"                  % "commons-codec"        % "1.15"
       ),
       Universal / mappings += file("requirements.txt") -> "requirements.txt",
+      dockerAlias                                      := new DockerAlias(None, None, "lambda-knowledge-bot", None),
       dockerBaseImage                                  := "eclipse-temurin:8-jre-jammy",
       dockerExposedPorts += 8080,
       dockerCommands := {
