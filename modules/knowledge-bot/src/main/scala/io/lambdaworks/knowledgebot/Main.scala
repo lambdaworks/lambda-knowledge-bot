@@ -58,7 +58,7 @@ object Main {
 
   val client: AmazonDynamoDB = AmazonDynamoDBClientBuilder
     .standard()
-    .withRegion(Regions.EU_NORTH_1)
+    .withRegion(config.getString("dynamodb.region"))
     .build()
 
   val dynamoDB: DynamoDB = new DynamoDB(client)
