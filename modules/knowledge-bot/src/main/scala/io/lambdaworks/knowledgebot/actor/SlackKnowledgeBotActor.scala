@@ -98,7 +98,7 @@ class SlackKnowledgeBotActor(
                 } yield slackResponse
               },
               attempts = 10,
-              delayFunction = attempted => Option(5.seconds * attempted)
+              delayFunction = attempted => Option((5 * attempted).seconds)
             )
           ) { case Success(slackResponse) =>
             SentResponse(slackResponse)
