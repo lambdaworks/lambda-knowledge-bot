@@ -12,8 +12,8 @@ import slack.rtm.SlackRtmClient
 class SlackMessageListenerActor(client: SlackRtmClient, repository: Repository[InteractionFeedback]) extends Actor {
   implicit val system: ActorSystem = context.system
 
-  val router: ActorRef[SlackMessageRouterActor.Event] =
-    context.spawn(SlackMessageRouterActor(client, repository), "SlackMessageRouterActor")
+  val router: ActorRef[SlackEventRouterActor.Event] =
+    context.spawn(SlackEventRouterActor(client, repository), "SlackEventRouterActor")
 
   val selfId: String = client.state.self.id
 
@@ -23,7 +23,7 @@ class SlackMessageListenerActor(client: SlackRtmClient, repository: Repository[I
         val mentionedIds = extractMentionedIds(message.text)
 
         if ((isDirectMsg(message) || mentionedIds.contains(selfId)) && userId != selfId && message.bot_id.isEmpty) {
-          router ! SlackMessageRouterActor.MessageFrom(
+          router ! SlackEventRouterActor.MessageFrom(
             userId,
             Message(SlackMessageId(message.channel, message.ts), message.text)
           )
@@ -34,7 +34,7 @@ class SlackMessageListenerActor(client: SlackRtmClient, repository: Repository[I
       Option(reaction).collect {
         case "+1" => Positive
         case "-1" => Negative
-      }.foreach(router ! SlackMessageRouterActor.InteractionFeedbackEvent(SlackMessageId(channel, timestamp), _))
+      }.foreach(router ! SlackEventRouterActor.InteractionFeedbackEvent(SlackMessageId(channel, timestamp), _))
     case _ => ()
   }
 }

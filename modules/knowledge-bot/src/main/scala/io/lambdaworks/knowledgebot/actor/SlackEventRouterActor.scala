@@ -5,7 +5,7 @@ import akka.actor.typed.receptionist.Receptionist.Find
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
-import io.lambdaworks.knowledgebot.actor.SlackMessageRouterActor.{
+import io.lambdaworks.knowledgebot.actor.SlackEventRouterActor.{
   Event,
   InteractionFeedbackEvent,
   MessageFrom,
@@ -18,7 +18,7 @@ import slack.rtm.SlackRtmClient
 import scala.concurrent.duration.DurationInt
 import scala.util.Success
 
-object SlackMessageRouterActor {
+object SlackEventRouterActor {
   sealed trait Event
 
   final case class MessageFrom(userId: String, message: Message) extends Event
@@ -34,12 +34,12 @@ object SlackMessageRouterActor {
     Behaviors.setup { context =>
       val feedbackStoreActor = context.spawn(FeedbackStoreActor(repository), "FeedbackStoreActor")
 
-      new SlackMessageRouterActor(client, feedbackStoreActor).route()
+      new SlackEventRouterActor(client, feedbackStoreActor).route()
     }
 }
 
-class SlackMessageRouterActor(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command])(implicit
-  actorSystem: ActorSystem
+class SlackEventRouterActor(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command])(implicit
+                                                                                                              actorSystem: ActorSystem
 ) {
   private def route()(implicit timeout: Timeout = 1.second): Behavior[Event] =
     Behaviors.receive { (context, message) =>
