@@ -22,7 +22,6 @@ import io.lambdaworks.knowledgebot.vectordb.qdrant.QdrantDatabase
 import slack.rtm.SlackRtmClient
 
 import scala.concurrent.ExecutionContextExecutor
-import scala.concurrent.duration.DurationInt
 
 object Main {
   val config: Config = ConfigFactory.load()
@@ -69,7 +68,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     Source
-      .combine(Source.tick(0.seconds, 7.days, ()), listenerService.listen())(Merge(_))
+      .combine(Source.single(()), listenerService.listen())(Merge(_))
       .mapAsync(1)(_ => documentFetcher.fetch())
       .runForeach(vectorDatabase.upsert)
 
