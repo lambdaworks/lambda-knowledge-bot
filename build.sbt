@@ -1,4 +1,5 @@
 import BuildHelper._
+import com.typesafe.sbt.packager.docker._
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
@@ -39,6 +40,8 @@ lazy val scalaPyFacades =
 lazy val knowledgeBot =
   project
     .in(file("modules/knowledge-bot"))
+    .enablePlugins(JavaAppPackaging)
+    .enablePlugins(DockerPlugin)
     .settings(
       stdSettings("knowledgeBot"),
       libraryDependencies ++= Seq(
@@ -50,6 +53,24 @@ lazy val knowledgeBot =
         "org.slf4j"                      % "slf4j-simple"         % "2.0.5",
         "com.github.slack-scala-client" %% "slack-scala-client"   % "0.4.3",
         "commons-codec"                  % "commons-codec"        % "1.15"
-      )
+      ),
+      Universal / mappings += file("requirements.txt") -> "requirements.txt",
+      dockerAlias                                      := new DockerAlias(None, None, "lambda-knowledge-bot", None),
+      dockerBaseImage                                  := "eclipse-temurin:8-jre-jammy",
+      dockerExposedPorts += 8080,
+      dockerCommands := {
+        dockerCommands.value
+          .patch(
+            dockerCommands.value.length - 3,
+            Seq(
+              Cmd("RUN", "apt-get update".split(' '): _*),
+              Cmd("RUN", "apt-get install -y python3".split(' '): _*),
+              Cmd("RUN", "apt-get install -y python3-pip".split(' '): _*),
+              Cmd("RUN", "pip3 install --no-cache --upgrade pip setuptools".split(' '): _*),
+              Cmd("RUN", "pip3 install --no-cache-dir -r requirements.txt".split(' '): _*)
+            ),
+            0
+          )
+      }
     )
     .dependsOn(scalaPyFacades)
