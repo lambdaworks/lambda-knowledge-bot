@@ -83,7 +83,7 @@ resource "aws_ecs_service" "lambda-knowledge-bot" {
   load_balancer {
     container_name   = "lambda-knowledge-bot"
     container_port   = "3000"
-    target_group_arn = aws_alb_target_group.my_target_group.arn
+    target_group_arn = aws_alb_target_group.target_group.arn
   }
-  depends_on = [aws_lb_listener.my_alb_listener]
+  depends_on = [aws_lb_listener.alb_listener]
 }
