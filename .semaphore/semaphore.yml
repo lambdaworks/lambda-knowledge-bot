@@ -1,0 +1,41 @@
+version: v1.0
+name: Initial Pipeline
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu2004
+blocks:
+  - name: Push Docker image
+    task:
+      jobs:
+        - name: docker-push
+          commands:
+            - checkout
+            - sem-version java 17
+            - cs=$(checksum build.sbt)-$(checksum project/plugins.sbt)
+            - cache restore sbt-cache-$cs
+            - cache restore ivy-cache-$cs
+            - cache restore coursier-cache-$cs
+            - 'sbt docker:publishLocal'
+            - cd ~
+            - cache store sbt-cache-$cs .sbt
+            - cache store ivy-cache-$cs .ivy2
+            - cache store coursier-cache-$cs .cache/coursier
+            - cd lambda-knowledge-bot
+            - 'COMMIT_DATE=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d)'
+            - 'VERSION=$(echo "${SEMAPHORE_GIT_SHA}" | cut -c1-7 | xargs printf "$COMMIT_DATE-%s")'
+            - 'echo "${VERSION}"'
+            - 'docker tag lambda-knowledge-bot "${ECR_REGISTRY}:${VERSION}"'
+            - 'docker push "${ECR_REGISTRY}:${VERSION}"'
+      secrets:
+        - name: lambda-knowledge-bot-ecr-credentials
+      env_vars:
+        - name: AWS_DEFAULT_REGION
+          value: us-east-1
+        - name: ECR_REGISTRY
+          value: 195175520793.dkr.ecr.us-east-1.amazonaws.com/lambda-knowledge-bot
+      prologue:
+        commands:
+          - aws ecr get-login --no-include-email | bash
+    run:
+      when: branch = 'main'
