@@ -37,3 +37,5 @@ blocks:
       prologue:
         commands:
           - aws ecr get-login --no-include-email | bash
+    run:
+      when: branch = 'main'
