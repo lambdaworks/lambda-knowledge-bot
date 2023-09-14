@@ -18,7 +18,7 @@ resource "aws_lb_listener" "alb_listener" {
 }
 
 resource "aws_alb_target_group" "target_group" {
-  name        = "lambda-knowledge-bot-target-group"
+  name        = "knowledge-bot-target-group"
   port        = "3000"
   protocol    = "HTTP"
   vpc_id      = aws_vpc.this.id

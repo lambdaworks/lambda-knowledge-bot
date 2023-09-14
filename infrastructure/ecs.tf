@@ -1,3 +1,8 @@
+variable "image_version" {
+  type = string
+  default = "latest"
+}
+
 resource "aws_ecs_cluster" "lambda-knowledge-bot-cluster" {
   name = "lambdaworks-cluster"
 }
@@ -62,18 +67,29 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
   [
     {
       "name": "lambda-knowledge-bot",
-      "image": "",
+      "image": "195175520793.dkr.ecr.us-east-1.amazonaws.com/lambda-knowledge-bot:local",
       "essential": true,
       "portMappings": [{
         "containerPort": 3000,
         "hostPort": 3000,
         "protocol":"tcp"
-      }]
+      }],
+      "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/lambda-knowledge-bot",
+        "awslogs-region": "us-east-1", 
+        "awslogs-stream-prefix": "lambda-knowledge-bot" 
+      }
+    }
     }
   ]
   EOF
 }
 
+resource "aws_cloudwatch_log_group" "lambda-knowledge-bot" {
+  name = "/ecs/lambda-knowledge-bot"
+}
 resource "aws_ecs_service" "lambda-knowledge-bot" {
   name            = "lambda-knowledge-bot-service"
   cluster         = aws_ecs_cluster.lambda-knowledge-bot-cluster.id

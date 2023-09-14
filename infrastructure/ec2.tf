@@ -8,7 +8,7 @@ module "key_pair" {
 
 
 resource "aws_instance" "ec2_instance" {
-  ami                  = "ami-05e1405c57ab23683"
+  ami                  = "ami-0f844a9675b22ea32"
   instance_type        = "t2.micro"
   subnet_id            = aws_subnet.public[0].id
   security_groups      = [aws_security_group.lambda-knowledge-bot.id]
