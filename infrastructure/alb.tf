@@ -8,7 +8,7 @@ resource "aws_lb" "alb" {
 
 resource "aws_lb_listener" "alb_listener" {
   load_balancer_arn = aws_lb.alb.arn
-  port              = "3000"
+  port              = "8080"
   protocol          = "HTTP"
 
   default_action {
@@ -19,7 +19,7 @@ resource "aws_lb_listener" "alb_listener" {
 
 resource "aws_alb_target_group" "target_group" {
   name        = "knowledge-bot-target-group"
-  port        = "3000"
+  port        = "8080"
   protocol    = "HTTP"
   vpc_id      = aws_vpc.this.id
   target_type = "instance"
