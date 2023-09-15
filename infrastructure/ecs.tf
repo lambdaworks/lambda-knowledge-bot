@@ -1,6 +1,6 @@
 variable "image_version" {
   type = string
-  default = "latest"
+  default = "local"
 }
 data "aws_secretsmanager_secret_version" "env"{
   secret_id = "/lambda-knowledge-bot/env"
@@ -83,7 +83,7 @@ resource "aws_iam_role_policy_attachment" "ecs-task-execution-role-policy-attach
 }
 resource "aws_iam_role_policy_attachment" "dynamodb_policy_attachment" {
   policy_arn = aws_iam_policy.dynamodb_policy.arn
-  role       = aws_iam_role.ecs_role.name
+  role       = aws_iam_role.ecs_task_role.name
 }
 
 resource "aws_cloudwatch_log_group" "lambda-knowledge-bot" {
@@ -101,7 +101,7 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
   [
     {
       "name": "lambda-knowledge-bot",
-      "image": "195175520793.dkr.ecr.us-east-1.amazonaws.com/lambda-knowledge-bot:local",
+      "image": "195175520793.dkr.ecr.us-east-1.amazonaws.com/lambda-knowledge-bot:${var.image_version}",
       "essential": true,
       "environment":${jsonencode(local.env_vars)},
       "portMappings": [{

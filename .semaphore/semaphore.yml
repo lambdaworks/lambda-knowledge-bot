@@ -23,7 +23,7 @@ blocks:
             - cache store coursier-cache-$cs .cache/coursier
             - cd lambda-knowledge-bot
             - 'COMMIT_DATE=$(git log -1 --format="%at" | xargs -I{} date -d @{} +%Y.%m.%d)'
-            - 'VERSION=$(echo "${SEMAPHORE_GIT_SHA}" | cut -c1-7 | xargs printf "$COMMIT_DATE-%s")'
+            - 'VERSION=$(echo "${SEMAPHORE_GIT_SHA}" | cut -c1-7 )'
             - 'echo "${VERSION}"'
             - 'docker tag lambda-knowledge-bot "${ECR_REGISTRY}:${VERSION}"'
             - 'docker push "${ECR_REGISTRY}:${VERSION}"'
@@ -37,5 +37,32 @@ blocks:
       prologue:
         commands:
           - aws ecr get-login --no-include-email | bash
-    run:
-      when: branch = 'main'
+    # run:
+    #   when: branch = 'main'
+
+  - name: "Deploy"
+    task:
+      secrets:
+        - name: lambda-knowledge-bot-ecr-credentials
+        - name: lambda-knowledge-bot-terraform-token
+      jobs:
+        - name: "Deploy"
+          commands:
+            - mkdir -p ~/.terraform.d
+            - touch ~/.terraform.d/credentials.tfrc.json
+            - |
+              cat <<EOF > ~/.terraform.d/credentials.tfrc.json
+              {
+                "credentials": {
+                  "app.terraform.io": {
+                    "token": "$TERRAFORM_TOKEN"
+                  }
+                }
+              }
+              EOF
+            - checkout
+            - VERSION=$(echo ${SEMAPHORE_GIT_SHA} | cut -c1-7)
+            - export TF_VAR_image_version=$VERSION
+            - cd infrastructure/
+            - terraform init
+            - terraform apply -target aws_ecs_service.lambda-knowledge-bot -auto-approve -lock-timeout=1m
