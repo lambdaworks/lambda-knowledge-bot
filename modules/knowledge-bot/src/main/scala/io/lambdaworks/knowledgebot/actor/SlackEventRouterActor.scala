@@ -5,12 +5,7 @@ import akka.actor.typed.receptionist.Receptionist.Find
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
-import io.lambdaworks.knowledgebot.actor.SlackEventRouterActor.{
-  Event,
-  InteractionFeedbackEvent,
-  MessageFrom,
-  MessageTo
-}
+import io.lambdaworks.knowledgebot.actor.SlackEventRouterActor.{Event, InteractionFeedbackEvent, MessageFrom, MessageTo}
 import io.lambdaworks.knowledgebot.actor.model.{Feedback, InteractionFeedback, Message, SlackMessageId}
 import io.lambdaworks.knowledgebot.repository.Repository
 import slack.rtm.SlackRtmClient
@@ -39,7 +34,7 @@ object SlackEventRouterActor {
 }
 
 class SlackEventRouterActor(client: SlackRtmClient, feedbackStoreActor: ActorRef[FeedbackStoreActor.Command])(implicit
-                                                                                                              actorSystem: ActorSystem
+  actorSystem: ActorSystem
 ) {
   private def route()(implicit timeout: Timeout = 1.second): Behavior[Event] =
     Behaviors.receive { (context, message) =>
