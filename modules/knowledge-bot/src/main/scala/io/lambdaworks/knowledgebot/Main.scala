@@ -2,25 +2,25 @@ package io.lambdaworks.knowledgebot
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
-import akka.actor.{ActorSystem => UntypedActorSystem}
+import akka.actor.{ActorSystem => UntypedActorSystem, Props, Scheduler}
 import akka.stream.Materializer
-import akka.stream.scaladsl.{Merge, Sink, Source}
+import akka.stream.scaladsl.{Merge, Source}
+import com.amazonaws.services.dynamodbv2.document.DynamoDB
+import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
+import io.lambdaworks.knowledgebot.actor.SlackMessageListenerActor
+import io.lambdaworks.knowledgebot.actor.model.InteractionFeedback
 import io.lambdaworks.knowledgebot.fetcher.DocumentFetcher
 import io.lambdaworks.knowledgebot.fetcher.github.GitHubDocumentFetcher
 import io.lambdaworks.knowledgebot.listener.ListenerService
 import io.lambdaworks.knowledgebot.listener.github.GitHubPushListenerService
-import io.lambdaworks.knowledgebot.retrieval.LLMRetriever
-import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
+import io.lambdaworks.knowledgebot.repository.Repository
+import io.lambdaworks.knowledgebot.repository.dynamodb.InteractionFeedbackRepository
 import io.lambdaworks.knowledgebot.vectordb.VectorDatabase
 import io.lambdaworks.knowledgebot.vectordb.qdrant.QdrantDatabase
-import io.lambdaworks.langchain.schema.document.Document
-import me.shadaj.scalapy.py
-import slack.SlackUtil
 import slack.rtm.SlackRtmClient
 
-import scala.concurrent.{ExecutionContextExecutor, Future}
-import scala.util.Success
+import scala.concurrent.ExecutionContextExecutor
 
 object Main {
   val config: Config = ConfigFactory.load()
@@ -29,6 +29,7 @@ object Main {
   implicit val typedSystem: ActorSystem[Nothing]          = system.toTyped
   implicit val executionContext: ExecutionContextExecutor = typedSystem.executionContext
   implicit val materializer: Materializer                 = Materializer.matFromSystem(typedSystem)
+  implicit val scheduler: Scheduler                       = system.scheduler
 
   val listenerService: ListenerService =
     new GitHubPushListenerService(
@@ -42,7 +43,7 @@ object Main {
       config.getString("github.token"),
       config.getString("github.user"),
       config.getString("github.repo"),
-      config.getString("clickup.commonDocPath")
+      config.getString("clickup.commonDocUrl")
     )
 
   val vectorDatabase: VectorDatabase = new QdrantDatabase(
@@ -52,55 +53,29 @@ object Main {
     config.getString("qdrant.collectionName")
   )
 
-  val retriever: LLMRetriever = new GPTRetriever(vectorDatabase.asRetriever)
-
   val slackToken: String = config.getString("slack.token")
 
-  def embedSlackLink(link: String, text: String): String =
-    s"<$link|$text>"
+  val client: AmazonDynamoDB = AmazonDynamoDBClientBuilder
+    .standard()
+    .withRegion(config.getString("dynamodb.region"))
+    .build()
 
-  def createSlackMessage(llmResponse: Map[String, py.Any]): String = {
-    val result = llmResponse("result").as[String]
+  val dynamoDB: DynamoDB = new DynamoDB(client)
 
-    val sources = Option(llmResponse("source_documents").as[List[Document]])
-      .filter(_.nonEmpty)
-      .fold("") { documents =>
-        "\n\n" + "*Relevant documents:* " + documents.map { doc =>
-          embedSlackLink(
-            doc.metadata("source"),
-            doc.metadata("topic")
-          )
-        }.distinct.mkString(", ")
-      }
-
-    result + sources
-  }
+  val interactionFeedbackRepository: Repository[InteractionFeedback] =
+    new InteractionFeedbackRepository(dynamoDB, config.getString("dynamodb.tableName"))
 
   def main(args: Array[String]): Unit = {
     Source
       .combine(Source.single(()), listenerService.listen())(Merge(_))
       .mapAsync(1)(_ => documentFetcher.fetch())
-      .runWith(Sink.foreach(vectorDatabase.upsert))
+      .runForeach(vectorDatabase.upsert)
 
     val client: SlackRtmClient = SlackRtmClient(slackToken)
 
-    val clientId = client.state.self.id
+    val slackMessageListenerActor =
+      system.actorOf(Props(new SlackMessageListenerActor(client, interactionFeedbackRepository)))
 
-    client.onMessage { message =>
-      if (SlackUtil.isDirectMsg(message) && message.user.exists(_ != clientId) && message.bot_id.isEmpty) {
-        Future
-          .sequence(
-            List(
-              Future(
-                client.apiClient.postChatMessage(message.channel, "*Generating response...*", unfurlLinks = Some(false))
-              ),
-              Future(createSlackMessage(retriever.retrieve(message.text)))
-            )
-          )
-          .onComplete { case Success(List(timestamp, newMessage)) =>
-            client.apiClient.updateChatMessage(message.channel, timestamp, newMessage)
-          }
-      }
-    }
+    client.addEventListener(slackMessageListenerActor)
   }
 }

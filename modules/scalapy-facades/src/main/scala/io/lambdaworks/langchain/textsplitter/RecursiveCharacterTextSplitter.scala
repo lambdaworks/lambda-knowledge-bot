@@ -8,7 +8,7 @@ import me.shadaj.scalapy.py.SeqConverters
 trait RecursiveCharacterTextSplitter extends py.Object {
   def apply(chunkSize: Int, chunkOverlap: Int, separators: List[String]): RecursiveCharacterTextSplitter =
     as[py.Dynamic]
-      .applyNamed("chunk_size" -> chunkSize, "chunk_overlap" -> chunkOverlap, "separators" -> separators.toPythonProxy)
+      .applyNamed("chunk_size" -> chunkSize, "chunk_overlap" -> chunkOverlap, "separators" -> separators.toPythonCopy)
       .as[RecursiveCharacterTextSplitter]
 
   def splitDocuments(documents: List[Document]): List[Document] =

@@ -11,7 +11,7 @@ import java.nio.charset.StandardCharsets
 import java.util.Base64
 import scala.concurrent.{ExecutionContext, Future}
 
-final class GitHubDocumentFetcher(token: String, user: String, repo: String, commonDocPath: String)
+final class GitHubDocumentFetcher(token: String, user: String, repo: String, commonDocUrl: String)
     extends DocumentFetcher
     with GitHubFileJsonProtocol {
   def fetch()(implicit ec: ExecutionContext, system: ActorSystem[Nothing]): Future[List[Document]] = {
@@ -32,7 +32,7 @@ final class GitHubDocumentFetcher(token: String, user: String, repo: String, com
       files.map { file =>
         Document(
           file.name match {
-            case pattern(id) => commonDocPath + id
+            case pattern(id) => commonDocUrl + id
             case _           => ""
           },
           new String(Base64.getDecoder.decode(file.content.replace("\n", "")), StandardCharsets.UTF_8)

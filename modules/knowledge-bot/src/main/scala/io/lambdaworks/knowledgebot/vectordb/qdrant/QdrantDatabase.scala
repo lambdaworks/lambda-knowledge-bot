@@ -38,6 +38,8 @@ class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, c
       apiKey = apiKey,
       forceRecreate = true
     )
+
+    ()
   }
 
   private val client = QdrantClientModule.QdrantClient(url = clusterUrl, apiKey = apiKey)
