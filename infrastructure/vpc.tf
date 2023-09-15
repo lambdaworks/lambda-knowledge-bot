@@ -70,7 +70,3 @@ resource "aws_security_group" "lambda-knowledge-bot" {
   }
 
 }
-
-output "subnet_id" {
-  value = [for subnet in aws_subnet.public : subnet.id]
-}

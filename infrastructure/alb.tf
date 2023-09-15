@@ -25,7 +25,3 @@ resource "aws_alb_target_group" "target_group" {
   target_type = "instance"
 
 }
-
-output "alb_dns_name" {
-  value = aws_lb.alb.dns_name
-}

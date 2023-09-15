@@ -1,15 +1,15 @@
 variable "image_version" {
-  type = string
+  type    = string
   default = "local"
 }
-data "aws_secretsmanager_secret_version" "env"{
+data "aws_secretsmanager_secret_version" "env" {
   secret_id = "/lambda-knowledge-bot/env"
 }
 locals {
   env_vars = [
     for key, value in jsondecode(data.aws_secretsmanager_secret_version.env.secret_string) : {
-      "name": key,
-      "value": value
+      "name" : key,
+      "value" : value
     }
   ]
 }
@@ -90,13 +90,13 @@ resource "aws_cloudwatch_log_group" "lambda-knowledge-bot" {
   name = "/ecs/lambda-knowledge-bot"
 }
 resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
-  network_mode = "bridge"
+  network_mode             = "bridge"
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
   requires_compatibilities = ["EC2"]
   cpu                      = "256"
   memory                   = "512"
   family                   = "lambda-knowledge-bot"
-  task_role_arn = aws_iam_role.ecs_task_role.arn
+  task_role_arn            = aws_iam_role.ecs_task_role.arn
   container_definitions    = <<EOF
   [
     {
@@ -120,14 +120,14 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
     }
   ]
   EOF
-  
+
 }
 
 resource "aws_ecs_service" "lambda-knowledge-bot" {
   name            = "lambda-knowledge-bot-service"
   cluster         = aws_ecs_cluster.lambda-knowledge-bot-cluster.id
   task_definition = aws_ecs_task_definition.lambda-knowledge-bot.arn
-  desired_count   = 2
+  desired_count   = 1
   launch_type     = "EC2"
   load_balancer {
     container_name   = "lambda-knowledge-bot"
