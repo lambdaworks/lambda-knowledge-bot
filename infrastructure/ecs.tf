@@ -106,8 +106,11 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
       "environment":${jsonencode(local.env_vars)},
       "portMappings": [{
         "containerPort": 8080,
-        "hostPort": 8080,
-        "protocol":"tcp"
+        "hostPort": 8080
+      },
+      {
+        "containerPort": 80,
+        "hostPort": 80
       }],
       "logConfiguration": {
       "logDriver": "awslogs",
