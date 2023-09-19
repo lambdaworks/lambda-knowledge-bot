@@ -24,4 +24,14 @@ resource "aws_alb_target_group" "target_group" {
   vpc_id      = aws_vpc.this.id
   target_type = "instance"
 
+  health_check {
+  protocol            = "HTTP"
+  path                = "/health"
+  port                = 80
+  healthy_threshold   = 3
+  unhealthy_threshold = 3
+  timeout             = 10
+  interval            = 30
+  matcher             = "200"
+  }
 }
