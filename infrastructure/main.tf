@@ -18,7 +18,3 @@ terraform {
 provider "aws" {
   region = "us-east-1"
 }
-
-# output "key" {
-#   value = nonsensitive(module.key_pair.private_key_pem)
-# }
