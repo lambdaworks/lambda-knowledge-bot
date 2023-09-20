@@ -129,7 +129,8 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
 resource "aws_ecs_service" "lambda-knowledge-bot" {
   name            = "lambda-knowledge-bot-service"
   cluster         = aws_ecs_cluster.lambda-knowledge-bot-cluster.id
-  task_definition = aws_ecs_task_definition.lambda-knowledge-bot.arn
+  # task_definition = aws_ecs_task_definition.lambda-knowledge-bot.arn
+  task_definition = "${aws_ecs_task_definition.lambda-knowledge-bot.family}:${aws_ecs_task_definition.lambda-knowledge-bot.revision}"
   desired_count   = 1
   launch_type     = "EC2"
   load_balancer {
