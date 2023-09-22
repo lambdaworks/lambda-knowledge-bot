@@ -17,7 +17,7 @@ class QdrantDatabase(openaiApiKey: String, clusterUrl: String, apiKey: String, c
         client = client,
         collectionName = collectionName
       )
-      .asRetriever(scoreThreshold = 0.8)
+      .asRetriever(scoreThreshold = 0.5)
 
   def upsert(documents: List[Document]): Unit = {
     val mdHeaderSplits =
