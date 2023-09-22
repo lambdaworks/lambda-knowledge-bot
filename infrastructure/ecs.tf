@@ -134,6 +134,8 @@ resource "aws_ecs_service" "lambda-knowledge-bot" {
   # task_definition = "${aws_ecs_task_definition.lambda-knowledge-bot.family}:${aws_ecs_task_definition.lambda-knowledge-bot.revision}"
   desired_count   = 1
   launch_type     = "EC2"
+  deployment_maximum_percent         = 200
+  deployment_minimum_healthy_percent = 100
   load_balancer {
     container_name   = "lambda-knowledge-bot"
     container_port   = "8080"
