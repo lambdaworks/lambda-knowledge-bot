@@ -58,7 +58,7 @@ lazy val knowledgeBot =
       Universal / mappings += file("requirements.txt") -> "requirements.txt",
       dockerAlias                                      := new DockerAlias(None, None, "lambda-knowledge-bot", None),
       dockerBaseImage                                  := "eclipse-temurin:8-jre-jammy",
-      dockerExposedPorts += 8080,
+      dockerExposedPorts ++= Seq(80, 8080),
       dockerCommands := {
         dockerCommands.value
           .patch(

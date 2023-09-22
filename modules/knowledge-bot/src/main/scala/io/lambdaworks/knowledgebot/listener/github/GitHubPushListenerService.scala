@@ -11,6 +11,7 @@ import io.lambdaworks.knowledgebot.listener.ListenerService
 import org.apache.commons.codec.digest.HmacUtils
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.DurationInt
 
 final class GitHubPushListenerService(host: String, port: Int, secret: String) extends ListenerService {
   def listen()(implicit ec: ExecutionContext, system: ActorSystem[Nothing]): Source[Unit, NotUsed] = {
@@ -38,7 +39,7 @@ final class GitHubPushListenerService(host: String, port: Int, secret: String) e
         }
       }
 
-    Http().newServerAt(host, port).bind(route)
+    Http().newServerAt(host, port).bind(route).map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
 
     source
   }

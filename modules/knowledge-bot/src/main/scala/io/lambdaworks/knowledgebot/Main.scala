@@ -3,6 +3,9 @@ package io.lambdaworks.knowledgebot
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.{ActorSystem => UntypedActorSystem, Props, Scheduler}
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
+import akka.http.scaladsl.server.Directives.{complete, get, path}
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Merge, Source}
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
@@ -21,11 +24,12 @@ import io.lambdaworks.knowledgebot.vectordb.qdrant.QdrantDatabase
 import slack.rtm.SlackRtmClient
 
 import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
 
 object Main {
   val config: Config = ConfigFactory.load()
 
-  implicit val system: UntypedActorSystem                 = UntypedActorSystem("KnowledgeBot")
+  val system: UntypedActorSystem                          = UntypedActorSystem("KnowledgeBot")
   implicit val typedSystem: ActorSystem[Nothing]          = system.toTyped
   implicit val executionContext: ExecutionContextExecutor = typedSystem.executionContext
   implicit val materializer: Materializer                 = Materializer.matFromSystem(typedSystem)
@@ -65,17 +69,26 @@ object Main {
   val interactionFeedbackRepository: Repository[InteractionFeedback] =
     new InteractionFeedbackRepository(dynamoDB, config.getString("dynamodb.tableName"))
 
+  val healthcheckHost: String = config.getString("healthcheck.host")
+  val healthcheckPort: Int    = config.getInt("healthcheck.port")
+
   def main(args: Array[String]): Unit = {
     Source
       .combine(Source.single(()), listenerService.listen())(Merge(_))
       .mapAsync(1)(_ => documentFetcher.fetch())
       .runForeach(vectorDatabase.upsert)
+      .onComplete(_ => typedSystem.terminate())
 
-    val client: SlackRtmClient = SlackRtmClient(slackToken)
+    val client: SlackRtmClient = SlackRtmClient(slackToken)(system)
 
     val slackMessageListenerActor =
       system.actorOf(Props(new SlackMessageListenerActor(client, interactionFeedbackRepository)))
 
     client.addEventListener(slackMessageListenerActor)
+
+    Http()
+      .newServerAt(healthcheckHost, healthcheckPort)
+      .bind(path("health")(get(complete(StatusCodes.OK))))
+      .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
   }
 }
