@@ -4,7 +4,17 @@ import akka.NotUsed
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{HttpHeader, StatusCodes}
-import akka.http.scaladsl.server.Directives.{complete, extractDataBytes, headerValue, onComplete, path, post, validate}
+import akka.http.scaladsl.server.Directives.{
+  complete,
+  concat,
+  extractDataBytes,
+  get,
+  headerValue,
+  onComplete,
+  path,
+  post,
+  validate
+}
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
 import io.lambdaworks.knowledgebot.listener.ListenerService
@@ -32,14 +42,21 @@ final class GitHubPushListenerService(host: String, port: Int, secret: String) e
       }
     }
 
-    val route =
-      path("payload") {
-        post {
-          postRoute
+    val routes =
+      concat(
+        path("payload") {
+          post {
+            postRoute
+          }
+        },
+        path("health") {
+          get {
+            complete(StatusCodes.OK)
+          }
         }
-      }
+      )
 
-    Http().newServerAt(host, port).bind(route).map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
+    Http().newServerAt(host, port).bind(routes).map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
 
     source
   }
