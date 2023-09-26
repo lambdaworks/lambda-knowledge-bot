@@ -61,7 +61,8 @@ The rest of the setup revolves around providing the environment variables outlin
 
 If you want to run the application locally, you can store the environment variables in a `.env` file placed in the root directory.
 
-You can build a Docker image using the following command: 
+You can build a Docker image using the following command:
+ 
 ```
 sbt docker:publishLocal
 ```
