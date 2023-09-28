@@ -6,7 +6,7 @@
 
 # Description
 
-Knowle is a Slack bot meant for answering all of the employees' questions about the company, with the help of vector databases and Large Language Models.
+Knowle is a Slack bot meant for answering questions from documentation, such as a company's knowledge base, with the help of vector databases and Large Language Models.
 
 # Behavior
 
@@ -33,9 +33,9 @@ pip install -r requirements.txt
 This application requires some services running to function correctly:
 
 - Qdrant account with an active cluster
-- ClickUp document-based knowledge base
 - DynamoDB table with `Channel` as a string primary key and `Timestamp` as an integer sort key
 - GitHub repository hosting the documents with a webhook triggered on push events
+  - Each document must have a name in following format: `document_name_id`
 - RTM-based Slack bot with `bot` and `chat:write:bot` OAuth scopes
 - OpenAI account
 
@@ -44,7 +44,7 @@ The rest of the setup revolves around providing the environment variables outlin
 | Variable               | Description                                                            | Default/Pattern |
 | ---------------------- | -----------------------------------------------------------------------| --------------- |
 | SCALAPY_PYTHON_LIBRARY | Python version used (only if not 3.{7, 8, 9})                          | python3.x       |
-| CLICKUP_COMMON_DOC_URL | The common part of the URL for every ClickUp document                  |                 |
+| CLICKUP_COMMON_DOC_URL | The common part of the URL for every document                          |                 |
 | DYNAMODB_REGION        | Region the DynamoDB table is in                                        |                 |
 | DYNAMODB_TABLE_NAME    | Name of the DynamoDB table                                             |                 |
 | GITHUB_TOKEN           | Personal GitHub access token with read access to the GitHub repository |                 |
