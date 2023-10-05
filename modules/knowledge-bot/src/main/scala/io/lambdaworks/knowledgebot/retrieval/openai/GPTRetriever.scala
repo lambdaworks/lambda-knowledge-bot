@@ -2,11 +2,13 @@ package io.lambdaworks.knowledgebot.retrieval.openai
 
 import io.lambdaworks.knowledgebot.retrieval.LLMRetriever
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever.{ClassificationPromptTemplate, PromptTemplate}
+import io.lambdaworks.langchain.callbacks
 import io.lambdaworks.langchain.chains.ChainsModule
+import io.lambdaworks.langchain.chains.ChainsModule.LLMChain
 import io.lambdaworks.langchain.chatmodels.ChatModelsModule
 import io.lambdaworks.langchain.outputparsers.OutputParsersModule
+import io.lambdaworks.langchain.prompts.PromptsModule
 import io.lambdaworks.langchain.schema.retriever.BaseRetriever
-import io.lambdaworks.langchain.{LangChainModule, callbacks}
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 
@@ -53,9 +55,9 @@ class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit) extends
 
   private val llm = ChatModelsModule.ChatOpenAI(modelName = "gpt-3.5-turbo", temperature = 0)
 
-  private val llmChain = LangChainModule.LLMChain(
+  private val llmChain = LLMChain(
     llm = llm,
-    prompt = LangChainModule.PromptTemplate.fromTemplate(ClassificationPromptTemplate),
+    prompt = PromptsModule.PromptTemplate.fromTemplate(ClassificationPromptTemplate),
     outputParser = OutputParsersModule.BooleanOutputParser()
   )
 
@@ -70,7 +72,7 @@ class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit) extends
     llm = streamingLlm,
     retriever = retriever,
     returnSourceDocuments = true,
-    prompt = LangChainModule.PromptTemplate.fromTemplate(PromptTemplate)
+    prompt = PromptsModule.PromptTemplate.fromTemplate(PromptTemplate)
   )
 }
 
