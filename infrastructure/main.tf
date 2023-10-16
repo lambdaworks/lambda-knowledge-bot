@@ -18,3 +18,7 @@ terraform {
 provider "aws" {
   region = "us-east-1"
 }
+
+output "task_revision" {
+  value = "${aws_ecs_task_definition.lambda-knowledge-bot.family}:${aws_ecs_task_definition.lambda-knowledge-bot.revision}"
+}

@@ -93,7 +93,7 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
   network_mode             = "bridge"
   execution_role_arn       = aws_iam_role.ecs_execution_role.arn
   requires_compatibilities = ["EC2"]
-  cpu                      = "256"
+  cpu                      = "512"
   memory                   = "512"
   family                   = "lambda-knowledge-bot"
   task_role_arn            = aws_iam_role.ecs_task_role.arn
@@ -103,14 +103,10 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
       "name": "lambda-knowledge-bot",
       "image": "195175520793.dkr.ecr.us-east-1.amazonaws.com/lambda-knowledge-bot:${var.image_version}",
       "essential": true,
+      "memory":512,
       "environment":${jsonencode(local.env_vars)},
       "portMappings": [{
-        "containerPort": 8080,
-        "hostPort": 8080
-      },
-      {
-        "containerPort": 80,
-        "hostPort": 80
+        "containerPort": 8080
       }],
       "logConfiguration": {
       "logDriver": "awslogs",
@@ -118,8 +114,8 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
         "awslogs-group": "/ecs/lambda-knowledge-bot",
         "awslogs-region": "us-east-1", 
         "awslogs-stream-prefix": "lambda-knowledge-bot" 
+        }
       }
-    }
     }
   ]
   EOF
@@ -129,7 +125,6 @@ resource "aws_ecs_task_definition" "lambda-knowledge-bot" {
 resource "aws_ecs_service" "lambda-knowledge-bot" {
   name            = "lambda-knowledge-bot-service"
   cluster         = aws_ecs_cluster.lambda-knowledge-bot-cluster.id
-  # task_definition = aws_ecs_task_definition.lambda-knowledge-bot.arn
   task_definition = "${aws_ecs_task_definition.lambda-knowledge-bot.family}:${aws_ecs_task_definition.lambda-knowledge-bot.revision}"
   desired_count   = 1
   launch_type     = "EC2"
