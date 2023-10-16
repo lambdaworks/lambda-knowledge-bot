@@ -17,7 +17,7 @@ httpcore==0.17.3
 httpx==0.24.1
 hyperframe==6.0.1
 idna==3.4
-langchain==0.0.308
+langchain==0.0.312
 langsmith==0.0.15
 marshmallow==3.20.1
 multidict==6.0.4
