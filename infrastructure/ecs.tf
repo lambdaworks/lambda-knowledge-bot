@@ -3,7 +3,7 @@ variable "image_version" {
   default = "local"
 }
 data "aws_secretsmanager_secret_version" "env" {
-  secret_id = "/lambda-knowledge-bot/env"
+  secret_id = "lambdaKnowledgeBotEnv"
 }
 locals {
   env_vars = [
