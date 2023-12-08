@@ -35,7 +35,7 @@ This application requires some services running to function correctly:
 - Qdrant account with an active cluster
 - DynamoDB table with `Channel` as a string primary key and `Timestamp` as an integer sort key
 - GitHub repository hosting the documents with a webhook triggered on push events
-  - Each document must have a name in following format: `document_name_id`
+  - Each document must have a name in following format: `document_name_id1_id2`
 - RTM-based Slack bot with `bot` and `chat:write:bot` OAuth scopes
 - OpenAI account
 
