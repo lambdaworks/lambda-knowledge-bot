@@ -32,8 +32,8 @@ final class GitHubDocumentFetcher(token: String, user: String, repo: String, com
       files.map { file =>
         Document(
           file.name match {
-            case pattern(id) => commonDocUrl + id
-            case _           => ""
+            case pattern(rootId, id) => commonDocUrl + rootId + '/' + commonDocUrl.split('/').last + id
+            case _                   => ""
           },
           new String(Base64.getDecoder.decode(file.content.replace("\n", "")), StandardCharsets.UTF_8)
         )
@@ -46,5 +46,5 @@ final class GitHubDocumentFetcher(token: String, user: String, repo: String, com
   private val request =
     HttpRequest(headers = Seq(authHeader), uri = Uri(s"https://api.github.com/repos/$user/$repo/contents"))
 
-  private val pattern = "^.*_([0-9]+)\\..*$".r
+  private val pattern = "^.*_([0-9]+)_([0-9]+)\\..*$".r
 }
