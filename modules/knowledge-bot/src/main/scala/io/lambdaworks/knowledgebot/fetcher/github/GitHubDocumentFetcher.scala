@@ -5,6 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
 import akka.http.scaladsl.model.{HttpRequest, Uri}
 import akka.http.scaladsl.unmarshalling.Unmarshal
+import akka.stream.scaladsl.{Sink, Source}
 import io.lambdaworks.knowledgebot.fetcher.{Document, DocumentFetcher}
 
 import java.nio.charset.StandardCharsets
@@ -18,14 +19,17 @@ final class GitHubDocumentFetcher(token: String, user: String, repo: String, com
     val filesFuture: Future[List[GitHubFile]] = for {
       response  <- Http().singleRequest(request)
       fileInfos <- Unmarshal(response.entity).to[List[GitHubFileInfo]]
-      files <- Future.sequence(fileInfos.map { fileInfo =>
-                 val request = HttpRequest(
-                   headers = Seq(authHeader),
-                   uri = Uri(fileInfo.url)
-                 )
+      files <- Source(fileInfos)
+                 .mapAsyncUnordered(parallelism = 5) { fileInfo =>
+                   val request = HttpRequest(
+                     headers = Seq(authHeader),
+                     uri = Uri(fileInfo.url)
+                   )
 
-                 Http().singleRequest(request).flatMap(response => Unmarshal(response.entity).to[GitHubFile])
-               })
+                   Http().singleRequest(request).flatMap(response => Unmarshal(response.entity).to[GitHubFile])
+                 }
+                 .runWith(Sink.seq)
+                 .map(_.toList)
     } yield files
 
     filesFuture.map { files =>
