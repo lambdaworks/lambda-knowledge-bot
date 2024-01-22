@@ -1,12 +1,13 @@
-package io.lambdaworks.knowledgebot.actor
+package io.lambdaworks.knowledgebot.actor.slack
 
 import akka.actor.typed.receptionist.ServiceKey
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.{ActorSystem, Scheduler}
 import io.lambdaworks.knowledgebot.Main
-import io.lambdaworks.knowledgebot.actor.SlackKnowledgeBotActor._
 import io.lambdaworks.knowledgebot.actor.model.{Interaction, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.slack.SlackKnowledgeBotActor._
+import io.lambdaworks.knowledgebot.actor.{FeedbackStoreActor, LLMRetrieverActor}
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
 import io.lambdaworks.langchain.schema.document.Document
 import me.shadaj.scalapy.py
@@ -35,8 +36,10 @@ object SlackKnowledgeBotActor {
   )(implicit actorSystem: ActorSystem): Behavior[Event] =
     Behaviors.setup { context =>
       Behaviors.withStash(500) { buffer =>
+        val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
+
         val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_))
-        val retrieverActor = context.spawn(LLMRetrieverActor(context.self, retriever), "LLMRetrieverActor")
+        val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
         new SlackKnowledgeBotActor(buffer, client, feedbackStoreActor, messageHandlerActor, retrieverActor)
           .free()
