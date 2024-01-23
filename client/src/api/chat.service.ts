@@ -46,7 +46,7 @@ export const handleFetchAllUserChats = (): Chat[] => {
 
 export const fetchChatMessages = (chatId: string): Message[] => {
   if (chatId === "") return []
-  return [{ id: "1", content: "Cao", role: "user" }, { id: "2", content: "Cao ti", role: "bot" }]
+  return [{ id: "1", content: "Cao", role: "user", liked:false, disliked:false }, { id: "2", content: "Cao ti", role: "bot", liked:false, disliked:false }]
 }
 
 export const handleFetchAnswer = (question: string): Promise<any> => {

@@ -66,9 +66,7 @@ export function ChatPanel({
                       open={shareDialogOpen}
                       onOpenChange={setShareDialogOpen}
                       onCopy={() => setShareDialogOpen(false)}
-                      shareChat={() => {
-                        console.log("SHARE")
-                      }}
+                      shareChat={() => { console.log("SHARE") }}
                       chat={{
                         title,
                         messages
