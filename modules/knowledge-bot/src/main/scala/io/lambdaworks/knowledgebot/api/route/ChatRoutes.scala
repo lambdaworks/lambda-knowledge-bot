@@ -5,12 +5,16 @@ import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
 import akka.http.scaladsl.model.sse.ServerSentEvent
-import akka.http.scaladsl.server.Directives.{complete, path, post, _}
+import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
-import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.ApiResponse
+import com.softwaremill.session.SessionDirectives.{optionalSession, setSession}
+import com.softwaremill.session.SessionOptions.oneOff
+import com.softwaremill.session.{HeaderST, SetSessionTransport}
+import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
+import io.lambdaworks.knowledgebot.api.JwtSessionManager._
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
 import spray.json.enrichAny
 
@@ -22,17 +26,28 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
 
   private implicit val timeout: Timeout = 5.seconds
 
-  private def postChatMessage(message: ChatMessage): Future[Source[ServerSentEvent, _]] =
+  private val sessionTransport: SetSessionTransport = HeaderST
+
+  private def postChatMessage(
+    message: ChatMessage,
+    session: Option[SessionData]
+  ): Future[(Source[ServerSentEvent, _], String)] =
     messageRouterActor
-      .ask[Source[(ApiResponse, String), _]](MessageRouterActor.ChatMessage(None, message.text, _))
-      .map(source => source.map(response => ServerSentEvent(response._1.toJson.compactPrint, response._2)))
+      .ask[SessionInfo](MessageRouterActor.ChatMessage(session.map(_.value), message.text, _))
+      .map(info =>
+        (info.source.map(response => ServerSentEvent(response.data.toJson.compactPrint, response.`type`)), info.session)
+      )
 
   val chatRoutes: Route =
     path("chat") {
       post {
-        entity(as[ChatMessage]) { message =>
-          onSuccess(postChatMessage(message)) { source =>
-            complete(source)
+        optionalSession(oneOff, sessionTransport) { session =>
+          entity(as[ChatMessage]) { message =>
+            onSuccess(postChatMessage(message, session)) { (source, session) =>
+              setSession(oneOff, sessionTransport, SessionData(session)) {
+                complete(source)
+              }
+            }
           }
         }
       }

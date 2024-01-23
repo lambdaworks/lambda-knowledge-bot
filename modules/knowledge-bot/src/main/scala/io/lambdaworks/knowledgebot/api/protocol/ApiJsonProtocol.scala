@@ -1,6 +1,6 @@
 package io.lambdaworks.knowledgebot.api.protocol
 
-import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{ApiResponse, Document}
+import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{Document, ResponseData}
 import io.lambdaworks.knowledgebot.api.route.ChatMessage
 import spray.json.DefaultJsonProtocol._
 import spray.json.RootJsonFormat
@@ -12,6 +12,6 @@ object ApiJsonProtocol {
   implicit val documentJsonFormat: RootJsonFormat[Document] =
     jsonFormat2(Document.apply)
 
-  implicit val responseJsonFormat: RootJsonFormat[ApiResponse] =
-    jsonFormat3(ApiResponse.apply)
+  implicit val responseJsonFormat: RootJsonFormat[ResponseData] =
+    jsonFormat2(ResponseData.apply)
 }

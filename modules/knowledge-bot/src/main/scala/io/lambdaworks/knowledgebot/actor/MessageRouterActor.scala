@@ -2,8 +2,7 @@ package io.lambdaworks.knowledgebot.actor
 
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
-import akka.stream.scaladsl.Source
-import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.ApiResponse
+import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 
 import java.util.UUID
 
@@ -12,7 +11,7 @@ object MessageRouterActor {
   final case class ChatMessage(
     session: Option[String],
     text: String,
-    replyBack: ActorRef[Source[(ApiResponse, String), _]]
+    replyBack: ActorRef[SessionInfo]
   ) extends Event
   final case class SessionExpired(session: String) extends Event
 
