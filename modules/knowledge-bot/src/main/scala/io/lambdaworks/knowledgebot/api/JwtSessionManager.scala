@@ -8,6 +8,6 @@ object JwtSessionManager {
   final case class SessionData(value: String)
 
   implicit val serializer: SessionSerializer[SessionData, JValue] = JValueSessionSerializer.caseClass[SessionData]
-  implicit val encoder                                            = new JwtSessionEncoder[SessionData]
-  implicit val manager                                            = new SessionManager(SessionConfig.fromConfig())
+  implicit val encoder: JwtSessionEncoder[SessionData]            = new JwtSessionEncoder[SessionData]
+  implicit val manager: SessionManager[SessionData]               = new SessionManager(SessionConfig.fromConfig())
 }
