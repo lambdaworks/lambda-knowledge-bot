@@ -77,7 +77,7 @@ private final class KnowledgeBotActor(
     Behaviors.receiveMessage {
       case _: ChatMessage =>
         Behaviors.same
-      case NewToken(text) =>
+      case NewToken(text) if text.nonEmpty =>
         queue.offer(ServerSentEvent(ResponseData(messageToken = text, None), "in_progress"))
 
         Behaviors.same
