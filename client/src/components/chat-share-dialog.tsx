@@ -34,6 +34,7 @@ export function ChatShareDialog({
 
   const copyShareLink = React.useCallback(
     async (chat: Chat) => {
+      chat.sharePath = "test"
       if (!chat.sharePath) {
         return toast.error('Could not copy share link to clipboard')
       }
@@ -77,8 +78,10 @@ export function ChatShareDialog({
           <Button
             disabled={isSharePending}
             onClick={() => {
-              console.log("SHARING CALLBACK")
-              shareChat();
+              // @ts-ignore
+              startShareTransition(async () => {
+                copyShareLink(chat as Chat)
+              })
             }}
           >
             {isSharePending ? (

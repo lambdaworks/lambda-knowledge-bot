@@ -16,6 +16,8 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Message } from '@/lib/types'
+import React from 'react'
+import { fetchChatMessages, handleFetchAnswer } from '@/api/chat.service'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -30,8 +32,30 @@ export function Chat({ className }: ChatProps) {
   const [previewTokenDialog, setPreviewTokenDialog] = useState(false)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
   const [input, setInput] = useState<string>("")
-  const { messages, append, reload, stop, isLoading } =
-    { messages: [], append: () => {}, reload: () => {}, stop: () => {}, isLoading: false }
+  const [messages, setMessages] = React.useState<Message[]>([]);
+  React.useEffect(() => {
+    const parts = window.location.href.split("/");
+    const chatId = parts[parts.length - 1];
+    const messages = fetchChatMessages(chatId);
+    setMessages(messages);
+  }, []);
+  const { stop, isLoading } = { stop: () => { }, isLoading: false }
+  const reload = async () => {
+    if (messages.length === 0) return;
+
+    try {
+      const lastMessage = messages[messages.length - 1];
+      const newContent = await handleFetchAnswer(lastMessage.content);
+      const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage, content: newContent }]);
+      setMessages(updatedMessages);
+    } catch (error) {
+      console.error("Error regenerating response:", error);
+    }
+  };
+
+  const append = (val: { content: string; role: any }) => {
+    setMessages(initialMessages => [...initialMessages, { content: val.content, role: val.role, id: "34" }]);
+  };
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
@@ -45,6 +69,7 @@ export function Chat({ className }: ChatProps) {
         )}
       </div>
       <ChatPanel
+        title='naslov'
         isLoading={isLoading}
         stop={stop}
         append={append}

@@ -3,15 +3,15 @@ import { IconArrowRight } from '@/components/ui/icons'
 
 const exampleMessages = [
   {
-    heading: 'Explain technical concepts',
-    message: `What is a "serverless function"?`
+    heading: 'Ask a question from our knowledge base',
+    message: `What is a Wifi password?`
   },
   {
     heading: 'Summarize an article',
     message: 'Summarize the following article for a 2nd grader:'
   },
   {
-    heading: 'Draft an email',
+    heading: 'Analyze a PDF',
     message: `Draft an email to my boss about the following:`
   }
 ]

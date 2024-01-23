@@ -13,7 +13,7 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { IconShare, IconSpinner, IconTrash } from '@/components/ui/icons'
+import { IconPencil, IconShare, IconSpinner, IconTrash } from '@/components/ui/icons'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import {
   Tooltip,
@@ -39,7 +39,7 @@ export function SidebarActions({
 
   return (
     <>
-      <div className="space-x-1">
+      <div className="text-gray-800 space-x-1 hover:text-white">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

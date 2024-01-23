@@ -21,7 +21,7 @@ interface ClearHistoryProps {
 
 export function ClearHistory({
   isEnabled = false,
-  clearChats
+  clearChats,
 }: ClearHistoryProps) {
   const [open, setOpen] = React.useState(false)
   const [isPending, startTransition] = React.useTransition()
@@ -51,6 +51,7 @@ export function ClearHistory({
               startTransition(() => {
                 clearChats();
                 console.log("CLEARED")
+                setOpen(false);
               })
             }}
           >

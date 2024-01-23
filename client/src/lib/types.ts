@@ -2,6 +2,8 @@ export interface Message {
   id: string;
   createdAt?: Date;
   content: string;
+  liked: boolean;
+  disliked: boolean
   role: 'system' | 'user' | 'assistant' | 'function' | 'data' | 'tool';
 }
 

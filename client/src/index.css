@@ -45,3 +45,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .text-user-color {
+    --user-message-color: #C0C0C0; /* Replace with your desired color */
+    color: var(--user-message-color);
+  }
+
+  .whiteIcon {
+    --user-message-color: #C0C0C0; /* Replace with your desired color */
+    background-color: var(--user-message-color);
+    cursor: pointer;
+  }
+
+  .bg-light-background {
+    background-color: #a4a4c1;
+  }
+}

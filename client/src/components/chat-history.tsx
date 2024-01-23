@@ -1,15 +1,33 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { SidebarList } from '@/components/sidebar-list'
 import { buttonVariants } from '@/components/ui/button'
 import { IconPlus } from '@/components/ui/icons'
+import { Chat } from '@/lib/types'
+import { handleFetchAllUserChats } from '@/api/chat.service'
 
 export function ChatHistory() {
+  const [chats, setChats] = useState<Chat[]>([]);
+  React.useEffect(() => {
+    const chats = handleFetchAllUserChats();
+    setChats(chats);
+  }, []);
+  const handleNewChatClick = () => {
+    const newChat: Chat = {
+      id: String(chats.length + 1),
+      title: "Untitled",
+      createdAt: new Date(),
+      userId: 'user-id',
+      path: "chat-path",
+      messages: []
+    };
+    setChats([...chats, newChat]);
+  };
   return (
     <div className="flex flex-col h-full">
       <div className="px-2 my-4">
         <a
-          href="/"
+          onClick={handleNewChatClick}
           className={cn(
             buttonVariants({ variant: 'outline' }),
             'text-black h-10 w-full justify-start bg-zinc-50 px-4 shadow-none hover:bg-zinc-200/40 dark:bg-zinc-900 dark:hover:bg-zinc-300/10'
@@ -31,7 +49,7 @@ export function ChatHistory() {
           </div>
         }
       >
-        <SidebarList />
+        <SidebarList chats={chats} setChats={setChats} />
       </React.Suspense>
     </div>
   )

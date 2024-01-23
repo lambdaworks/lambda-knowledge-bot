@@ -1,7 +1,5 @@
 import React from 'react';
 // import { type UseChatHelpers } from 'ai/react'
-
-// import { shareChat } from 'app/actions'
 import { Button } from '@/components/ui/button'
 import { PromptForm } from '@/components/prompt-form'
 import { ButtonScrollToBottom } from '@/components/button-scroll-to-bottom'
@@ -9,6 +7,7 @@ import { IconRefresh, IconShare, IconStop } from '@/components/ui/icons'
 import { FooterText } from '@/components/footer'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import { Message } from '@/lib/types'
+import { handleFetchAnswer } from '@/api/chat.service';
 
 export interface ChatPanelProps {
   title?: string
@@ -67,7 +66,9 @@ export function ChatPanel({
                       open={shareDialogOpen}
                       onOpenChange={setShareDialogOpen}
                       onCopy={() => setShareDialogOpen(false)}
-                      shareChat={() => { console.log("SHARE") }}
+                      shareChat={() => {
+                        console.log("SHARE")
+                      }}
                       chat={{
                         title,
                         messages
@@ -85,6 +86,11 @@ export function ChatPanel({
               await append({
                 content: value,
                 role: 'user'
+              })
+              const response = await handleFetchAnswer(input)
+              await append({
+                content: response,
+                role: 'bot'
               })
             }}
             input={input}
