@@ -62,6 +62,17 @@
     background-color: #a4a4c1;
   }
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+
+  .logo-container {
+    display: flex;
+    align-items: left;
+    justify-content: center;
+    height: 55px;
+    height: 55px;
+  }
+>>>>>>> e679a6f (Add logo)
 }
 =======
 }
