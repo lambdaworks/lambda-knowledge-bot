@@ -1,7 +1,12 @@
 package io.lambdaworks.knowledgebot.api
 
-import com.softwaremill.session.{JValueSessionSerializer, JwtSessionEncoder, SessionConfig, SessionManager}
-import com.softwaremill.session.SessionSerializer
+import com.softwaremill.session.{
+  JValueSessionSerializer,
+  JwtSessionEncoder,
+  SessionConfig,
+  SessionManager,
+  SessionSerializer
+}
 import org.json4s.JValue
 
 object JwtSessionManager {
