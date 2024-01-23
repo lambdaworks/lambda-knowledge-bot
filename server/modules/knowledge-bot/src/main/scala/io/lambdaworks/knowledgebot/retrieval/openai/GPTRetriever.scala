@@ -1,18 +1,20 @@
 package io.lambdaworks.knowledgebot.retrieval.openai
 
 import io.lambdaworks.knowledgebot.retrieval.LLMRetriever
-import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever.{ClassificationPromptTemplate, PromptTemplate}
+import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever.{ClassificationPromptTemplate, promptTemplate}
 import io.lambdaworks.langchain.callbacks
 import io.lambdaworks.langchain.chains.ChainsModule
 import io.lambdaworks.langchain.chains.ChainsModule.LLMChain
 import io.lambdaworks.langchain.chatmodels.ChatModelsModule
+import io.lambdaworks.langchain.memory.MemoryModule
 import io.lambdaworks.langchain.outputparsers.OutputParsersModule
 import io.lambdaworks.langchain.prompts.PromptsModule
 import io.lambdaworks.langchain.schema.retriever.BaseRetriever
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 
-class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit) extends LLMRetriever {
+class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit, withMemory: Boolean = false)
+    extends LLMRetriever {
   def retrieve(query: String): Map[String, py.Any] = {
     val output = qaChain(query)
 
@@ -72,7 +74,8 @@ class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit) extends
     llm = streamingLlm,
     retriever = retriever,
     returnSourceDocuments = true,
-    prompt = PromptsModule.PromptTemplate.fromTemplate(PromptTemplate)
+    prompt = PromptsModule.PromptTemplate.fromTemplate(promptTemplate(withMemory)),
+    memory = Some(MemoryModule.ConversationTokenBufferMemory(llm, 500, "history", "question")).filter(_ => withMemory)
   )
 }
 
@@ -84,15 +87,15 @@ object GPTRetriever {
       |
       |Classification:""".stripMargin
 
-  final val PromptTemplate: String =
-    "Use the following pieces of context about the company to answer the question at the end." +
-      "Every answer to a question you give should be in the language it was asked in, same if you don't know the answer." +
-      "If the context doesn't contain the answer, just say that you don't know, don't try to make up an answer." +
+  final def promptTemplate(withMemory: Boolean): String =
+    "Use the following pieces of context about the company to answer the question at the end. " +
+      "Every answer to a question you give should be in the language it was asked in, same if you don't know the answer. " +
+      "If the context doesn't contain the answer, just say that you don't know, don't try to make up an answer. " +
       "Don't give opinionated answers." +
-      """
-        |
-        |{context}
-        |
-        |Question: {question}
-        |Helpful Answer:""".stripMargin
+      s"""
+         |${if (withMemory) "\nChat History: {history}\n" else ""}
+         |Context: {context}
+         |
+         |Question: {question}
+         |Helpful Answer:""".stripMargin
 }

@@ -3,13 +3,16 @@ package io.lambdaworks.knowledgebot
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.{ActorSystem => UntypedActorSystem, Props, Scheduler}
+import akka.http.scaladsl.Http
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Merge, Source}
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
-import io.lambdaworks.knowledgebot.actor.SlackMessageListenerActor
+import io.lambdaworks.knowledgebot.actor.MessageRouterActor
 import io.lambdaworks.knowledgebot.actor.model.InteractionFeedback
+import io.lambdaworks.knowledgebot.actor.slack.SlackMessageListenerActor
+import io.lambdaworks.knowledgebot.api.route.ChatRoutes
 import io.lambdaworks.knowledgebot.fetcher.DocumentFetcher
 import io.lambdaworks.knowledgebot.fetcher.github.GitHubDocumentFetcher
 import io.lambdaworks.knowledgebot.listener.ListenerService
@@ -78,5 +81,9 @@ object Main {
       system.actorOf(Props(new SlackMessageListenerActor(client, interactionFeedbackRepository)))
 
     client.addEventListener(slackMessageListenerActor)
+
+    val messageRouterActor = system.spawn(MessageRouterActor(), "MessageRouterActor")
+
+    Http().newServerAt("0.0.0.0", 8000).bind(new ChatRoutes(messageRouterActor).chatRoutes)
   }
 }

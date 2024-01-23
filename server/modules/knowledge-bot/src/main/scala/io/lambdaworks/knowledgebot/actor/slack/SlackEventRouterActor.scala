@@ -1,12 +1,18 @@
-package io.lambdaworks.knowledgebot.actor
+package io.lambdaworks.knowledgebot.actor.slack
 
 import akka.actor.ActorSystem
 import akka.actor.typed.receptionist.Receptionist.Find
 import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
-import io.lambdaworks.knowledgebot.actor.SlackEventRouterActor.{Event, InteractionFeedbackEvent, MessageFrom, MessageTo}
+import io.lambdaworks.knowledgebot.actor.FeedbackStoreActor
 import io.lambdaworks.knowledgebot.actor.model.{Feedback, InteractionFeedback, Message, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.slack.SlackEventRouterActor.{
+  Event,
+  InteractionFeedbackEvent,
+  MessageFrom,
+  MessageTo
+}
 import io.lambdaworks.knowledgebot.repository.Repository
 import slack.rtm.SlackRtmClient
 
