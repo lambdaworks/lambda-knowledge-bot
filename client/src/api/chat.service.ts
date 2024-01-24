@@ -4,6 +4,9 @@ import axios from 'axios'
 const API_URL = import.meta.env.VITE_API_URL;
 const STAGE = import.meta.env.VITE_STAGE;
 
+const instance = axios.create({
+  withCredentials: true,
+});
 
 export const removeChat = (id: string) => {
   //uklanja chat iz baze
@@ -63,12 +66,18 @@ export const handleFetchAnswer = (question: string): Promise<any> => {
 
 async function fetchKnowledgeAnswer(question: string): Promise<string | null> {
   await new Promise(resolve => setTimeout(resolve, 1000));
-  const url = `${API_URL}/chat`;
   if (STAGE === "test") {
     return "podaci"
   }
   try {
-    const { data } = await axios.post(url, question);
+    const data = await instance.post('http://127.0.0.1:8000/chat', {
+      text: 'What is the WiFi password?',
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log(data)
     return data.data
   } catch (error) {
     console.log(error);

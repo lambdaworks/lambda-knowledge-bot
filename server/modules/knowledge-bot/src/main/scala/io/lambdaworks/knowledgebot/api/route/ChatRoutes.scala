@@ -20,6 +20,8 @@ import spray.json.enrichAny
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 
 final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(implicit val system: ActorSystem[_]) {
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
@@ -39,19 +41,20 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
       )
 
   val chatRoutes: Route =
-    path("chat") {
-      post {
-        optionalSession(oneOff, sessionTransport) { session =>
-          entity(as[ChatMessage]) { message =>
-            onSuccess(postChatMessage(message, session)) { (source, session) =>
-              setSession(oneOff, sessionTransport, SessionData(session)) {
-                complete(source)
+        path("chat") {
+          post {
+            optionalSession(oneOff, sessionTransport) { session =>
+              entity(as[ChatMessage]) { message =>
+                onSuccess(postChatMessage(message, session)) { (source, session) =>
+                  setSession(oneOff, sessionTransport, SessionData(session)) {
+                    complete(source)
+                  }
+                }
               }
             }
           }
         }
-      }
-    }
+      
 }
 
 case class ChatMessage(text: String)

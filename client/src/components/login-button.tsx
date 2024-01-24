@@ -1,7 +1,7 @@
 
 
 
-import { signIn } from 'next-auth/react'
+// import { signIn } from 'next-auth/react'
 
 import { cn } from '@/lib/utils'
 import { Button, type ButtonProps } from '@/components/ui/button'
@@ -26,7 +26,7 @@ export function LoginButton({
       onClick={() => {
         setIsLoading(true)
         // next-auth signIn() function doesn't work yet at Edge Runtime due to usage of BroadcastChannel
-        signIn('github', { callbackUrl: `/` })
+        // signIn('github', { callbackUrl: `/` })
       }}
       disabled={isLoading}
       className={cn(className)}
