@@ -11,7 +11,7 @@ blocks:
         - name: docker-push
           commands:
             - checkout
-            - cd server
+            - cd server/
             - sem-version java 17
             - cs=$(checksum build.sbt)-$(checksum project/plugins.sbt)
             - cache restore sbt-cache-$cs
@@ -40,27 +40,29 @@ blocks:
           - aws ecr get-login --no-include-email | bash
     run:
       when: branch = 'main'
+
   - name: Deploy
     task:
       secrets:
         - name: lambda-knowledge-bot-ecr-credentials
         - name: lambda-knowledge-bot-terraform-token
       jobs:
-        - name: Deploy
+        - name: "Deploy"
           commands:
             - mkdir -p ~/.terraform.d
             - touch ~/.terraform.d/credentials.tfrc.json
-            - cat <<EOF > ~/.terraform.d/credentials.tfrc.json
-            - '{'
-            - '  "credentials": {'
-            - '    "app.terraform.io": {'
-            - '      "token": "$TERRAFORM_TOKEN"'
-            - '    }'
-            - '  }'
-            - '}'
-            - EOF
+            - |
+              cat <<EOF > ~/.terraform.d/credentials.tfrc.json
+              {
+                "credentials": {
+                  "app.terraform.io": {
+                    "token": "$TERRAFORM_TOKEN"
+                  }
+                }
+              }
+              EOF
             - checkout
-            - 'VERSION=$(echo ${SEMAPHORE_GIT_SHA} | cut -c1-7)'
+            - VERSION=$(echo ${SEMAPHORE_GIT_SHA} | cut -c1-7)
             - export TF_VAR_image_version=$VERSION
             - cd server/infrastructure/
             - terraform init
