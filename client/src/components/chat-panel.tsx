@@ -85,9 +85,10 @@ export function ChatPanel({
                 content: value,
                 role: 'user'
               })
-              const response = await handleFetchAnswer(input)
+              const response = await handleFetchAnswer(value);
+              console.log(response)
               await append({
-                content: response,
+                content: response.message,
                 role: 'bot'
               })
             }}

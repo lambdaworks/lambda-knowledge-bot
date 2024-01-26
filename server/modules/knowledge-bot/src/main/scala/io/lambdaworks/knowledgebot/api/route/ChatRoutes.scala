@@ -30,6 +30,8 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
 
   private val sessionTransport: SetSessionTransport = HeaderST
 
+  val corsSettings: CorsSettings = CorsSettings.defaultSettings.withAllowGenericHttpRequests(true)
+
   private def postChatMessage(
     message: ChatMessage,
     session: Option[SessionData]
@@ -41,6 +43,7 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
       )
 
   val chatRoutes: Route =
+      cors(corsSettings) {
         path("chat") {
           post {
             optionalSession(oneOff, sessionTransport) { session =>
@@ -54,6 +57,7 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
             }
           }
         }
+      }
       
 }
 

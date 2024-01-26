@@ -46,7 +46,7 @@ export function Chat({ className }: ChatProps) {
     try {
       const lastMessage = messages[messages.length - 1];
       const newContent = await handleFetchAnswer(lastMessage.content);
-      const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage, content: newContent }]);
+      const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage, content: newContent.message }]);
       setMessages(updatedMessages);
     } catch (error) {
       console.error("Error regenerating response:", error);

@@ -49,38 +49,65 @@ export const handleFetchAllUserChats = (): Chat[] => {
 
 export const fetchChatMessages = (chatId: string): Message[] => {
   if (chatId === "") return []
-  return [{ id: "1", content: "Cao", role: "user", liked:false, disliked:false }, { id: "2", content: "Cao ti", role: "bot", liked:false, disliked:false }]
+  return [{ id: "1", content: "Cao", role: "user", liked: false, disliked: false }, { id: "2", content: "Cao ti", role: "bot", liked: false, disliked: false }]
 }
 
-export const handleFetchAnswer = (question: string): Promise<any> => {
-  const res = fetchKnowledgeAnswer(question)
-    .then(response => {
-      console.log(response)
-      return response;
+export const handleFetchAnswer = async (question: string): Promise<any> => {
+  const response = await fetch('http://127.0.0.1:8000/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      text: question
     })
-    .catch(err => {
-      console.log(err)
-    });
-  return res;
-};
+  });
+  console.log(response);
+  let accumulated = "";
+  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
+  let finish = false;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
 
-async function fetchKnowledgeAnswer(question: string): Promise<string | null> {
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  if (STAGE === "test") {
-    return "podaci"
+    console.log(value);
+    accumulated += value;
+
+    if (value.includes("event:finish")) {
+      finish = true;
+      break;
+    }
   }
-  try {
-    const data = await instance.post('http://127.0.0.1:8000/chat', {
-      text: 'What is the WiFi password?',
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    console.log(data)
-    return data.data
-  } catch (error) {
-    console.log(error);
-    return null;
+
+  let result = {
+    message: "",
+    relevantDocuments: []
+  };
+
+  if (finish) {
+    const lines = accumulated.split('\n');
+    for (const line of lines) {
+      if (line.startsWith("data:")) {
+        try {
+          const data = JSON.parse(line.substring(5));
+          result.message += data.messageToken;
+
+          if (data.relevantDocuments && Array.isArray(data.relevantDocuments)) {
+            result.relevantDocuments.push(...data.relevantDocuments);
+
+            const documentLinks = data.relevantDocuments.map((doc: { topic: any; source: any; }) =>
+              `[${doc.topic}](${doc.source})`
+            ).join(', ');
+
+            if (documentLinks) {
+              result.message += `\n\n Relevant documents: ${documentLinks}`;
+            }
+          }
+        } catch (error) {
+          console.error("Error parsing JSON:", error);
+        }
+      }
+    }
   }
-}
+  return result;
+};
