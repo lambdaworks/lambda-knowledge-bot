@@ -1,27 +1,18 @@
-import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { SidebarList } from '@/components/sidebar-list'
 import { buttonVariants } from '@/components/ui/button'
 import { IconPlus } from '@/components/ui/icons'
-import { Chat } from '@/lib/types'
-import { handleFetchAllUserChats } from '@/api/chat.service'
+import { ChatType } from '@/lib/types'
+import React from 'react'
 
-export function ChatHistory() {
-  const [chats, setChats] = useState<Chat[]>([]);
-  React.useEffect(() => {
-    const chats = handleFetchAllUserChats();
-    setChats(chats);
-  }, []);
+interface ChatHistoryProps {
+  chats: ChatType[]
+  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
+}
+
+export function ChatHistory({chats = [], setChats}: ChatHistoryProps) {
   const handleNewChatClick = () => {
-    const newChat: Chat = {
-      id: String(chats.length + 1),
-      title: "Untitled",
-      createdAt: new Date(),
-      userId: 'user-id',
-      path: "chat-path",
-      messages: []
-    };
-    setChats([...chats, newChat]);
+    window.location.href = window.location.origin
   };
   return (
     <div className="flex flex-col h-full">
@@ -49,7 +40,7 @@ export function ChatHistory() {
           </div>
         }
       >
-        <SidebarList chats={chats} setChats={setChats} />
+        <SidebarList chats={chats} setChats={setChats}/>
       </React.Suspense>
     </div>
   )

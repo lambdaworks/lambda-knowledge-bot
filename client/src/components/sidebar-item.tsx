@@ -9,12 +9,12 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import { type Chat } from '@/lib/types'
+import { type ChatType } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface SidebarItemProps {
   index: number
-  chat: Chat
+  chat: ChatType
   children: React.ReactNode
 }
 

@@ -18,6 +18,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ setEmail }) => {
         <Button variant="outline" className="btn btn-primary loginBtn"
           onClick={() => {
             loginWithRedirect();
+            localStorage.setItem("sidebar", "true")
           }}>Log In</Button>
       </div>
     );

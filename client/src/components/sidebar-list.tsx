@@ -1,15 +1,13 @@
-import { removeAllUserChats } from '@/api/chat.service';
 import { ClearHistory } from '@/components/clear-history'
 import { SidebarItems } from '@/components/sidebar-items'
-import { Chat } from '@/lib/types';
+import { ChatType } from '@/lib/types';
 
 interface SidebarListProps {
-  chats: Chat[];
-  setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
+  chats: ChatType[];
+  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
 export function SidebarList({ chats, setChats }: SidebarListProps) {
-
   return (
     <div className="flex flex-1 flex-col overflow-hidden">
       <div className="flex-1 overflow-auto">
@@ -24,11 +22,7 @@ export function SidebarList({ chats, setChats }: SidebarListProps) {
         )}
       </div>
       <div className="flex items-center justify-between p-4">
-        <ClearHistory clearChats={() => {
-          console.log("CLEAR")
-          removeAllUserChats();
-          setChats([])
-        }} isEnabled={chats?.length > 0} />
+        <ClearHistory clearChats={setChats} isEnabled={chats?.length > 0} />
       </div>
     </div>
   )

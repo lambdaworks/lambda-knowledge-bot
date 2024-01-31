@@ -7,7 +7,7 @@ export interface Message {
   role: 'system' | 'user' | 'assistant' | 'function' | 'data' | 'tool';
 }
 
-export interface Chat extends Record<string, any> {
+export interface ChatType extends Record<string, any> {
   id: string
   title: string
   createdAt: Date

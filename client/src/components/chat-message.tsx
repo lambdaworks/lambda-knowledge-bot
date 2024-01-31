@@ -4,15 +4,22 @@ import remarkMath from 'remark-math'
 import { cn } from '@/lib/utils'
 import { CodeBlock } from '@/components/ui/codeblock'
 import { MemoizedReactMarkdown } from '@/components/markdown'
-import { IconOpenAI, IconUser } from '@/components/ui/icons'
+import { IconOpenAI, IconThumbsDown, IconThumbsUp, IconUser } from '@/components/ui/icons'
 import { ChatMessageActions } from '@/components/chat-message-actions'
 import { Message } from '@/lib/types'
+import { Button } from './ui/button'
+import { TooltipTrigger } from '@radix-ui/react-tooltip'
+import { Tooltip } from './ui/tooltip'
+import { handleDislikeMessage, handleLikeMessage } from '@/api/chat.service'
+import { useState } from 'react'
 
 export interface ChatMessageProps {
   message: Message
 }
 
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
+  const [liked, setLiked] = useState(message.liked);
+  const [disliked, setDisliked] = useState(message.disliked);
   return (
     <div
       className={cn('group relative mb-4 flex items-start md:-ml-12')}
@@ -71,6 +78,45 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
           {message.content}
         </MemoizedReactMarkdown>
         <ChatMessageActions message={message} />
+        {message.role === 'bot' && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={`w-5 h-5 p-0 ${liked ? 'bg-light-background' : 'bg-background'}`}
+                  style={{ marginRight: '5px' }}
+                  onClick={() => { 
+                    handleLikeMessage()
+                    setLiked(!liked)
+                    if (!liked)
+                      setDisliked(false)
+                   }}
+                >
+                  <IconThumbsUp />
+                  <span className="sr-only">Like</span>
+                </Button>
+              </TooltipTrigger>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className={`w-5 h-5 p-0 ${disliked ? 'bg-light-background' : 'bg-background'}`}
+                  onClick={() => { 
+                    handleDislikeMessage()
+                    setDisliked(!disliked)
+                    if (!disliked)
+                      setLiked(false)
+                   }}
+                >
+                  <IconThumbsDown />
+                  <span className="sr-only">Dislike</span>
+                </Button>
+              </TooltipTrigger>
+            </Tooltip>
+          </>
+        )}
       </div>
     </div>
   )

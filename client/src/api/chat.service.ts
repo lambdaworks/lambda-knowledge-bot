@@ -1,7 +1,11 @@
-import { Chat, Message } from '@/lib/types';
+import { ChatType, Message } from '@/lib/types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+interface Document {
+  source: string,
+  topic: string
+}
 
 export const removeChat = (id: string) => {
   console.log(id)
@@ -17,40 +21,34 @@ export const handleDislikeMessage = (): boolean => {
   return true;
 };
 
-export const removeAllUserChats = () => {
-  window.location.href = "/"
+export const removeAllUserChats = () => { }
 
-}
-
-export const handleFetchAllUserChats = (): Chat[] => {
-  const mock1: Chat = {
+export const handleFetchAllUserChats = (): ChatType[] => {
+  const mock1: ChatType = {
     id: "1",
     title: "Example1",
     userId: "user",
     createdAt: new Date(),
-    path: "nekaPutanja1",
-    messages: []
+    path: "1",
+    messages: [{ id: "1", content: "Hello!", role: "user", liked: false, disliked: false }, { id: "2", content: "How can I help you?", role: "bot", liked: false, disliked: false }]
   }
-  const mock2: Chat = {
+  const mock2: ChatType = {
     id: "2",
     title: "Example2",
     userId: "user",
     createdAt: new Date(),
-    path: "nekaPutanja2",
-    messages: []
+    path: "2",
+    messages: [{ id: "2", content: "Hello", role: "user", liked: false, disliked: false }, { id: "2", content: "Hello", role: "bot", liked: false, disliked: false }]
   }
   return [mock1, mock2];
 };
 
 export const fetchChatMessages = (chatId: string): Message[] => {
-  if (chatId === "") return []
-  return [{ id: "1", content: "Cao", role: "user", liked: false, disliked: false }, { id: "2", content: "Cao ti", role: "bot", liked: false, disliked: false }]
+  // fetches chat messages
+  return []
 }
 
-interface Document {
-  source: string,
-  topic: string
-}
+
 
 
 export const handleFetchAnswer = async (question: string): Promise<{

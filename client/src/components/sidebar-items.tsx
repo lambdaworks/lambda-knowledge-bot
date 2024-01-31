@@ -1,16 +1,15 @@
 
 
-import { Chat } from '@/lib/types'
+import { ChatType } from '@/lib/types'
 import { AnimatePresence, motion } from 'framer-motion'
 
 import { SidebarActions } from '@/components/sidebar-actions'
 import { SidebarItem } from '@/components/sidebar-item'
-import { useState } from 'react'
 import { removeChat } from '@/api/chat.service'
 
 interface SidebarItemsProps {
-  chats?: Chat[]
-  setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
+  chats?: ChatType[]
+  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
 export function SidebarItems({ chats, setChats }: SidebarItemsProps) {

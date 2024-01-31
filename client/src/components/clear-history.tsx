@@ -13,10 +13,12 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
 import { IconSpinner } from '@/components/ui/icons'
+import { ChatType } from '@/lib/types'
+import { removeAllUserChats } from '@/api/chat.service'
 
 interface ClearHistoryProps {
   isEnabled: boolean
-  clearChats: () => void
+  clearChats: React.Dispatch<React.SetStateAction<ChatType[]>>
 }
 
 export function ClearHistory({
@@ -49,7 +51,8 @@ export function ClearHistory({
             onClick={event => {
               event.preventDefault()
               startTransition(() => {
-                clearChats();
+                removeAllUserChats()
+                clearChats([]);
                 console.log("CLEARED")
                 setOpen(false);
               })

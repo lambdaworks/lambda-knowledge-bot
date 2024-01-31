@@ -15,16 +15,18 @@ import {
 import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-import { Message } from '@/lib/types'
+import { ChatType, Message } from '@/lib/types'
 import React from 'react'
 import { fetchChatMessages, handleFetchAnswer } from '@/api/chat.service'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
   id?: string
+  chats: ChatType[]
+  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
-export function Chat({ className }: ChatProps) {
+export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
     'ai-token',
     null
@@ -32,12 +34,19 @@ export function Chat({ className }: ChatProps) {
   const [previewTokenDialog, setPreviewTokenDialog] = useState(false)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
   const [input, setInput] = useState<string>("")
-  const [messages, setMessages] = React.useState<Message[]>([]);
+  const chat = chats.find(chat => chat.id === id);
+  const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
+
   React.useEffect(() => {
     const parts = window.location.href.split("/");
     const chatId = parts[parts.length - 1];
-    const messages = fetchChatMessages(chatId);
-    setMessages(messages);
+    // const messages = fetchChatMessages(chatId);
+    const messages = chats.find(chat => chat.id.toString() === chatId)?.messages;
+    console.log(chatId)
+    console.log(chats)
+    console.log(messages)
+    if (messages)
+      setMessages(messages);
   }, []);
   const { stop, isLoading } = { stop: () => { }, isLoading: false }
   const reload = async () => {
@@ -53,8 +62,20 @@ export function Chat({ className }: ChatProps) {
     }
   };
 
-  const append = (val: { content: string; role: any }) => {
+  const append = (val: { content: string; role: string }) => {
     setMessages(initialMessages => [...initialMessages, { content: val.content, role: val.role, id: "34" }]);
+
+    if (messages.length === 0 && val.role === "user") {
+      const newChat: ChatType = {
+        id: String(chats.length + 1),
+        title: val.content,
+        createdAt: new Date(),
+        userId: sessionStorage.getItem("email") || "",
+        path: String(chats.length + 1),
+        messages: []
+      };
+      setChats([...chats, newChat])
+    }
   };
   return (
     <>
@@ -69,7 +90,7 @@ export function Chat({ className }: ChatProps) {
         )}
       </div>
       <ChatPanel
-        title='naslov'
+        title="title"
         isLoading={isLoading}
         stop={stop}
         append={append}
