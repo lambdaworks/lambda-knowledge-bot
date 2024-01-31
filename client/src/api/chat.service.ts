@@ -1,15 +1,10 @@
 import { Chat, Message } from '@/lib/types';
-import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL;
-const STAGE = import.meta.env.VITE_STAGE;
 
-const instance = axios.create({
-  withCredentials: true,
-});
 
 export const removeChat = (id: string) => {
-  //uklanja chat iz baze
+  console.log(id)
 };
 
 export const handleLikeMessage = (): boolean => {
@@ -52,8 +47,17 @@ export const fetchChatMessages = (chatId: string): Message[] => {
   return [{ id: "1", content: "Cao", role: "user", liked: false, disliked: false }, { id: "2", content: "Cao ti", role: "bot", liked: false, disliked: false }]
 }
 
-export const handleFetchAnswer = async (question: string): Promise<any> => {
-  const response = await fetch('http://127.0.0.1:8000/chat', {
+interface Document {
+  source: string,
+  topic: string
+}
+
+
+export const handleFetchAnswer = async (question: string): Promise<{
+  message: string,
+  relevantDocuments: Document[]
+}> => {
+  const response = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -62,52 +66,46 @@ export const handleFetchAnswer = async (question: string): Promise<any> => {
       text: question
     })
   });
-  console.log(response);
   let accumulated = "";
   const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
-  let finish = false;
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
-
-    console.log(value);
     accumulated += value;
-
     if (value.includes("event:finish")) {
-      finish = true;
       break;
     }
   }
 
-  let result = {
+  return parseAnswer(accumulated);
+};
+
+function parseAnswer(accumulated: string) {
+  const result = {
     message: "",
     relevantDocuments: []
   };
+  const lines = accumulated.split('\n');
+  for (const line of lines) {
+    if (line.startsWith("data:")) {
+      try {
+        const data = JSON.parse(line.substring(5));
+        result.message += data.messageToken;
 
-  if (finish) {
-    const lines = accumulated.split('\n');
-    for (const line of lines) {
-      if (line.startsWith("data:")) {
-        try {
-          const data = JSON.parse(line.substring(5));
-          result.message += data.messageToken;
+        if (data.relevantDocuments) {
+          result.relevantDocuments.push(...data.relevantDocuments);
 
-          if (data.relevantDocuments && Array.isArray(data.relevantDocuments)) {
-            result.relevantDocuments.push(...data.relevantDocuments);
+          const documentLinks = data.relevantDocuments.map((doc: Document) => `[${doc.topic}](${doc.source})`
+          ).join(', ');
 
-            const documentLinks = data.relevantDocuments.map((doc: { topic: any; source: any; }) =>
-              `[${doc.topic}](${doc.source})`
-            ).join(', ');
-
-            if (documentLinks) {
-              result.message += `\n\n Relevant documents: ${documentLinks}`;
-            }
+          if (documentLinks) {
+            result.message += `\n\n Relevant documents: ${documentLinks}`;
           }
-        } catch (error) {
-          console.error("Error parsing JSON:", error);
         }
+      } catch (error) {
+        console.error("Error parsing JSON:", error);
       }
     }
   }
   return result;
-};
+}

@@ -6,7 +6,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { IconExternalLink } from '@/components/ui/icons'
 
 export function UserMenu() {
   return (
@@ -24,20 +23,13 @@ export function UserMenu() {
             <div className="text-xs font-medium">Menu</div>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <a
-              href="https://vercel.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-between w-full text-xs"
-            >
-              Vercel Homepage
-              <IconExternalLink className="w-3 h-3 ml-auto" />
-            </a>
-          </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              console.log("SIGN OUT")
+            onClick={() => {
+              localStorage.removeItem("name");
+              localStorage.removeItem("email");
+              console.log(localStorage.getItem("name"))
+              //window.location.reload();
+            }
             }
             className="text-xs"
           >
