@@ -43,22 +43,21 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
       )
 
   val chatRoutes: Route =
-      cors(corsSettings) {
-        path("chat") {
-          post {
-            optionalSession(oneOff, sessionTransport) { session =>
-              entity(as[ChatMessage]) { message =>
-                onSuccess(postChatMessage(message, session)) { (source, session) =>
-                  setSession(oneOff, sessionTransport, SessionData(session)) {
-                    complete(source)
-                  }
+    cors(corsSettings) {
+      path("chat") {
+        post {
+          optionalSession(oneOff, sessionTransport) { session =>
+            entity(as[ChatMessage]) { message =>
+              onSuccess(postChatMessage(message, session)) { (source, session) =>
+                setSession(oneOff, sessionTransport, SessionData(session)) {
+                  complete(source)
                 }
               }
             }
           }
         }
       }
-      
+    }
 }
 
 case class ChatMessage(text: String)

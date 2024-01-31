@@ -48,9 +48,6 @@ export const fetchChatMessages = (chatId: string): Message[] => {
   return []
 }
 
-
-
-
 export const handleFetchAnswer = async (question: string): Promise<{
   message: string,
   relevantDocuments: Document[]
