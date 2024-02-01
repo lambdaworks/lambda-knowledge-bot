@@ -17,7 +17,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { ChatType, Message } from '@/lib/types'
 import React from 'react'
-import { fetchChatMessages, handleFetchAnswer } from '@/api/chat.service'
+import { fetchChatMessages, handleFetchAnswer, regenerateMessage } from '@/api/api'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -40,27 +40,17 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   React.useEffect(() => {
     const parts = window.location.href.split("/");
     const chatId = parts[parts.length - 1];
+    // add condition when chat list is empty to fetch from BE
     // const messages = fetchChatMessages(chatId);
     const messages = chats.find(chat => chat.id.toString() === chatId)?.messages;
-    console.log(chatId)
-    console.log(chats)
-    console.log(messages)
-    if (messages)
-      setMessages(messages);
+    setMessages(messages || []);
   }, []);
   const { stop, isLoading } = { stop: () => { }, isLoading: false }
-  const reload = async () => {
-    if (messages.length === 0) return;
 
-    try {
-      const lastMessage = messages[messages.length - 1];
-      const newContent = await handleFetchAnswer(lastMessage.content);
-      const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage, content: newContent.message }]);
-      setMessages(updatedMessages);
-    } catch (error) {
-      console.error("Error regenerating response:", error);
-    }
-  };
+  async function reload() {
+    const updatedMessages: Message[] = await regenerateMessage(messages);
+    setMessages(updatedMessages);
+  }
 
   const append = (val: { content: string; role: string }) => {
     setMessages(initialMessages => [...initialMessages, { content: val.content, role: val.role, id: "34" }]);
@@ -77,6 +67,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
       setChats([...chats, newChat])
     }
   };
+  
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>

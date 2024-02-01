@@ -9,6 +9,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.softwaremill.session.SessionDirectives.{optionalSession, setSession}
 import com.softwaremill.session.SessionOptions.oneOff
 import com.softwaremill.session.{HeaderST, SetSessionTransport}
@@ -20,8 +22,6 @@ import spray.json.enrichAny
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
-import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
-import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 
 final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(implicit val system: ActorSystem[_]) {
   implicit val executionContext: ExecutionContextExecutor = system.executionContext

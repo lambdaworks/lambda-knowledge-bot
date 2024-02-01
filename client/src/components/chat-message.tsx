@@ -10,7 +10,7 @@ import { Message } from '@/lib/types'
 import { Button } from './ui/button'
 import { TooltipTrigger } from '@radix-ui/react-tooltip'
 import { Tooltip } from './ui/tooltip'
-import { handleDislikeMessage, handleLikeMessage } from '@/api/chat.service'
+import { handleDislikeMessage, handleLikeMessage } from '@/api/api'
 import { useState } from 'react'
 
 export interface ChatMessageProps {
@@ -20,6 +20,21 @@ export interface ChatMessageProps {
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
   const [liked, setLiked] = useState(message.liked);
   const [disliked, setDisliked] = useState(message.disliked);
+
+  function likeMessage() {
+    handleLikeMessage()
+    setLiked(!liked)
+    if (!liked)
+      setDisliked(false)
+  }
+
+  function dislikeMessage() {
+    handleDislikeMessage()
+    setDisliked(!disliked)
+    if (!disliked)
+      setLiked(false)
+  }
+
   return (
     <div
       className={cn('group relative mb-4 flex items-start md:-ml-12')}
@@ -86,12 +101,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
                   variant="ghost"
                   className={`w-5 h-5 p-0 ${liked ? 'bg-light-background' : 'bg-background'}`}
                   style={{ marginRight: '5px' }}
-                  onClick={() => { 
-                    handleLikeMessage()
-                    setLiked(!liked)
-                    if (!liked)
-                      setDisliked(false)
-                   }}
+                  onClick={likeMessage}
                 >
                   <IconThumbsUp />
                   <span className="sr-only">Like</span>
@@ -103,12 +113,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
                 <Button
                   variant="ghost"
                   className={`w-5 h-5 p-0 ${disliked ? 'bg-light-background' : 'bg-background'}`}
-                  onClick={() => { 
-                    handleDislikeMessage()
-                    setDisliked(!disliked)
-                    if (!disliked)
-                      setLiked(false)
-                   }}
+                  onClick={dislikeMessage}
                 >
                   <IconThumbsDown />
                   <span className="sr-only">Dislike</span>

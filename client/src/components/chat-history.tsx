@@ -17,7 +17,7 @@ export function ChatHistory({chats = [], setChats}: ChatHistoryProps) {
   return (
     <div className="flex flex-col h-full">
       <div className="px-2 my-4">
-        <a
+        <div
           onClick={handleNewChatClick}
           className={cn(
             buttonVariants({ variant: 'outline' }),
@@ -26,7 +26,7 @@ export function ChatHistory({chats = [], setChats}: ChatHistoryProps) {
         >
           <IconPlus className="-translate-x-2 stroke-2" />
           New Chat
-        </a>
+        </div>
       </div>
       <React.Suspense
         fallback={

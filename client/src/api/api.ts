@@ -7,17 +7,13 @@ interface Document {
   topic: string
 }
 
-export const removeChat = (id: string) => {
-  console.log(id)
-};
+export const removeChat = (id: string) => {};
 
 export const handleLikeMessage = (): boolean => {
-  console.log("LIKE")
   return true;
 };
 
 export const handleDislikeMessage = (): boolean => {
-  console.log("DISLIKE")
   return true;
 };
 
@@ -104,3 +100,16 @@ function parseAnswer(accumulated: string) {
   }
   return result;
 }
+
+export const regenerateMessage = async (messages: Message[]): Promise<Message[]> => {
+  if (messages.length === 0) return [];
+  try {
+    const lastMessage = messages[messages.length - 1];
+    const newContent = await handleFetchAnswer(lastMessage.content);
+    const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage, content: newContent.message }]);
+    return updatedMessages;
+  } catch (error) {
+    console.error("Error regenerating response:", error);
+    return [];
+  }
+};

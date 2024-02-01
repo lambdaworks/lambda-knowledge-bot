@@ -7,6 +7,7 @@ import { SidebarToggle } from './sidebar-toggle';
 import LoginButton from './login-button';
 import { Button } from './ui/button';
 import { useAuth0 } from "@auth0/auth0-react";
+import { isEmpty } from '@/api/util';
 
 function UserOrLogin() {
   const [email, setEmail] = useState(sessionStorage.getItem("email"))
@@ -21,21 +22,19 @@ function UserOrLogin() {
   useEffect(() => {
     const storedEmail = sessionStorage.getItem("email");
     setEmail(storedEmail);
-    console.log(storedEmail)
   }, []);
-
   return (
     <>
-      {email !== null && (
+      {!isEmpty(email) && (
         <>
           <SidebarMobile>
-            <ChatHistory chats={[]}/>
+            <ChatHistory chats={[]} />
           </SidebarMobile>
           <SidebarToggle />
         </>
       )}
       <div className="flex align-items-center">
-        {email !== null ? (
+        {!isEmpty(email) ? (
           <><IconSeparator className="size-6 text-muted-foreground/50 me-2" /><Button variant="outline" className="btn btn-primary loginBtn" onClick={handleLogout}>Logout</Button></>
         ) : (
           <LoginButton setEmail={setEmail} />
@@ -62,7 +61,7 @@ export function Header() {
           <UserOrLogin />
         </React.Suspense>
       </div>
-      <a target='__blank' className="logo-container" style={{marginLeft: 20}}>
+      <a target='__blank' className="logo-container" style={{ marginLeft: 20 }}>
         <img src={Logo} alt='Logo'></img>
       </a>
     </header>

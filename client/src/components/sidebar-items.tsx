@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { SidebarActions } from '@/components/sidebar-actions'
 import { SidebarItem } from '@/components/sidebar-item'
-import { removeChat } from '@/api/chat.service'
+import { removeChat } from '@/api/api'
 
 interface SidebarItemsProps {
   chats?: ChatType[]
@@ -15,6 +15,14 @@ interface SidebarItemsProps {
 export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
 
   if (!chats?.length) return null
+
+  function removeUserChat(chat: ChatType) {
+    const updatedChats = chats?.filter((currentChat) => chat.id !== currentChat.id);
+    removeChat(chat.id)
+    setChats(updatedChats || [])
+  }
+
+  function shareChat() { }
 
   return (
     <AnimatePresence>
@@ -31,14 +39,8 @@ export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
               <SidebarItem index={index} chat={chat}>
                 <SidebarActions
                   chat={chat}
-                  removeChat={() => {
-                    const updatedChats = chats?.filter((currentChat) => chat.id !== currentChat.id);
-                    removeChat(chat.id)
-                    setChats(updatedChats)
-                  }}
-                  shareChat={() => {
-                    console.log("SHARE CHAT")
-                  }}
+                  removeChat={() => removeUserChat(chat)}
+                  shareChat={shareChat}
                 />
               </SidebarItem>
             </motion.div>

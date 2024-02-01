@@ -7,7 +7,7 @@ import { IconRefresh, IconShare, IconStop } from '@/components/ui/icons'
 import { FooterText } from '@/components/footer'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import { Message } from '@/lib/types'
-import { handleFetchAnswer } from '@/api/chat.service';
+import { handleFetchAnswer } from '@/api/api';
 
 export interface ChatPanelProps {
   title?: string
