@@ -56,7 +56,7 @@ lazy val knowledgeBot =
         "commons-codec"                       % "commons-codec"         % "1.15",
         "com.softwaremill.akka-http-session" %% "core"                  % "0.7.1",
         "com.softwaremill.akka-http-session" %% "jwt"                   % "0.7.1",
-        "ch.megard" %% "akka-http-cors" % "1.1.1"
+        "ch.megard"                          %% "akka-http-cors"        % "1.1.1"
       ),
       Universal / mappings += file("requirements.txt") -> "requirements.txt",
       dockerAlias                                      := new DockerAlias(None, None, "lambda-knowledge-bot", None),
