@@ -11,13 +11,15 @@ export function ChatList({ messages }: ChatList) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, 200);
   };
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  
+
   if (!messages.length) {
     return null
   }
@@ -32,7 +34,7 @@ export function ChatList({ messages }: ChatList) {
           )}
         </div>
       ))}
-      <div ref={messagesEndRef} /> 
+      <div ref={messagesEndRef} />
     </div>
   )
 }

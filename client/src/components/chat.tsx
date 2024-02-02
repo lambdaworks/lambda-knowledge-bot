@@ -49,7 +49,9 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   }, []);
   const { stop } = { stop: () => { } }
   async function reload() {
+    setIsLoading(true)
     await regenerateMessage(messages, setMessages);
+    setIsLoading(false)
   }
   
   const append = async (val: { content: string; role: string }) => {

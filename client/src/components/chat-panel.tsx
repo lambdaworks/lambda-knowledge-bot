@@ -1,5 +1,4 @@
 import React from 'react';
-// import { type UseChatHelpers } from 'ai/react'
 import { Button } from '@/components/ui/button'
 import { PromptForm } from '@/components/prompt-form'
 import { ButtonScrollToBottom } from '@/components/button-scroll-to-bottom'
@@ -7,7 +6,6 @@ import { IconRefresh, IconShare, IconStop } from '@/components/ui/icons'
 import { FooterText } from '@/components/footer'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import { Message } from '@/lib/types'
-import { handleFetchAnswer } from '@/api/api';
 import { StreamingTextResponse } from 'ai'
 
 export interface ChatPanelProps {

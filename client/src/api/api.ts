@@ -62,6 +62,7 @@ export const regenerateMessage = async (messages: Message[], setMessages: React.
   if (messages.length === 0) return [];
   try {
     const lastMessage = messages[messages.length - 1];
+    setMessages(currentMessages => currentMessages.slice(0, -1))
     await appendBotAnswer(lastMessage.content, messages.slice(0, -1), setMessages)
   } catch (error) {
     console.error("Error regenerating response:", error);
@@ -69,40 +70,51 @@ export const regenerateMessage = async (messages: Message[], setMessages: React.
   }
 };
 
-export const appendBotAnswer = async (question: string, messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
-  const reader = await handleFetchAnswer(question);
-  let firstToken = true;
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    firstToken = parseAnswer(value, messages, setMessages, firstToken)
-    if (value.includes("event:finish")) {
-      break;
+async function* streamAsyncIterator(reader: ReadableStreamDefaultReader) {
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) return;
+      yield value;
     }
+  } finally {
+    reader.releaseLock();
   }
 }
 
-export const parseAnswer = (value: string, messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>, firstToken: boolean): boolean => {
-  if (value.startsWith("data:")) {
-    const data = JSON.parse(value.substring(5).split("\n")[0]);
-    if (firstToken === false) {
-      const lastMessage = messages[messages.length - 1];
-      lastMessage.content += data.messageToken;
-      if (data.relevantDocuments) {
-        const documentLinks = parseRelevantDocuments(data.relevantDocuments)
-        if (documentLinks) {
-          lastMessage.content += `\n\n Relevant documents: ${documentLinks}`;
-        }
+export const appendBotAnswer = async (question: string, setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
+  try {
+    const reader = await handleFetchAnswer(question);
+    let firstToken = true;
+    for await (const value of streamAsyncIterator(reader)) {
+      if (value.startsWith("data:")) {
+        const data = JSON.parse(value.substring(5).split("\n")[0]);
+        setMessages(currentMessages => {
+          let updatedMessages = [...currentMessages];
+          if (!firstToken) {
+            const lastMessage = { ...updatedMessages[updatedMessages.length - 1] };
+            lastMessage.content += data.messageToken;
+            if (data.relevantDocuments) {
+              const documentLinks = parseRelevantDocuments(data.relevantDocuments);
+              if (documentLinks) {
+                lastMessage.content += `\n\n Relevant documents: ${documentLinks}`;
+              }
+            }
+            updatedMessages[updatedMessages.length - 1] = lastMessage;
+          } else {
+            updatedMessages.push({ content: data.messageToken, role: "bot", id: `message_${updatedMessages.length}`, liked: false, disliked: false });
+            firstToken = false;
+          }
+          return updatedMessages;
+        });
+
+      } if (value.includes("event:finish")) {
+        break;
       }
-      const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage }]);
-      setMessages(updatedMessages)
-    } else {
-      messages.push({ content: data.messageToken, role: "bot", id: "34", liked: false, disliked: false })
-      setMessages(messages);
-      firstToken = false
     }
+  } catch (error) {
+    console.error("Error fetching or processing the answer:", error);
   }
-  return firstToken;
 }
 
 export const parseRelevantDocuments = (documents: [{ topic: string; source: string }]): string => {
