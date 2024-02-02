@@ -8,10 +8,11 @@ import { FooterText } from '@/components/footer'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import { Message } from '@/lib/types'
 import { handleFetchAnswer } from '@/api/api';
+import { StreamingTextResponse } from 'ai'
 
 export interface ChatPanelProps {
   title?: string
-  append: (val: { content: string; role: string; }) => void;
+  append: (val: { content: string | StreamingTextResponse; role: string; }) => void;
   isLoading: boolean;
   reload: () => void;
   messages: Message[];
@@ -84,12 +85,6 @@ export function ChatPanel({
               await append({
                 content: value,
                 role: 'user'
-              })
-              const response = await handleFetchAnswer(value);
-              console.log(response)
-              await append({
-                content: response.message,
-                role: 'bot'
               })
             }}
             input={input}

@@ -1,4 +1,5 @@
 import { ChatType, Message } from '@/lib/types';
+import { SetStateAction } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -7,7 +8,7 @@ interface Document {
   topic: string
 }
 
-export const removeChat = (id: string) => {};
+export const removeChat = (id: string) => { };
 
 export const handleLikeMessage = (): boolean => {
   return true;
@@ -44,10 +45,7 @@ export const fetchChatMessages = (chatId: string): Message[] => {
   return []
 }
 
-export const handleFetchAnswer = async (question: string): Promise<{
-  message: string,
-  relevantDocuments: Document[]
-}> => {
+export const handleFetchAnswer = async (question: string): Promise<ReadableStreamDefaultReader<string>> => {
   const response = await fetch(`${API_URL}/chat`, {
     method: 'POST',
     headers: {
@@ -57,59 +55,59 @@ export const handleFetchAnswer = async (question: string): Promise<{
       text: question
     })
   });
-  let accumulated = "";
-  const reader = response.body.pipeThrough(new TextDecoderStream()).getReader()
-  while (true) {
-    const { value, done } = await reader.read();
-    if (done) break;
-    accumulated += value;
-    if (value.includes("event:finish")) {
-      break;
-    }
-  }
-
-  return parseAnswer(accumulated);
+  return response.body.pipeThrough(new TextDecoderStream()).getReader()
 };
 
-function parseAnswer(accumulated: string) {
-  const result = {
-    message: "",
-    relevantDocuments: []
-  };
-  const lines = accumulated.split('\n');
-  for (const line of lines) {
-    if (line.startsWith("data:")) {
-      try {
-        const data = JSON.parse(line.substring(5));
-        result.message += data.messageToken;
-
-        if (data.relevantDocuments) {
-          result.relevantDocuments.push(...data.relevantDocuments);
-
-          const documentLinks = data.relevantDocuments.map((doc: Document) => `[${doc.topic}](${doc.source})`
-          ).join(', ');
-
-          if (documentLinks) {
-            result.message += `\n\n Relevant documents: ${documentLinks}`;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing JSON:", error);
-      }
-    }
-  }
-  return result;
-}
-
-export const regenerateMessage = async (messages: Message[]): Promise<Message[]> => {
+export const regenerateMessage = async (messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<Message[]> => {
   if (messages.length === 0) return [];
   try {
     const lastMessage = messages[messages.length - 1];
-    const newContent = await handleFetchAnswer(lastMessage.content);
-    const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage, content: newContent.message }]);
-    return updatedMessages;
+    await appendBotAnswer(lastMessage.content, messages.slice(0, -1), setMessages)
   } catch (error) {
     console.error("Error regenerating response:", error);
     return [];
   }
 };
+
+export const appendBotAnswer = async (question: string, messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
+  const reader = await handleFetchAnswer(question);
+  let firstToken = true;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    firstToken = parseAnswer(value, messages, setMessages, firstToken)
+    if (value.includes("event:finish")) {
+      break;
+    }
+  }
+}
+
+export const parseAnswer = (value: string, messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>, firstToken: boolean): boolean => {
+  if (value.startsWith("data:")) {
+    const data = JSON.parse(value.substring(5).split("\n")[0]);
+    if (firstToken === false) {
+      const lastMessage = messages[messages.length - 1];
+      lastMessage.content += data.messageToken;
+      if (data.relevantDocuments) {
+        const documentLinks = parseRelevantDocuments(data.relevantDocuments)
+        if (documentLinks) {
+          lastMessage.content += `\n\n Relevant documents: ${documentLinks}`;
+        }
+      }
+      const updatedMessages = messages.slice(0, -1).concat([{ ...lastMessage }]);
+      setMessages(updatedMessages)
+    } else {
+      messages.push({ content: data.messageToken, role: "bot", id: "34", liked: false, disliked: false })
+      setMessages(messages);
+      firstToken = false
+    }
+  }
+  return firstToken;
+}
+
+export const parseRelevantDocuments = (documents: [{ topic: string; source: string }]): string => {
+  const relevantDocuments: Document[] = [];
+  relevantDocuments.push(...documents);
+  const documentLinks = documents.map((doc: Document) => `[${doc.topic}](${doc.source})`).join(', ');
+  return documentLinks;
+}

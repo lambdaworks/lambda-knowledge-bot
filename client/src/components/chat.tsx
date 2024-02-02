@@ -17,7 +17,8 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { ChatType, Message } from '@/lib/types'
 import React from 'react'
-import { fetchChatMessages, handleFetchAnswer, regenerateMessage } from '@/api/api'
+import { appendBotAnswer, fetchChatMessages, handleFetchAnswer, regenerateMessage } from '@/api/api'
+import { StreamingTextResponse } from 'ai'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -48,13 +49,12 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const { stop, isLoading } = { stop: () => { }, isLoading: false }
 
   async function reload() {
-    const updatedMessages: Message[] = await regenerateMessage(messages);
-    setMessages(updatedMessages);
+    await regenerateMessage(messages, setMessages);
   }
-
-  const append = (val: { content: string; role: string }) => {
-    setMessages(initialMessages => [...initialMessages, { content: val.content, role: val.role, id: "34" }]);
-
+  
+  const append = async (val: { content: string; role: string }) => {
+    messages.push({ content: val.content, role: val.role, id: "34", liked:false, disliked: false })
+    setMessages(messages)
     if (messages.length === 0 && val.role === "user") {
       const newChat: ChatType = {
         id: String(chats.length + 1),
@@ -66,8 +66,9 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
       };
       setChats([...chats, newChat])
     }
+    await appendBotAnswer(val.content, messages, setMessages);
   };
-  
+
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
