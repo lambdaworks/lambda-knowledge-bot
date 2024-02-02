@@ -63,7 +63,7 @@ export const regenerateMessage = async (messages: Message[], setMessages: React.
   try {
     const lastMessage = messages[messages.length - 1];
     setMessages(currentMessages => currentMessages.slice(0, -1))
-    await appendBotAnswer(lastMessage.content, messages.slice(0, -1), setMessages)
+    await appendBotAnswer(lastMessage.content, setMessages)
   } catch (error) {
     console.error("Error regenerating response:", error);
     return [];

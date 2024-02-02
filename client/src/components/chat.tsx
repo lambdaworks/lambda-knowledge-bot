@@ -69,7 +69,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
       setChats([...chats, newChat])
     }
     setIsLoading(true)
-    await appendBotAnswer(val.content, messages, setMessages);
+    await appendBotAnswer(val.content, setMessages);
     setIsLoading(false)
   };
 
