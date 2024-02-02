@@ -34,6 +34,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   )
   const [previewTokenDialog, setPreviewTokenDialog] = useState(false)
   const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
+  const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState<string>("")
   const chat = chats.find(chat => chat.id === id);
   const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
@@ -46,8 +47,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
     const messages = chats.find(chat => chat.id.toString() === chatId)?.messages;
     setMessages(messages || []);
   }, []);
-  const { stop, isLoading } = { stop: () => { }, isLoading: false }
-
+  const { stop } = { stop: () => { } }
   async function reload() {
     await regenerateMessage(messages, setMessages);
   }
@@ -55,7 +55,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const append = async (val: { content: string; role: string }) => {
     messages.push({ content: val.content, role: val.role, id: "34", liked:false, disliked: false })
     setMessages(messages)
-    if (messages.length === 0 && val.role === "user") {
+    if (messages.length === 1 && val.role === "user") {
       const newChat: ChatType = {
         id: String(chats.length + 1),
         title: val.content,
@@ -66,7 +66,9 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
       };
       setChats([...chats, newChat])
     }
+    setIsLoading(true)
     await appendBotAnswer(val.content, messages, setMessages);
+    setIsLoading(false)
   };
 
   return (
