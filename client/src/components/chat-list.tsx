@@ -9,11 +9,12 @@ export interface ChatList {
 
 export function ChatList({ messages }: ChatList) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const SCROLL_BOTTOM_OFFSET = 200;
 
   const scrollToBottom = () => {
     setTimeout(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 200);
+    }, SCROLL_BOTTOM_OFFSET);
   };
 
   useEffect(() => {

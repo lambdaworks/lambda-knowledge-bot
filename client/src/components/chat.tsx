@@ -39,6 +39,8 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const chat = chats.find(chat => chat.id === id);
   const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
 
+  const emailKey = "email";
+
   React.useEffect(() => {
     const parts = window.location.href.split("/");
     const chatId = parts[parts.length - 1];
@@ -62,7 +64,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
         id: String(chats.length + 1),
         title: val.content,
         createdAt: new Date(),
-        userId: sessionStorage.getItem("email") || "",
+        userId: sessionStorage.getItem(emailKey) || "",
         path: String(chats.length + 1),
         messages: []
       };
@@ -70,6 +72,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
     }
     setIsLoading(true)
     await appendBotAnswer(val.content, setMessages);
+    console.log("tu")
     setIsLoading(false)
   };
 

@@ -1,11 +1,15 @@
 import { ChatType, Message } from '@/lib/types';
-import { SetStateAction } from 'react';
-
 const API_URL = import.meta.env.VITE_API_URL;
 
 interface Document {
   source: string,
   topic: string
+}
+class BreakChainError extends Error {
+  constructor() {
+    super();
+    this.name = "BreakChainError"; // Custom name for the error type
+  }
 }
 
 export const removeChat = (id: string) => { };
@@ -58,15 +62,15 @@ export const handleFetchAnswer = async (question: string): Promise<ReadableStrea
   return response.body.pipeThrough(new TextDecoderStream()).getReader()
 };
 
-export const regenerateMessage = async (messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<Message[]> => {
-  if (messages.length === 0) return [];
+export const regenerateMessage = async (messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<void> => {
+  if (messages.length === 0) return;
   try {
     const lastMessage = messages[messages.length - 1];
     setMessages(currentMessages => currentMessages.slice(0, -1))
     await appendBotAnswer(lastMessage.content, setMessages)
   } catch (error) {
     console.error("Error regenerating response:", error);
-    return [];
+    return;
   }
 };
 
@@ -87,35 +91,41 @@ export const appendBotAnswer = async (question: string, setMessages: React.Dispa
     const reader = await handleFetchAnswer(question);
     let firstToken = true;
     for await (const value of streamAsyncIterator(reader)) {
-      if (value.startsWith("data:")) {
-        const data = JSON.parse(value.substring(5).split("\n")[0]);
-        setMessages(currentMessages => {
-          let updatedMessages = [...currentMessages];
-          if (!firstToken) {
-            const lastMessage = { ...updatedMessages[updatedMessages.length - 1] };
-            lastMessage.content += data.messageToken;
-            if (data.relevantDocuments) {
-              const documentLinks = parseRelevantDocuments(data.relevantDocuments);
-              if (documentLinks) {
-                lastMessage.content += `\n\n Relevant documents: ${documentLinks}`;
-              }
-            }
-            updatedMessages[updatedMessages.length - 1] = lastMessage;
-          } else {
-            updatedMessages.push({ content: data.messageToken, role: "bot", id: `message_${updatedMessages.length}`, liked: false, disliked: false });
-            firstToken = false;
-          }
-          return updatedMessages;
-        });
-
-      } if (value.includes("event:finish")) {
-        break;
+      firstToken = await parseAnswer(value, setMessages, firstToken);
+      if (value.includes("event:finish")) {
+        return;
       }
     }
   } catch (error) {
-    console.error("Error fetching or processing the answer:", error);
+    return;
   }
 }
+
+export const parseAnswer = async (value: string, setMessages: React.Dispatch<React.SetStateAction<Message[]>>, firstToken: boolean): Promise<boolean> => {
+  if (value.startsWith("data:")) {
+    const data = JSON.parse(value.substring(5).split("\n")[0]);
+    setMessages(currentMessages => {
+      const updatedMessages = [...currentMessages];
+      if (!firstToken) {
+        const lastMessageIndex = updatedMessages.length - 1;
+        const lastMessage = updatedMessages[lastMessageIndex];
+        lastMessage.content += data.messageToken;
+        if (data.relevantDocuments) {
+          const documentLinks = parseRelevantDocuments(data.relevantDocuments);
+          if (documentLinks) {
+            lastMessage.content += `\n\n Relevant documents: ${documentLinks}`;
+          }
+        }
+        updatedMessages[lastMessageIndex] = lastMessage;
+      } else {
+        updatedMessages.push({ content: data.messageToken, role: "bot", id: `message_${updatedMessages.length}`, liked: false, disliked: false });
+      }
+      return updatedMessages;
+    });
+    firstToken = false;
+  }
+  return firstToken;
+};
 
 export const parseRelevantDocuments = (documents: [{ topic: string; source: string }]): string => {
   const relevantDocuments: Document[] = [];
