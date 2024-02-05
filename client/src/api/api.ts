@@ -117,7 +117,6 @@ export const parseAnswer = async (value: string, setMessages: React.Dispatch<Rea
         const lastMessageIndex = updatedMessages.length - 1;
         const lastMessage = updatedMessages[lastMessageIndex];
         lastMessage.content += data.messageToken;
-        console.log(data.messageToken)
         if (data.relevantDocuments) {
           const documentLinks = parseRelevantDocuments(data.relevantDocuments);
           if (documentLinks) {
@@ -143,7 +142,6 @@ export const parseData = (value: string): { messageToken: string, relevantDocume
   const sentences = value.split("\n");
   sentences.forEach(sentence => {
     if (sentence.startsWith("data:")) {
-      console.log(sentence);
       const val = JSON.parse(sentence.substring(5));
       data.messageToken += val.messageToken;
       if (val.relevantDocuments) {
