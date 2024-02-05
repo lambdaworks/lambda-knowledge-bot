@@ -1,6 +1,5 @@
+import { LOCAL_STORAGE_KEYS } from '@/types/storage'
 import React from 'react'
-
-const sidebarKey: LocalStorageKey = "sidebar";
 
 interface SidebarContext {
   isSidebarOpen: boolean
@@ -29,7 +28,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   const [isLoading, setLoading] = React.useState(true)
 
   React.useEffect(() => {
-    const value = localStorage.getItem(sidebarKey)
+    const value = localStorage.getItem(LOCAL_STORAGE_KEYS.sidebar)
     if (value) {
       setSidebarOpen(JSON.parse(value))
     }
@@ -39,7 +38,7 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
   const toggleSidebar = () => {
     setSidebarOpen(value => {
       const newState = !value
-      localStorage.setItem(sidebarKey, JSON.stringify(newState))
+      localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, JSON.stringify(newState))
       return newState
     })
   }

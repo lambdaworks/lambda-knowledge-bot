@@ -7,23 +7,21 @@ import { SidebarToggle } from './sidebar-toggle';
 import LoginButton from './login-button';
 import { Button } from './ui/button';
 import { useAuth0 } from "@auth0/auth0-react";
-import { isEmpty, LocalStorageKey, SessionStorageKey } from '@/api/util';
+import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from '@/types/storage';
+import { isEmpty } from '@/utils/helper';
 
 function UserOrLogin() {
-  const sidebarKey: LocalStorageKey = "sidebar";
-  const emailKey: SessionStorageKey = "email";
-
-  const [email, setEmail] = useState(sessionStorage.getItem(emailKey))
+  const [email, setEmail] = useState(sessionStorage.getItem(SESSION_STORAGE_KEYS.email))
   const { logout } = useAuth0();
 
   const handleLogout = async () => {
     await logout();
-    sessionStorage.removeItem(emailKey)
-    localStorage.setItem(sidebarKey, "false")
+    sessionStorage.removeItem(SESSION_STORAGE_KEYS.email)
+    localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "false")
   };
 
   useEffect(() => {
-    const storedEmail = sessionStorage.getItem(emailKey);
+    const storedEmail = sessionStorage.getItem(SESSION_STORAGE_KEYS.email);
     setEmail(storedEmail);
   }, []);
   return (

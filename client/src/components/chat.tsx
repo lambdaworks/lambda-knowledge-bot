@@ -18,6 +18,7 @@ import { Input } from './ui/input'
 import { ChatType, Message } from '@/lib/types'
 import React from 'react'
 import { appendBotAnswer, regenerateMessage, stopGenerating } from '@/api/api'
+import { SESSION_STORAGE_KEYS } from '@/types/storage'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -38,8 +39,6 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const chat = chats.find(chat => chat.id === id);
   const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
 
-  const emailKey = "email";
-
   React.useEffect(() => {
     const parts = window.location.href.split("/");
     const chatId = parts[parts.length - 1];
@@ -48,25 +47,25 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
     const messages = chats.find(chat => chat.id.toString() === chatId)?.messages;
     setMessages(messages || []);
   }, []);
-  const { stop } = { stop: () => {
-    stopGenerating()
-    setIsLoading(false)
-   } }
+  const stop = (): void => {
+    stopGenerating();
+    setIsLoading(false);
+  }
   async function reload() {
     setIsLoading(true)
     await regenerateMessage(messages, setMessages);
     setIsLoading(false)
   }
-  
+
   const append = async (val: { content: string; role: string }) => {
-    messages.push({ content: val.content, role: val.role, id: "34", liked:false, disliked: false })
+    messages.push({ content: val.content, role: val.role, id: "34", liked: false, disliked: false })
     setMessages(messages)
     if (messages.length === 1 && val.role === "user") {
       const newChat: ChatType = {
         id: String(chats.length + 1),
         title: val.content,
         createdAt: new Date(),
-        userId: sessionStorage.getItem(emailKey) || "",
+        userId: sessionStorage.getItem(SESSION_STORAGE_KEYS.email) || "",
         path: String(chats.length + 1),
         messages: []
       };

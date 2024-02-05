@@ -75,9 +75,8 @@ export function ChatShareDialog({
             disabled={isSharePending}
             onClick={() => {
               // @ts-expect-error
-              startShareTransition(async () => {
-                copyShareLink(chat as Chat)
-              })
+              startShareTransition(async () => copyShareLink(chat as Chat)
+              )
             }}
           >
             {isSharePending ? (

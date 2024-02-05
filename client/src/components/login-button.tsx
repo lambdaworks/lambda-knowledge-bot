@@ -1,18 +1,15 @@
 import { useAuth0 } from "@auth0/auth0-react";
 import { Button } from "./ui/button";
-import { LocalStorageKey } from "@/api/util";
-
-const emailKey = "email";
+import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from "@/types/storage";
 
 interface LoginButtonProps {
   setEmail: (value: string | null) => void;
 }
 
 const LoginButton: React.FC<LoginButtonProps> = ({ setEmail }) => {
-  const sidebarKey: LocalStorageKey = "sidebar";
   const { user, loginWithRedirect, isAuthenticated } = useAuth0();
   if (user?.email) {
-    sessionStorage.setItem(emailKey, user?.email)
+    sessionStorage.setItem(SESSION_STORAGE_KEYS.email, user?.email)
     setEmail(user.email)
   }
   if (!isAuthenticated) {
@@ -21,7 +18,7 @@ const LoginButton: React.FC<LoginButtonProps> = ({ setEmail }) => {
         <Button variant="outline" className="btn btn-primary loginBtn"
           onClick={() => {
             loginWithRedirect();
-            localStorage.setItem(sidebarKey, "true")
+            localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "true")
           }}>Log In</Button>
       </div>
     );
