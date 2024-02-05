@@ -92,6 +92,7 @@ export const appendBotAnswer = async (question: string, setMessages: React.Dispa
     let firstToken = true;
     for await (const value of streamAsyncIterator(reader)) {
       firstToken = await parseAnswer(value, setMessages, firstToken);
+
       if (value.includes("event:finish")) {
         return;
       }
@@ -103,13 +104,14 @@ export const appendBotAnswer = async (question: string, setMessages: React.Dispa
 
 export const parseAnswer = async (value: string, setMessages: React.Dispatch<React.SetStateAction<Message[]>>, firstToken: boolean): Promise<boolean> => {
   if (value.startsWith("data:")) {
-    const data = JSON.parse(value.substring(5).split("\n")[0]);
     setMessages(currentMessages => {
+      const data = parseData(value);
       const updatedMessages = [...currentMessages];
       if (!firstToken) {
         const lastMessageIndex = updatedMessages.length - 1;
         const lastMessage = updatedMessages[lastMessageIndex];
         lastMessage.content += data.messageToken;
+        console.log(data.messageToken)
         if (data.relevantDocuments) {
           const documentLinks = parseRelevantDocuments(data.relevantDocuments);
           if (documentLinks) {
@@ -127,9 +129,26 @@ export const parseAnswer = async (value: string, setMessages: React.Dispatch<Rea
   return firstToken;
 };
 
-export const parseRelevantDocuments = (documents: [{ topic: string; source: string }]): string => {
-  const relevantDocuments: Document[] = [];
-  relevantDocuments.push(...documents);
+export const parseData = (value: string): { messageToken: string, relevantDocuments: Document[] } => {
+  const data: { messageToken: string, relevantDocuments: Document[] } = {
+    messageToken: "",
+    relevantDocuments: []
+  }
+  const sentences = value.split("\n");
+  sentences.forEach(sentence => {
+    if (sentence.startsWith("data:")) {
+      console.log(sentence);
+      const val = JSON.parse(sentence.substring(5));
+      data.messageToken += val.messageToken;
+      if (val.relevantDocuments) {
+        data.relevantDocuments = [...data.relevantDocuments, ...val.relevantDocuments]
+      }
+    }
+  });
+  return data;
+}
+
+export const parseRelevantDocuments = (documents: Document[]): string => {
   const documentLinks = documents.map((doc: Document) => `[${doc.topic}](${doc.source})`).join(', ');
   return documentLinks;
 }
