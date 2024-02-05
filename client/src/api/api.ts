@@ -1,6 +1,8 @@
 import { ChatType, Message } from '@/lib/types';
 const API_URL = import.meta.env.VITE_API_URL;
 
+export let stopGeneratingAnswer: boolean = false;
+
 interface Document {
   source: string,
   topic: string
@@ -74,7 +76,12 @@ export const regenerateMessage = async (messages: Message[], setMessages: React.
   }
 };
 
+export function stopGenerating() {
+  stopGeneratingAnswer = true;
+}
+
 async function* streamAsyncIterator(reader: ReadableStreamDefaultReader) {
+  stopGeneratingAnswer = false;
   try {
     while (true) {
       const { done, value } = await reader.read();
@@ -92,8 +99,7 @@ export const appendBotAnswer = async (question: string, setMessages: React.Dispa
     let firstToken = true;
     for await (const value of streamAsyncIterator(reader)) {
       firstToken = await parseAnswer(value, setMessages, firstToken);
-
-      if (value.includes("event:finish")) {
+      if (value.includes("event:finish") || stopGeneratingAnswer) {
         return;
       }
     }

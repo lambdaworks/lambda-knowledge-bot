@@ -17,8 +17,7 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { ChatType, Message } from '@/lib/types'
 import React from 'react'
-import { appendBotAnswer, fetchChatMessages, handleFetchAnswer, regenerateMessage } from '@/api/api'
-import { StreamingTextResponse } from 'ai'
+import { appendBotAnswer, regenerateMessage, stopGenerating } from '@/api/api'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -49,7 +48,10 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
     const messages = chats.find(chat => chat.id.toString() === chatId)?.messages;
     setMessages(messages || []);
   }, []);
-  const { stop } = { stop: () => { } }
+  const { stop } = { stop: () => {
+    stopGenerating()
+    setIsLoading(false)
+   } }
   async function reload() {
     setIsLoading(true)
     await regenerateMessage(messages, setMessages);
