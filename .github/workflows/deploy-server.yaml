@@ -32,7 +32,7 @@ jobs:
 
       - name: Create Dockerfile
         run: |
-          apt install sbt -y 
+          sudo apt install sbt -y 
           cd server/ && sbt docker:stage
 
       - name: Build and push
