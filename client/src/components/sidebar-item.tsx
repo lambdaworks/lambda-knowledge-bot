@@ -1,4 +1,3 @@
-
 import { motion } from 'framer-motion'
 
 import { buttonVariants } from '@/components/ui/button'
@@ -9,12 +8,12 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import { type Chat } from '@/lib/types'
+import { type ChatType } from '@/lib/types'
 import { cn } from '@/lib/utils'
 
 interface SidebarItemProps {
   index: number
-  chat: Chat
+  chat: ChatType
   children: React.ReactNode
 }
 
@@ -45,7 +44,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
         ease: 'easeIn'
       }}
     >
-      <div className="absolute left-2 top-1 flex h-6 w-6 items-center justify-center">
+      <div className="text-gray-800 absolute left-2 top-1 flex h-6 w-6 items-center justify-center">
         {chat.sharePath ? (
           <Tooltip delayDuration={1000}>
             <TooltipTrigger
@@ -64,12 +63,12 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
         href={chat.path}
         className={cn(
           buttonVariants({ variant: 'ghost' }),
-          'group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10',
+          'text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10',
           isActive && 'bg-zinc-200 pr-16 font-semibold dark:bg-zinc-800'
         )}
       >
         <div
-          className="relative max-h-5 flex-1 select-none overflow-hidden text-ellipsis break-all"
+          className="title relative max-h-5 flex-1 select-none overflow-hidden text-ellipsis break-all"
           title={chat.title}
         >
           <span className="whitespace-nowrap">

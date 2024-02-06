@@ -45,3 +45,25 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .text-user-color {
+    --user-message-color: #C0C0C0;
+    color: var(--user-message-color);
+  }
+
+  .whiteIcon {
+    --user-message-color: #C0C0C0;
+    background-color: var(--user-message-color);
+    cursor: pointer;
+  }
+
+  .bg-light-background {
+    background-color: #a4a4c1;
+  }
+
+  .logo-container {
+    width: 50px;
+    height: 50px;
+  }
+}

@@ -13,18 +13,26 @@ import {
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
 import { IconSpinner } from '@/components/ui/icons'
+import { ChatType } from '@/lib/types'
+import { removeAllUserChats } from '@/api/api'
 
 interface ClearHistoryProps {
   isEnabled: boolean
-  clearChats: () => void
+  clearChats: React.Dispatch<React.SetStateAction<ChatType[]>>
 }
 
 export function ClearHistory({
   isEnabled = false,
-  clearChats
+  clearChats,
 }: ClearHistoryProps) {
   const [open, setOpen] = React.useState(false)
   const [isPending, startTransition] = React.useTransition()
+
+  function removeAllChats() {
+    removeAllUserChats()
+    clearChats([]);
+    setOpen(false);
+  }
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
@@ -48,10 +56,7 @@ export function ClearHistory({
             disabled={isPending}
             onClick={event => {
               event.preventDefault()
-              startTransition(() => {
-                clearChats();
-                console.log("CLEARED")
-              })
+              startTransition(removeAllChats)
             }}
           >
             {isPending && <IconSpinner className="mr-2 animate-spin" />}
