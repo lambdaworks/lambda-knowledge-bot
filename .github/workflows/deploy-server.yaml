@@ -1,4 +1,4 @@
-name: Deploy to AWS
+name: Deploy server to AWS
 
 on:
   # push:
@@ -30,11 +30,16 @@ jobs:
         id: sha_short
         run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
+      - name: Create Dockerfile
+        run: |
+          apt install sbt -y 
+          cd server/ && sbt docker:stage
+
       - name: Build and push
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: server/
+          context: /server/modules/knowledge-bot/target/docker/stage/
           push: false
           tags: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
