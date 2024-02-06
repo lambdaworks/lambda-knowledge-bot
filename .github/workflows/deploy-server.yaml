@@ -51,7 +51,7 @@ jobs:
         id: build
         uses: docker/build-push-action@v5
         with:
-          context: $GITHUB_WORKSPACE/server/modules/knowledge-bot/target/docker/stage
+          context: /home/runner/work/lambda-knowledge-bot/lambda-knowledge-bot//server/modules/knowledge-bot/target/docker/stage/
           push: false
           tags: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
