@@ -1,0 +1,65 @@
+name: Deploy to AWS
+
+on:
+  # push:
+  #   branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  setup:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+  
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::195175520793:role/lambdaworks-bot-github-actions
+          aws-region: us-east-1
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Set short sha
+        id: sha_short
+        run: echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      - name: Create Dockerfile
+        run: |
+          apt install sbt -y 
+          cd server/ && sbt docker:stage
+
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v5
+        with:
+          context: /server/modules/knowledge-bot/target/docker/stage/
+          push: false
+          tags: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-client:${{ steps.sha_short.outputs.sha_short }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Render Amazon ECS task definition
+        id: render-task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: aws/task-definition-client.json
+          container-name: server
+          image: ${{ steps.build.outputs.imageid }}
+
+      - name: echo
+        run: echo ${{ steps.build.outputs.imageid }}
+
+      # - name: Deploy to Amazon ECS service
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   with:
+      #     task-definition: ${{ steps.render-task-def.outputs.task-definition }}
+      #     service: lambda-knowledge-bot-client
+      #     cluster: lambdaworks-cluster
+      #     force-new-deployment: true
