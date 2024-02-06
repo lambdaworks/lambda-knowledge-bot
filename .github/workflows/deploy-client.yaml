@@ -1,4 +1,4 @@
-name: Deploy to client to AWS
+name: Deploy client to AWS
 
 on:
   # push:
