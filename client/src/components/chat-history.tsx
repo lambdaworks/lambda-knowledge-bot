@@ -10,7 +10,7 @@ interface ChatHistoryProps {
   setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
-export function ChatHistory({chats = [], setChats}: ChatHistoryProps) {
+export function ChatHistory({ chats = [], setChats }: ChatHistoryProps) {
   const handleNewChatClick = () => {
     window.location.href = window.location.origin
   };
@@ -40,7 +40,7 @@ export function ChatHistory({chats = [], setChats}: ChatHistoryProps) {
           </div>
         }
       >
-        <SidebarList chats={chats} setChats={setChats}/>
+        <SidebarList chats={chats} setChats={setChats} />
       </React.Suspense>
     </div>
   )

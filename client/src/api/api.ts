@@ -1,17 +1,12 @@
 import { ChatType, Message } from '@/lib/types';
-const API_URL = import.meta.env.VITE_API_URL;
+import { SESSION_STORAGE_KEYS } from '@/types/storage';
 
+const API_URL = import.meta.env.VITE_API_URL;
 export let stopGeneratingAnswer: boolean = false;
 
 interface Document {
   source: string,
   topic: string
-}
-class BreakChainError extends Error {
-  constructor() {
-    super();
-    this.name = "BreakChainError"; // Custom name for the error type
-  }
 }
 
 export const removeChat = (id: string) => { };
@@ -51,25 +46,38 @@ export const fetchChatMessages = (chatId: string): Message[] => {
   return []
 }
 
-export const handleFetchAnswer = async (question: string): Promise<ReadableStreamDefaultReader<string>> => {
+const getHeaders = (chatId: string | undefined) => {
+  const headers: { [key: string]: string } = { 'Content-Type': 'application/json' };
+  if (sessionStorage.getItem(`${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`)) {
+    const token = sessionStorage.getItem(`${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`);
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+export const handleFetchAnswer = async (chatId: string | undefined, question: string): Promise<ReadableStreamDefaultReader<string>> => {
   const response = await fetch(`${API_URL}/chat`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
+    headers: getHeaders(chatId),
     body: JSON.stringify({
       text: question
     })
   });
+  if (response.headers) {
+    const token = response.headers.get("set-authorization");
+    if (token) {
+      sessionStorage.setItem(`${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`, token);
+    }
+  }
   return response.body.pipeThrough(new TextDecoderStream()).getReader()
 };
 
-export const regenerateMessage = async (messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<void> => {
+export const regenerateMessage = async (id: string | undefined, messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<void> => {
   if (messages.length === 0) return;
   try {
     const lastMessage = messages[messages.length - 1];
     setMessages(currentMessages => currentMessages.slice(0, -1))
-    await appendBotAnswer(lastMessage.content, setMessages)
+    await appendBotAnswer(id, lastMessage.content, setMessages)
   } catch (error) {
     console.error("Error regenerating response:", error);
     return;
@@ -93,9 +101,9 @@ async function* streamAsyncIterator(reader: ReadableStreamDefaultReader) {
   }
 }
 
-export const appendBotAnswer = async (question: string, setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
+export const appendBotAnswer = async (id: string | undefined, question: string, setMessages: React.Dispatch<React.SetStateAction<Message[]>>) => {
   try {
-    const reader = await handleFetchAnswer(question);
+    const reader = await handleFetchAnswer(id, question);
     let firstToken = true;
     for await (const value of streamAsyncIterator(reader)) {
       firstToken = await parseAnswer(value, setMessages, firstToken);

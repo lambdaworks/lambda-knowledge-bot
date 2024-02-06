@@ -30,7 +30,8 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
 
   private val sessionTransport: SetSessionTransport = HeaderST
 
-  val corsSettings: CorsSettings = CorsSettings.defaultSettings.withAllowGenericHttpRequests(true)
+  val corsSettings: CorsSettings =
+    CorsSettings.defaultSettings.withAllowGenericHttpRequests(true).withExposedHeaders(Seq("Set-Authorization"))
 
   private def postChatMessage(
     message: ChatMessage,

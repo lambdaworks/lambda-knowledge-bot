@@ -1,7 +1,5 @@
 import React from 'react'
 import { toast } from 'react-hot-toast'
-
-import { type Chat } from '@/lib/types'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,16 +11,17 @@ import {
   AlertDialogTitle
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { IconPencil, IconShare, IconSpinner, IconTrash } from '@/components/ui/icons'
+import { IconShare, IconSpinner, IconTrash } from '@/components/ui/icons'
 import { ChatShareDialog } from '@/components/chat-share-dialog'
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { ChatType } from '@/lib/types'
 
 interface SidebarActionsProps {
-  chat: Chat
+  chat: ChatType
   removeChat: () => void
   shareChat: () => void
 }

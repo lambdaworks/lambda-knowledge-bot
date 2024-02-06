@@ -3,18 +3,7 @@ import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
 import { EmptyScreen } from '@/components/empty-screen'
 import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { useState } from 'react'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
 import { ChatType, Message } from '@/lib/types'
 import React from 'react'
 import { appendBotAnswer, regenerateMessage, stopGenerating } from '@/api/api'
@@ -28,15 +17,9 @@ export interface ChatProps extends React.ComponentProps<'div'> {
 }
 
 export function Chat({ id, className, chats = [], setChats }: ChatProps) {
-  const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
-    'ai-token',
-    null
-  )
-  const [previewTokenDialog, setPreviewTokenDialog] = useState(false)
-  const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
   const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState<string>("")
-  const chat = chats.find(chat => chat.id === id);
+  let chat: ChatType | undefined = chats.find(chat => chat.id === id);
   const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
 
   React.useEffect(() => {
@@ -53,7 +36,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   }
   async function reload() {
     setIsLoading(true)
-    await regenerateMessage(messages, setMessages);
+    await regenerateMessage(chat?.id, messages, setMessages);
     setIsLoading(false)
   }
 
@@ -69,10 +52,11 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
         path: String(chats.length + 1),
         messages: []
       };
+      chat = newChat;
       setChats([...chats, newChat])
     }
     setIsLoading(true)
-    await appendBotAnswer(val.content, setMessages);
+    await appendBotAnswer(chat?.id, val.content, setMessages);
     setIsLoading(false)
   };
 
@@ -98,42 +82,6 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
         input={input}
         setInput={setInput}
       />
-
-      <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enter your OpenAI Key</DialogTitle>
-            <DialogDescription>
-              If you have not obtained your OpenAI API key, you can do so by{' '}
-              <a
-                href="https://platform.openai.com/signup/"
-                className="underline"
-              >
-                signing up
-              </a>{' '}
-              on the OpenAI website. This is only necessary for preview
-              environments so that the open source community can test the app.
-              The token will be saved to your browser&apos;s local storage under
-              the name <code className="font-mono">ai-token</code>.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={previewTokenInput}
-            placeholder="OpenAI API key"
-            onChange={e => setPreviewTokenInput(e.target.value)}
-          />
-          <DialogFooter className="items-center">
-            <Button
-              onClick={() => {
-                setPreviewToken(previewTokenInput)
-                setPreviewTokenDialog(false)
-              }}
-            >
-              Save Token
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

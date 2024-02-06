@@ -1,5 +1,3 @@
-
-
 import { ChatType } from '@/lib/types'
 import { AnimatePresence, motion } from 'framer-motion'
 

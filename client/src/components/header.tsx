@@ -23,7 +23,11 @@ function UserOrLogin() {
   useEffect(() => {
     const storedEmail = sessionStorage.getItem(SESSION_STORAGE_KEYS.email);
     setEmail(storedEmail);
+    if (!isEmpty(storedEmail)) {
+      sessionStorage.setItem(SESSION_STORAGE_KEYS.sidebar, "false");
+    }
   }, []);
+
   return (
     <>
       {!isEmpty(email) && (
@@ -52,13 +56,6 @@ export function Header() {
       <a target='__blank' className="logo-container" style={{ marginLeft: 5 }}>
         <img src={Logo} alt='Logo'></img>
       </a>
-      <div className="flex items-center">
-        <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
-          <SidebarMobile>
-            <ChatHistory chats={[]} />
-          </SidebarMobile>
-        </React.Suspense>
-      </div>
       <div className="flex-1" />
       <div className="flex items-center">
         <React.Suspense fallback={<div className="flex-1 overflow-auto" />}>
