@@ -26,7 +26,7 @@
             }
         }
     ],
-    "family": "lambda-knowledge-bot",
+    "family": "lambda-knowledge-bot-server",
     "taskRoleArn": "arn:aws:iam::195175520793:role/ecs-task-role",
     "executionRoleArn": "arn:aws:iam::195175520793:role/ecs-execution-role",
     "networkMode": "bridge",
