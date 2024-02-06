@@ -57,6 +57,9 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - name: echo imageid
+        run: echo ${{ steps.build.outputs.imageid }}
+        
       - name: Render Amazon ECS task definition
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
