@@ -45,7 +45,7 @@ object KnowledgeBotActor {
 
       val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
 
-      val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_), true)
+      val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_), withMemory = true)
       val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
       new KnowledgeBotActor(session, routerActor, retrieverActor).acceptMessage()
@@ -92,6 +92,7 @@ private final class KnowledgeBotActor(
                 response("source_documents")
                   .as[List[LangchainDocument]]
                   .map(d => Document(source = d.metadata("source"), topic = d.metadata("topic")))
+                  .distinct
               )
             ),
             "finish"
