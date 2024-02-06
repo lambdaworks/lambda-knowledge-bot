@@ -69,11 +69,11 @@ object Main {
     new InteractionFeedbackRepository(dynamoDB, config.getString("dynamodb.tableName"))
 
   def main(args: Array[String]): Unit = {
-    Source
-      .combine(Source.single(()), listenerService.listen())(Merge(_))
-      .mapAsync(1)(_ => documentFetcher.fetch())
-      .runForeach(vectorDatabase.upsert)
-      .onComplete(_ => typedSystem.terminate())
+    //Source
+    //  .combine(Source.single(()), listenerService.listen())(Merge(_))
+    //  .mapAsync(1)(_ => documentFetcher.fetch())
+    //  .runForeach(vectorDatabase.upsert)
+    //  .onComplete(_ => typedSystem.terminate())
 
     val client: SlackRtmClient = SlackRtmClient(slackToken)(system)
 
