@@ -47,12 +47,9 @@ jobs:
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: .aws/task-definition-client.json
+          task-definition: aws/task-definition-client.json
           container-name: server
           image: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-client:${{ steps.sha_short.outputs.sha_short }}
-
-      - name: echo
-        run: echo ${{ steps.build.outputs.imageid }}
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

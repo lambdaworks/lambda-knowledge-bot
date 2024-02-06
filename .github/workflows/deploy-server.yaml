@@ -56,12 +56,15 @@ jobs:
           tags: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+      
+      - name: ls
+        run: ls -lah
 
       - name: Render Amazon ECS task definition
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: .aws/task-definition-server.json
+          task-definition: aws/task-definition-server.json
           container-name: server
           image: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
 
