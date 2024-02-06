@@ -1,7 +1,5 @@
 import React from 'react'
 import { toast } from 'react-hot-toast'
-
-import { type Chat } from '@/lib/types'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,9 +18,10 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { ChatType } from '@/lib/types'
 
 interface SidebarActionsProps {
-  chat: Chat
+  chat: ChatType
   removeChat: () => void
   shareChat: () => void
 }
@@ -39,7 +38,7 @@ export function SidebarActions({
 
   return (
     <>
-      <div className="space-x-1">
+      <div className="text-gray-800 space-x-1 hover:text-white">
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

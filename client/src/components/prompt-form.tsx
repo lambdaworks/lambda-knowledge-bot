@@ -25,7 +25,7 @@ export function PromptForm({
 }: PromptProps) {
   const { formRef, onKeyDown } = useEnterSubmit()
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
- 
+
   React.useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()

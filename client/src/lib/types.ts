@@ -2,10 +2,12 @@ export interface Message {
   id: string;
   createdAt?: Date;
   content: string;
+  liked: boolean;
+  disliked: boolean
   role: 'system' | 'user' | 'assistant' | 'function' | 'data' | 'tool';
 }
 
-export interface Chat extends Record<string, any> {
+export interface ChatType extends Record<string, any> {
   id: string
   title: string
   createdAt: Date
@@ -18,6 +20,6 @@ export interface Chat extends Record<string, any> {
 export type ServerActionResult<Result> = Promise<
   | Result
   | {
-      error: string
-    }
+    error: string
+  }
 >
