@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  setup:
+  deploy:
     permissions:
       id-token: write
       contents: read
