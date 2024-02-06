@@ -9,6 +9,8 @@ import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
 import akka.util.Timeout
+import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
+import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import com.softwaremill.session.SessionDirectives.{optionalSession, setSession}
 import com.softwaremill.session.SessionOptions.oneOff
 import com.softwaremill.session.{HeaderST, SetSessionTransport}
@@ -28,6 +30,9 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
 
   private val sessionTransport: SetSessionTransport = HeaderST
 
+  val corsSettings: CorsSettings =
+    CorsSettings.defaultSettings.withAllowGenericHttpRequests(true).withExposedHeaders(Seq("Set-Authorization"))
+
   private def postChatMessage(
     message: ChatMessage,
     session: Option[SessionData]
@@ -39,13 +44,15 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
       )
 
   val chatRoutes: Route =
-    path("chat") {
-      post {
-        optionalSession(oneOff, sessionTransport) { session =>
-          entity(as[ChatMessage]) { message =>
-            onSuccess(postChatMessage(message, session)) { (source, session) =>
-              setSession(oneOff, sessionTransport, SessionData(session)) {
-                complete(source)
+    cors(corsSettings) {
+      path("chat") {
+        post {
+          optionalSession(oneOff, sessionTransport) { session =>
+            entity(as[ChatMessage]) { message =>
+              onSuccess(postChatMessage(message, session)) { (source, session) =>
+                setSession(oneOff, sessionTransport, SessionData(session)) {
+                  complete(source)
+                }
               }
             }
           }

@@ -3,35 +3,63 @@ import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
 import { EmptyScreen } from '@/components/empty-screen'
 import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog'
 import { useState } from 'react'
-import { Button } from './ui/button'
-import { Input } from './ui/input'
-import { Message } from '@/lib/types'
+import { ChatType, Message } from '@/lib/types'
+import React from 'react'
+import { appendBotAnswer, regenerateMessage, stopGenerating } from '@/api/api'
+import { SESSION_STORAGE_KEYS } from '@/types/storage'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
   id?: string
+  chats: ChatType[]
+  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
-export function Chat({ className }: ChatProps) {
-  const [previewToken, setPreviewToken] = useLocalStorage<string | null>(
-    'ai-token',
-    null
-  )
-  const [previewTokenDialog, setPreviewTokenDialog] = useState(false)
-  const [previewTokenInput, setPreviewTokenInput] = useState(previewToken ?? '')
+export function Chat({ id, className, chats = [], setChats }: ChatProps) {
+  const [isLoading, setIsLoading] = useState(false)
   const [input, setInput] = useState<string>("")
-  const { messages, append, reload, stop, isLoading } =
-    { messages: [], append: () => {}, reload: () => {}, stop: () => {}, isLoading: false }
+  let chat: ChatType | undefined = chats.find(chat => chat.id === id);
+  const [messages, setMessages] = React.useState<Message[]>(chat?.messages || []);
+
+  React.useEffect(() => {
+    const parts = window.location.href.split("/");
+    const chatId = parts[parts.length - 1];
+    // add condition when chat list is empty to fetch from BE
+    // const messages = fetchChatMessages(chatId);
+    const messages = chats.find(chat => chat.id.toString() === chatId)?.messages;
+    setMessages(messages || []);
+  }, []);
+  const stop = (): void => {
+    stopGenerating();
+    setIsLoading(false);
+  }
+  async function reload() {
+    setIsLoading(true)
+    await regenerateMessage(chat?.id, messages, setMessages);
+    setIsLoading(false)
+  }
+
+  const append = async (val: { content: string; role: string }) => {
+    messages.push({ content: val.content, role: val.role, id: "34", liked: false, disliked: false })
+    setMessages(messages)
+    if (messages.length === 1 && val.role === "user") {
+      const newChat: ChatType = {
+        id: String(chats.length + 1),
+        title: val.content,
+        createdAt: new Date(),
+        userId: sessionStorage.getItem(SESSION_STORAGE_KEYS.email) || "",
+        path: String(chats.length + 1),
+        messages: []
+      };
+      chat = newChat;
+      setChats([...chats, newChat])
+    }
+    setIsLoading(true)
+    await appendBotAnswer(chat?.id, val.content, setMessages);
+    setIsLoading(false)
+  };
+
   return (
     <>
       <div className={cn('pb-[200px] pt-4 md:pt-10', className)}>
@@ -45,6 +73,7 @@ export function Chat({ className }: ChatProps) {
         )}
       </div>
       <ChatPanel
+        title="title"
         isLoading={isLoading}
         stop={stop}
         append={append}
@@ -53,42 +82,6 @@ export function Chat({ className }: ChatProps) {
         input={input}
         setInput={setInput}
       />
-
-      <Dialog open={previewTokenDialog} onOpenChange={setPreviewTokenDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Enter your OpenAI Key</DialogTitle>
-            <DialogDescription>
-              If you have not obtained your OpenAI API key, you can do so by{' '}
-              <a
-                href="https://platform.openai.com/signup/"
-                className="underline"
-              >
-                signing up
-              </a>{' '}
-              on the OpenAI website. This is only necessary for preview
-              environments so that the open source community can test the app.
-              The token will be saved to your browser&apos;s local storage under
-              the name <code className="font-mono">ai-token</code>.
-            </DialogDescription>
-          </DialogHeader>
-          <Input
-            value={previewTokenInput}
-            placeholder="OpenAI API key"
-            onChange={e => setPreviewTokenInput(e.target.value)}
-          />
-          <DialogFooter className="items-center">
-            <Button
-              onClick={() => {
-                setPreviewToken(previewTokenInput)
-                setPreviewTokenDialog(false)
-              }}
-            >
-              Save Token
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   )
 }
