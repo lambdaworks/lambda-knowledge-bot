@@ -13,8 +13,12 @@ import io.lambdaworks.langchain.schema.retriever.BaseRetriever
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.{PyQuote, SeqConverters}
 
-class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit, withMemory: Boolean = false)
-    extends LLMRetriever {
+class GPTRetriever(
+  retriever: BaseRetriever,
+  onNewToken: String => Unit,
+  tokenCount: Int = 1,
+  withMemory: Boolean = false
+) extends LLMRetriever {
   def retrieve(query: String): Map[String, py.Any] = {
     val output = qaChain(query)
 
@@ -47,7 +51,7 @@ class GPTRetriever(retriever: BaseRetriever, onNewToken: String => Unit, withMem
       "CallbackHandler",
       py"(${callbacks.base.BaseModule.BaseCallbackHandler}, )",
       Map(
-        "token_queue"      -> py.module("queue").Queue(maxsize = 3),
+        "token_queue"      -> py.module("queue").Queue(maxsize = tokenCount),
         "on_llm_new_token" -> py"lambda self, token, **kwargs: self.onLLMNewToken(self, token)",
         "on_llm_end"       -> py"lambda self, response, **kwargs: self.consumeQueue(self)",
         "onLLMNewToken"    -> py.Any.from(onLLMNewToken),
