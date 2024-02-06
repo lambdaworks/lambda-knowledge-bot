@@ -61,7 +61,7 @@ jobs:
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: aws/task-definition.json
+          task-definition: aws/task-definition-server.json
           container-name: server
           image: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
 
