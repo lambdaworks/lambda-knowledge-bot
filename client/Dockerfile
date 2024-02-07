@@ -8,4 +8,4 @@ COPY . .
 
 EXPOSE 5173
 
-CMD ["yarn", "run"]
+CMD ["yarn", "dev"]
