@@ -7,7 +7,7 @@
             "memoryReservation": 512,
             "portMappings": [
                 {
-                    "containerPort": 8080,
+                    "containerPort": 8000,
                     "hostPort": 0,
                     "protocol": "tcp"
                 }
@@ -29,7 +29,7 @@
     "family": "lambda-knowledge-bot-server",
     "taskRoleArn": "arn:aws:iam::195175520793:role/ecs-task-role",
     "executionRoleArn": "arn:aws:iam::195175520793:role/ecs-execution-role",
-    "networkMode": "bridge",
+    "networkMode": "host",
     "requiresCompatibilities": [
         "EC2"
     ]

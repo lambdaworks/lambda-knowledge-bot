@@ -50,6 +50,12 @@ jobs:
           task-definition: aws/task-definition-client.json
           container-name: server
           image: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-client:${{ steps.sha_short.outputs.sha_short }}
+          environment-variables: |
+            VITE_API_URL=${{ secrets.VITE_API_URL }}
+            VITE_FRONT_URL=${{ secrets.VITE_FRONT_URL }}
+            VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}
+            VITE_DOMAINE=${{ secrets.VITE_DOMAINE }}
+            VITE_STAGE=${{ secrets.VITE_STAGE }}
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1

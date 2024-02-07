@@ -4,10 +4,10 @@
             "name": "lambda-knowledge-bot-client",
             "image": "",
             "cpu": 0,
-            "memoryReservation": 256,
+            "memoryReservation": 512,
             "portMappings": [
                 {
-                    "containerPort": 8080,
+                    "containerPort": 5173,
                     "hostPort": 0,
                     "protocol": "tcp"
                 }
@@ -26,10 +26,10 @@
             }
         }
     ],
-    "family": "lambda-knowledge-bot",
+    "family": "lambda-knowledge-bot-client",
     "taskRoleArn": "arn:aws:iam::195175520793:role/ecs-task-role",
     "executionRoleArn": "arn:aws:iam::195175520793:role/ecs-execution-role",
-    "networkMode": "bridge",
+    "networkMode": "host",
     "requiresCompatibilities": [
         "EC2"
     ]
