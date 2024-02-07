@@ -38,7 +38,7 @@ object SlackKnowledgeBotActor {
       Behaviors.withStash(500) { buffer =>
         val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
 
-        val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_))
+        val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_), tokenCount = 3)
         val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
         new SlackKnowledgeBotActor(buffer, client, feedbackStoreActor, messageHandlerActor, retrieverActor)

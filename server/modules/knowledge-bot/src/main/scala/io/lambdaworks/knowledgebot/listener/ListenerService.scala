@@ -1,11 +1,10 @@
 package io.lambdaworks.knowledgebot.listener
 
 import akka.NotUsed
-import akka.actor.typed.ActorSystem
+import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
 
-import scala.concurrent.ExecutionContext
-
 trait ListenerService {
-  def listen()(implicit ec: ExecutionContext, system: ActorSystem[Nothing]): Source[Unit, NotUsed]
+  def listenSource: Source[Unit, NotUsed]
+  def routes: Route
 }

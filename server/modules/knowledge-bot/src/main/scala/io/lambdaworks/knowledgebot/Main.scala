@@ -4,6 +4,9 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
 import akka.actor.{ActorSystem => UntypedActorSystem, Props, Scheduler}
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.server.directives.RouteDirectives
 import akka.stream.Materializer
 import akka.stream.scaladsl.{Merge, Source}
 import com.amazonaws.services.dynamodbv2.document.DynamoDB
@@ -24,6 +27,8 @@ import io.lambdaworks.knowledgebot.vectordb.qdrant.QdrantDatabase
 import slack.rtm.SlackRtmClient
 
 import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.DurationInt
+import scala.util.Try
 
 object Main {
   val config: Config = ConfigFactory.load()
@@ -34,20 +39,24 @@ object Main {
   implicit val materializer: Materializer                 = Materializer.matFromSystem(typedSystem)
   implicit val scheduler: Scheduler                       = system.scheduler
 
-  val listenerService: ListenerService =
-    new GitHubPushListenerService(
-      config.getString("github.webhook.host"),
-      config.getInt("github.webhook.port"),
-      config.getString("github.webhook.secret")
-    )
+  val listenerService: Option[ListenerService] =
+    Try {
+      new GitHubPushListenerService(
+        config.getString("github.webhook.host"),
+        config.getInt("github.webhook.port"),
+        config.getString("github.webhook.secret")
+      )
+    }.toOption
 
-  val documentFetcher: DocumentFetcher =
-    new GitHubDocumentFetcher(
-      config.getString("github.token"),
-      config.getString("github.user"),
-      config.getString("github.repo"),
-      config.getString("clickup.commonDocUrl")
-    )
+  val documentFetcher: Option[DocumentFetcher] =
+    Try {
+      new GitHubDocumentFetcher(
+        config.getString("github.token"),
+        config.getString("github.user"),
+        config.getString("github.repo"),
+        config.getString("clickup.commonDocUrl")
+      )
+    }.toOption
 
   val vectorDatabase: VectorDatabase = new QdrantDatabase(
     config.getString("openai.apiKey"),
@@ -56,7 +65,7 @@ object Main {
     config.getString("qdrant.collectionName")
   )
 
-  val slackToken: String = config.getString("slack.token")
+  val slackToken: Option[String] = Try(config.getString("slack.token")).toOption
 
   val client: AmazonDynamoDB = AmazonDynamoDBClientBuilder
     .standard()
@@ -69,21 +78,31 @@ object Main {
     new InteractionFeedbackRepository(dynamoDB, config.getString("dynamodb.tableName"))
 
   def main(args: Array[String]): Unit = {
-    Source
-      .combine(Source.single(()), listenerService.listen())(Merge(_))
-      .mapAsync(1)(_ => documentFetcher.fetch())
-      .runForeach(vectorDatabase.upsert)
-      .onComplete(_ => typedSystem.terminate())
+    listenerService.foreach { listenerService =>
+      Source
+        .combine(Source.single(()), listenerService.listenSource)(Merge(_))
+        .mapAsync(1)(_ => documentFetcher.get.fetch())
+        .runForeach(vectorDatabase.upsert)
+        .onComplete(_ => typedSystem.terminate())
+    }
 
-    val client: SlackRtmClient = SlackRtmClient(slackToken)(system)
+    slackToken.foreach { slackToken =>
+      val client: SlackRtmClient = SlackRtmClient(slackToken)(system)
 
-    val slackMessageListenerActor =
-      system.actorOf(Props(new SlackMessageListenerActor(client, interactionFeedbackRepository)))
+      val slackMessageListenerActor =
+        system.actorOf(Props(new SlackMessageListenerActor(client, interactionFeedbackRepository)))
 
-    client.addEventListener(slackMessageListenerActor)
+      client.addEventListener(slackMessageListenerActor)
+    }
 
     val messageRouterActor = system.spawn(MessageRouterActor(), "MessageRouterActor")
 
-    Http().newServerAt("0.0.0.0", 8000).bind(new ChatRoutes(messageRouterActor).chatRoutes)
+    val serverRoutes =
+      new ChatRoutes(messageRouterActor).chatRoutes ~ listenerService.fold[Route](RouteDirectives.reject)(_.routes)
+
+    Http()
+      .newServerAt(config.getString("api.host"), config.getInt("api.port"))
+      .bind(serverRoutes)
+      .map(_.addToCoordinatedShutdown(hardTerminationDeadline = 10.seconds))
   }
 }
