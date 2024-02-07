@@ -62,7 +62,7 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: aws/task-definition-server.json
-          container-name: server
+          container-name: lambda-knowledge-bot-server
           image: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
           environment-variables: |
             DYNAMODB_REGION=${{ secrets.DYNAMODB_REGION }}
