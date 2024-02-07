@@ -9,7 +9,7 @@ interface Document {
   topic: string
 }
 
-export const removeChat = (id: string) => { };
+export const removeChat = (id: string) => {};
 
 export const handleLikeMessage = (): boolean => {
   return true;
@@ -19,24 +19,20 @@ export const handleDislikeMessage = (): boolean => {
   return true;
 };
 
-export const removeAllUserChats = () => { }
+export const removeAllUserChats = () => {}
 
 export const handleFetchAllUserChats = (): ChatType[] => {
   const mock1: ChatType = {
     id: "1",
     title: "Example1",
-    userId: "user",
     createdAt: new Date(),
-    path: "1",
-    messages: [{ id: "1", content: "Hello!", role: "user", liked: false, disliked: false }, { id: "2", content: "How can I help you?", role: "bot", liked: false, disliked: false }]
+    messages: [{ id: "1", content: "Hello!", role: "user", liked: false, disliked: false }, { id: "2", content: "How can I help you?", role: "system", liked: false, disliked: false }]
   }
   const mock2: ChatType = {
     id: "2",
     title: "Example2",
-    userId: "user",
     createdAt: new Date(),
-    path: "2",
-    messages: [{ id: "2", content: "Hello", role: "user", liked: false, disliked: false }, { id: "2", content: "Hello", role: "bot", liked: false, disliked: false }]
+    messages: [{ id: "2", content: "Hello", role: "user", liked: false, disliked: false }, { id: "2", content: "Hello", role: "system", liked: false, disliked: false }]
   }
   return [mock1, mock2];
 };
@@ -133,11 +129,11 @@ export const parseAnswer = async (value: string, setMessages: React.Dispatch<Rea
         }
         updatedMessages[lastMessageIndex] = lastMessage;
       } else {
-        updatedMessages.push({ content: data.messageToken, role: "bot", id: `message_${updatedMessages.length}`, liked: false, disliked: false });
+        updatedMessages.push({ content: data.messageToken, role: "system", id: `message_${updatedMessages.length}`, liked: false, disliked: false });
       }
       return updatedMessages;
     });
-    firstToken = false;
+    return false;
   }
   return firstToken;
 };

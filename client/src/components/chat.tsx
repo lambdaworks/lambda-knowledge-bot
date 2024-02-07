@@ -7,7 +7,6 @@ import { useState } from 'react'
 import { ChatType, Message } from '@/lib/types'
 import React from 'react'
 import { appendBotAnswer, regenerateMessage, stopGenerating } from '@/api/api'
-import { SESSION_STORAGE_KEYS } from '@/types/storage'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
   initialMessages?: Message[]
@@ -48,8 +47,6 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
         id: String(chats.length + 1),
         title: val.content,
         createdAt: new Date(),
-        userId: sessionStorage.getItem(SESSION_STORAGE_KEYS.email) || "",
-        path: String(chats.length + 1),
         messages: []
       };
       chat = newChat;
