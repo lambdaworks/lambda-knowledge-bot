@@ -23,8 +23,8 @@ function UserOrLogin() {
   useEffect(() => {
     const storedEmail = sessionStorage.getItem(SESSION_STORAGE_KEYS.email);
     setEmail(storedEmail);
-    if (!isEmpty(storedEmail)) {
-      sessionStorage.setItem(SESSION_STORAGE_KEYS.sidebar, "false");
+    if (isEmpty(storedEmail)) {
+      localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "false");
     }
   }, []);
 

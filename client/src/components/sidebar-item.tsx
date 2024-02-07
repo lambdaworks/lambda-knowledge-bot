@@ -1,5 +1,4 @@
 import { motion } from 'framer-motion'
-
 import { buttonVariants } from '@/components/ui/button'
 import { IconMessage, IconUsers } from '@/components/ui/icons'
 import {
@@ -10,6 +9,7 @@ import {
 import { useLocalStorage } from '@/lib/hooks/use-local-storage'
 import { type ChatType } from '@/lib/types'
 import { cn } from '@/lib/utils'
+import React from 'react'
 
 interface SidebarItemProps {
   index: number
@@ -60,7 +60,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
         )}
       </div>
       <a
-        href={chat.path}
+        href={chat.id}
         className={cn(
           buttonVariants({ variant: 'ghost' }),
           'text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10',
