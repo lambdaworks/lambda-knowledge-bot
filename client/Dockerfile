@@ -2,9 +2,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci --production //yarn install && yarn vite
-
+COPY package*.json yarn.lock
+RUN yarn install --frozen --only=production
 COPY . .
 
 FROM node:20-alpine AS runner
@@ -13,6 +12,6 @@ WORKDIR /app
 
 COPY --from=builder /app/dist .
 
-EXPOSE 80
+EXPOSE 5173
 
-CMD ["npm", "start"]
+CMD ["yarn", "start"]
