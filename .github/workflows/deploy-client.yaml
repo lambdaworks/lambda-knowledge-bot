@@ -61,6 +61,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: lambda-knowledge-bot-client
+          service: knowle-client
           cluster: lambdaworks-cluster
           force-new-deployment: true
