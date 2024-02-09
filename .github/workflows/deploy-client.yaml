@@ -29,13 +29,11 @@ jobs:
 
       - name: Set env
         run: |
-          cat << EOF >> .env
-          VITE_API_URL=${{ secrets.VITE_API_URL }}
-          VITE_FRONT_URL=${{ secrets.VITE_FRONT_URL }}
-          VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}
-          VITE_DOMAINE=${{ secrets.VITE_CLIENT_ID }}
-          VITE_STAGE=${{ secrets.VITE_CLIENT_ID }}
-          EOF
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
+          echo "VITE_FRONT_URL=${{ secrets.VITE_FRONT_URL }}" >> .env
+          echo "VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}" >> .env
+          echo "VITE_DOMAINE=${{ secrets.VITE_DOMAINE }}" >> .env
+          echo "VITE_STAGE=${{ secrets.VITE_STAGE }}" >> .env
           source .env
 
       - name: Build
