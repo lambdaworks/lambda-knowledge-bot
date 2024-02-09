@@ -4,7 +4,7 @@ import React from 'react'
 import { type DialogProps } from '@radix-ui/react-dialog'
 import { toast } from 'react-hot-toast'
 
-import { type Chat } from '@/lib/types'
+import { ChatType } from '@/lib/types'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -18,7 +18,7 @@ import { IconSpinner } from '@/components/ui/icons'
 import { useCopyToClipboard } from '@/lib/hooks/use-copy-to-clipboard'
 
 interface ChatShareDialogProps extends DialogProps {
-  chat: Pick<Chat, 'title' | 'messages'>
+  chat: Pick<ChatType, 'title' | 'messages'>
   shareChat: () => void
   onCopy: () => void
 }
@@ -33,7 +33,7 @@ export function ChatShareDialog({
   const [isSharePending, startShareTransition] = React.useTransition()
 
   const copyShareLink = React.useCallback(
-    async (chat: Chat) => {
+    async (chat: ChatType) => {
       const url = new URL(window.location.href)
       if (chat.id)
         url.pathname = chat.id

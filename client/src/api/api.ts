@@ -9,8 +9,6 @@ interface Document {
   topic: string
 }
 
-export const removeChat = (id: string) => {};
-
 export const handleLikeMessage = (): boolean => {
   return true;
 };
@@ -37,11 +35,6 @@ export const handleFetchAllUserChats = (): ChatType[] => {
   return [mock1, mock2];
 };
 
-export const fetchChatMessages = (chatId: string): Message[] => {
-  // fetches chat messages
-  return []
-}
-
 const getHeaders = (chatId: string | undefined) => {
   const headers: { [key: string]: string } = { 'Content-Type': 'application/json' };
   if (sessionStorage.getItem(`${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`)) {
@@ -65,7 +58,13 @@ export const handleFetchAnswer = async (chatId: string | undefined, question: st
       sessionStorage.setItem(`${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`, token);
     }
   }
-  return response.body.pipeThrough(new TextDecoderStream()).getReader()
+  const responseBody = response.body;
+
+  if (!responseBody) {
+    throw new Error('Response body is undefined');
+  }
+
+  return responseBody.pipeThrough(new TextDecoderStream()).getReader();
 };
 
 export const regenerateMessage = async (id: string | undefined, messages: Message[], setMessages: React.Dispatch<React.SetStateAction<Message[]>>): Promise<void> => {

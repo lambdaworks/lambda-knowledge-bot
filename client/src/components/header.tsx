@@ -9,9 +9,11 @@ import { Button } from './ui/button';
 import { useAuth0 } from "@auth0/auth0-react";
 import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from '@/types/storage';
 import { isEmpty } from '@/utils/helper';
+import { ChatType } from '@/lib/types';
 
 function UserOrLogin() {
   const [email, setEmail] = useState(sessionStorage.getItem(SESSION_STORAGE_KEYS.email))
+  const [chats, setChats] = useState<ChatType[]>([])
   const { logout } = useAuth0();
 
   const handleLogout = async () => {
@@ -33,7 +35,7 @@ function UserOrLogin() {
       {!isEmpty(email) && (
         <>
           <SidebarMobile>
-            <ChatHistory chats={[]} />
+            <ChatHistory chats={chats} setChats={setChats} />
           </SidebarMobile>
           <SidebarToggle />
         </>

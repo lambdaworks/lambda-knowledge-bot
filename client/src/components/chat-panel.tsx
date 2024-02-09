@@ -10,7 +10,7 @@ import { StreamingTextResponse } from 'ai'
 
 export interface ChatPanelProps {
   title?: string
-  append: (val: { content: string | StreamingTextResponse; role: string; }) => void;
+  append: (val: { content: string | StreamingTextResponse; role: "function" | "data" | "system" | "user" | "assistant" | "tool" | "bot"; }) => Promise<void>;
   isLoading: boolean;
   reload: () => void;
   messages: Message[];
@@ -79,7 +79,7 @@ export function ChatPanel({
         </div>
         <div className="px-4 py-2 space-y-4 border-t shadow-lg bg-background sm:rounded-t-xl sm:border md:py-4">
           <PromptForm
-            onSubmit={async value => {
+            onSubmit={async (value) => {
               await append({
                 content: value,
                 role: 'user'

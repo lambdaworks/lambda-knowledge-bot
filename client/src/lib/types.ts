@@ -4,7 +4,7 @@ export interface Message {
   content: string;
   liked: boolean;
   disliked: boolean
-  role: 'system' | 'user' | 'assistant' | 'function' | 'data' | 'tool';
+  role: 'system' | 'user' | 'assistant' | 'function' | 'data' | 'tool' | 'bot';
 }
 
 export interface ChatType extends Record<string, any> {

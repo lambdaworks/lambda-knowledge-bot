@@ -1,3 +1,6 @@
+import React from 'react'
+import { StreamingTextResponse } from 'ai'
+
 import { cn } from '@/lib/utils'
 import { ChatList } from '@/components/chat-list'
 import { ChatPanel } from '@/components/chat-panel'
@@ -5,7 +8,6 @@ import { EmptyScreen } from '@/components/empty-screen'
 import { ChatScrollAnchor } from '@/components/chat-scroll-anchor'
 import { useState } from 'react'
 import { ChatType, Message } from '@/lib/types'
-import React from 'react'
 import { appendBotAnswer, regenerateMessage, stopGenerating } from '@/api/api'
 
 export interface ChatProps extends React.ComponentProps<'div'> {
@@ -39,13 +41,21 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
     setIsLoading(false)
   }
 
-  const append = async (val: { content: string; role: string }) => {
-    messages.push({ content: val.content, role: val.role, id: "34", liked: false, disliked: false })
+  interface AppendParams {
+    content: string | StreamingTextResponse;
+    role: "function" | "data" | "system" | "user" | "assistant" | "tool" | "bot";
+  }
+  
+  const append: (val: AppendParams) => Promise<void> = async (val) => {
+    // Ensure content is a string
+    const content = typeof val.content === 'string' ? val.content : '';
+  
+    messages.push({ content, role: val.role, id: "34", liked: false, disliked: false })
     setMessages(messages)
     if (messages.length === 1 && val.role === "user") {
       const newChat: ChatType = {
         id: String(chats.length + 1),
-        title: val.content,
+        title: content,
         createdAt: new Date(),
         messages: []
       };
@@ -53,7 +63,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
       setChats([...chats, newChat])
     }
     setIsLoading(true)
-    await appendBotAnswer(chat?.id, val.content, setMessages);
+    await appendBotAnswer(chat?.id, content, setMessages);
     setIsLoading(false)
   };
 

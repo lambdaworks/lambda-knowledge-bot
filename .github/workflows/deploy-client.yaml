@@ -21,11 +21,6 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::195175520793:role/lambdaworks-bot-github-actions
           aws-region: us-east-1
-      
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
 
       - name: Setup node
         uses: actions/setup-node@v4
