@@ -1,8 +1,8 @@
 name: Deploy client to AWS
 
 on:
-  # push:
-  #   branches: [ "main" ]
+  push:
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
@@ -29,6 +29,7 @@ jobs:
 
       - name: Set env
         run: |
+          cd ${{ secrets.CLIENT_PATH }}
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
           echo "VITE_FRONT_URL=${{ secrets.VITE_FRONT_URL }}" >> .env
           echo "VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}" >> .env
@@ -48,5 +49,5 @@ jobs:
           yarn install
           yarn vite build
 
-      - name: Deploy to Amazon ECS service
+      - name: Deploy to S3
         run: aws s3 sync ${{ secrets.CLIENT_PATH }}/dist/ s3://${{ secrets.BUCKET }}
