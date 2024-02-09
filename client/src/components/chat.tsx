@@ -47,7 +47,6 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   }
   
   const append: (val: AppendParams) => Promise<void> = async (val) => {
-    console.log('append', val)
     // Ensure content is a string
     const content = typeof val.content === 'string' ? val.content : '';
   

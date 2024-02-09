@@ -50,7 +50,6 @@ export function PromptForm({
             <button
               onClick={e => {
                 e.preventDefault()
-                console.log("REFRESH")
               }}
               className={cn(
                 buttonVariants({ size: 'sm', variant: 'outline' }),
