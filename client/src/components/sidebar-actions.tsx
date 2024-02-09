@@ -34,7 +34,7 @@ export function SidebarActions({
 
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
-  const [isRemovePending, startRemoveTransition] = React.useTransition()
+  const [isRemovePending, _] = React.useTransition()
 
   return (
     <>
@@ -89,7 +89,7 @@ export function SidebarActions({
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isRemovePending}
-              onClick={(event) => {
+              onClick={(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
                 event.preventDefault()
                 removeChat();
                 toast.success('Chat deleted')

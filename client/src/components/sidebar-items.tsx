@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion'
 
 import { SidebarActions } from '@/components/sidebar-actions'
 import { SidebarItem } from '@/components/sidebar-item'
-import { removeChat } from '@/api/api'
 
 interface SidebarItemsProps {
   chats?: ChatType[]
@@ -16,7 +15,7 @@ export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
 
   function removeUserChat(chat: ChatType) {
     const updatedChats = chats?.filter((currentChat) => chat.id !== currentChat.id);
-    removeChat(chat.id)
+    // removeChat(chat.id)
     setChats(updatedChats || [])
   }
 
