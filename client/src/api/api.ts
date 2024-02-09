@@ -45,7 +45,7 @@ const getHeaders = (chatId: string | undefined) => {
 }
 
 export const handleFetchAnswer = async (chatId: string | undefined, question: string): Promise<ReadableStreamDefaultReader<string>> => {
-  const response = await fetch(`${API_URL}/chat`, {
+  const response = await fetch(`https://${API_URL}/chat`, {
     method: 'POST',
     headers: getHeaders(chatId),
     body: JSON.stringify({
