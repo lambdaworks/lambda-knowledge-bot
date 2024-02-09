@@ -38,13 +38,15 @@ jobs:
 
       - name: Install yarn
         run: |
-          npm install --global yarn
+          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | sudo apt-key add -
+          echo "deb https://dl.yarnpkg.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/yarn.list
+          sudo apt update && sudo apt install yarn -y
 
       - name: Build app
         run: |
-          cd ${{ secrets.PATH }}
+          cd ${{ secrets.CLIENT_PATH }}
           yarn install
           yarn vite build
 
       - name: Deploy to Amazon ECS service
-        run: aws s3 sync ${{ secrets.PATH }}/dist/ s3://${{ secrets.BUCKET }}
+        run: aws s3 sync ${{ secrets.CLIENT_PATH }}/dist/ s3://${{ secrets.BUCKET }}
