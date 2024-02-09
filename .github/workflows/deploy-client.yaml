@@ -21,6 +21,30 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::195175520793:role/lambdaworks-bot-github-actions
           aws-region: us-east-1
+      
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set env
+        run: |
+          cat << EOF >> .env
+          VITE_API_URL="${{ secrets.VITE_API_URL }}"
+          VITE_FRONT_URL="${{ secrets.VITE_FRONT_URL }}"
+          VITE_CLIENT_ID="${{ secrets.VITE_CLIENT_ID }}"
+          VITE_DOMAINE="${{ secrets.VITE_CLIENT_ID }}"
+          VITE_STAGE="${{ secrets.VITE_CLIENT_ID }}"
+          EOF
+          source .env
+
+      - name: Build
+        run: yarn vite build
 
       - name: Deploy to Amazon ECS service
         run: aws s3 sync /home/runner/work/lambda-knowledge-bot/lambda-knowledge-bot/client/dist/ s3://knowle
