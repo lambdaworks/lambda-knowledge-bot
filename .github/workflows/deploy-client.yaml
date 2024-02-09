@@ -39,7 +39,7 @@ jobs:
           source .env
 
       - name: Build
-        run: yarn vite build
+        run: npm -i && yarn vite build
 
       - name: Deploy to Amazon ECS service
         run: aws s3 sync /home/runner/work/lambda-knowledge-bot/lambda-knowledge-bot/client/dist/ s3://knowle
