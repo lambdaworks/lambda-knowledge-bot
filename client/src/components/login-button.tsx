@@ -14,22 +14,24 @@ const LoginButton: React.FC<LoginButtonProps> = ({ setEmail }) => {
     setEmail(user.email);
   }
 
-  if (!isAuthenticated) {
-    return (
-      <div className="center-button">
-        <Button
-          variant="outline"
-          className="btn btn-primary loginBtn"
-          onClick={() => {
-            loginWithRedirect();
-            localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "true");
-          }}
-        >
-          Log In
-        </Button>
-      </div>
-    );
+  if (isAuthenticated) {
+    return null;
   }
+
+  return (
+    <div className="center-button">
+      <Button
+        variant="outline"
+        className="btn btn-primary loginBtn"
+        onClick={() => {
+          loginWithRedirect();
+          localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "true");
+        }}
+      >
+        Log In
+      </Button>
+    </div>
+  );
 };
 
 export default LoginButton;
