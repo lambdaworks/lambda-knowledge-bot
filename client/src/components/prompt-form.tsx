@@ -1,18 +1,18 @@
-import React, { ChangeEvent } from 'react'
-import Textarea from 'react-textarea-autosize'
-import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
-import { cn } from '@/lib/utils'
-import { Button, buttonVariants } from '@/components/ui/button'
+import React, { ChangeEvent } from "react";
+import Textarea from "react-textarea-autosize";
+import { useEnterSubmit } from "@/lib/hooks/use-enter-submit";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { IconArrowElbow, IconPlus } from "@/components/ui/icons";
 
 export interface PromptProps {
-  onSubmit: (value: string) => Promise<void>
-  isLoading: boolean
+  onSubmit: (value: string) => Promise<void>;
+  isLoading: boolean;
   input: string;
   setInput: (val: string) => void;
 }
@@ -21,26 +21,26 @@ export function PromptForm({
   onSubmit,
   input,
   setInput,
-  isLoading
+  isLoading,
 }: PromptProps) {
-  const { formRef, onKeyDown } = useEnterSubmit()
-  const inputRef = React.useRef<HTMLTextAreaElement>(null)
+  const { formRef, onKeyDown } = useEnterSubmit();
+  const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
   React.useEffect(() => {
     if (inputRef.current) {
-      inputRef.current.focus()
+      inputRef.current.focus();
     }
-  }, [])
+  }, []);
 
   return (
     <form
       onSubmit={async (e) => {
-        e.preventDefault()
+        e.preventDefault();
         if (!input?.trim()) {
-          return
+          return;
         }
-        setInput('')
-        await onSubmit(input)
+        setInput("");
+        await onSubmit(input);
       }}
       ref={formRef}
     >
@@ -48,12 +48,12 @@ export function PromptForm({
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={e => {
-                e.preventDefault()
+              onClick={(e) => {
+                e.preventDefault();
               }}
               className={cn(
-                buttonVariants({ size: 'sm', variant: 'outline' }),
-                'absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4'
+                buttonVariants({ size: "sm", variant: "outline" }),
+                "absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4"
               )}
             >
               <IconPlus />
@@ -68,7 +68,9 @@ export function PromptForm({
           onKeyDown={onKeyDown}
           rows={1}
           value={input}
-          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setInput(e.target.value)}
+          onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
+            setInput(e.target.value)
+          }
           placeholder="Send a message."
           spellCheck={false}
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
@@ -79,7 +81,7 @@ export function PromptForm({
               <Button
                 type="submit"
                 size="icon"
-                disabled={isLoading || input === ''}
+                disabled={isLoading || input === ""}
               >
                 <IconArrowElbow />
                 <span className="sr-only">Send message</span>
@@ -90,5 +92,5 @@ export function PromptForm({
         </div>
       </div>
     </form>
-  )
+  );
 }

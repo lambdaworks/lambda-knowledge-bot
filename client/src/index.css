@@ -48,12 +48,12 @@
 
 @layer utilities {
   .text-user-color {
-    --user-message-color: #C0C0C0;
+    --user-message-color: #c0c0c0;
     color: var(--user-message-color);
   }
 
   .whiteIcon {
-    --user-message-color: #C0C0C0;
+    --user-message-color: #c0c0c0;
     background-color: var(--user-message-color);
     cursor: pointer;
   }

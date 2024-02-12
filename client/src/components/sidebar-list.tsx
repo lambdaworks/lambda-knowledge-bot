@@ -1,6 +1,6 @@
-import { ClearHistory } from '@/components/clear-history'
-import { SidebarItems } from '@/components/sidebar-items'
-import { ChatType } from '@/lib/types';
+import { ClearHistory } from "@/components/clear-history";
+import { SidebarItems } from "@/components/sidebar-items";
+import { ChatType } from "@/lib/types";
 
 interface SidebarListProps {
   chats: ChatType[];
@@ -25,5 +25,5 @@ export function SidebarList({ chats, setChats }: SidebarListProps) {
         <ClearHistory clearChats={setChats} isEnabled={chats?.length > 0} />
       </div>
     </div>
-  )
+  );
 }

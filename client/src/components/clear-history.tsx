@@ -1,6 +1,6 @@
-import React from 'react'
+import React from "react";
 
-import { Button } from '@/components/ui/button'
+import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,26 +10,26 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger
-} from '@/components/ui/alert-dialog'
-import { IconSpinner } from '@/components/ui/icons'
-import { ChatType } from '@/lib/types'
-import { removeAllUserChats } from '@/api/api'
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { IconSpinner } from "@/components/ui/icons";
+import { ChatType } from "@/lib/types";
+import { removeAllUserChats } from "@/api/api";
 
 interface ClearHistoryProps {
-  isEnabled: boolean
-  clearChats: React.Dispatch<React.SetStateAction<ChatType[]>>
+  isEnabled: boolean;
+  clearChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
 export function ClearHistory({
   isEnabled = false,
   clearChats,
 }: ClearHistoryProps) {
-  const [open, setOpen] = React.useState(false)
-  const [isPending, startTransition] = React.useTransition()
+  const [open, setOpen] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
 
   function removeAllChats() {
-    removeAllUserChats()
+    removeAllUserChats();
     clearChats([]);
     setOpen(false);
   }
@@ -54,9 +54,9 @@ export function ClearHistory({
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
           <AlertDialogAction
             disabled={isPending}
-            onClick={event => {
-              event.preventDefault()
-              startTransition(removeAllChats)
+            onClick={(event) => {
+              event.preventDefault();
+              startTransition(removeAllChats);
             }}
           >
             {isPending && <IconSpinner className="mr-2 animate-spin" />}
@@ -65,5 +65,5 @@ export function ClearHistory({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
-  )
+  );
 }
