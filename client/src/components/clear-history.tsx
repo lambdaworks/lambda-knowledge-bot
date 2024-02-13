@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useTransition } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -25,17 +25,22 @@ export function ClearHistory({
   isEnabled = false,
   clearChats,
 }: ClearHistoryProps) {
-  const [open, setOpen] = React.useState(false);
-  const [isPending, startTransition] = React.useTransition();
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isPending, startTransition] = useTransition();
 
-  function removeAllChats() {
+  const removeAllChats = (): void => {
     removeAllUserChats();
     clearChats([]);
-    setOpen(false);
-  }
+    setIsOpen(false);
+  };
+
+  const handleDelete = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    startTransition(removeAllChats);
+  };
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
+    <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
       <AlertDialogTrigger asChild>
         <Button variant="ghost" disabled={!isEnabled || isPending}>
           {isPending && <IconSpinner className="mr-2" />}
@@ -52,13 +57,7 @@ export function ClearHistory({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
-          <AlertDialogAction
-            disabled={isPending}
-            onClick={(event) => {
-              event.preventDefault();
-              startTransition(removeAllChats);
-            }}
-          >
+          <AlertDialogAction disabled={isPending} onClick={handleDelete}>
             {isPending && <IconSpinner className="mr-2 animate-spin" />}
             Delete
           </AlertDialogAction>

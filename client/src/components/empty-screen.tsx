@@ -25,7 +25,7 @@ export function EmptyScreen({ setInput }: { setInput: (val: string) => void }) {
           You can start a conversation here or try the following examples:
         </p>
         <div className="mt-4 flex flex-col items-start space-y-2">
-          {exampleMessages.map((message, index) => (
+          {exampleMessages.map((message, index: number) => (
             <Button
               key={index}
               variant="link"

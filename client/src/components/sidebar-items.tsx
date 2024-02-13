@@ -1,6 +1,6 @@
-import { ChatType } from "@/lib/types";
 import { AnimatePresence, motion } from "framer-motion";
 
+import { ChatType } from "@/lib/types";
 import { SidebarActions } from "@/components/sidebar-actions";
 import { SidebarItem } from "@/components/sidebar-item";
 
@@ -10,22 +10,24 @@ interface SidebarItemsProps {
 }
 
 export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
-  if (!chats?.length) return null;
-
-  function removeUserChat(chat: ChatType) {
+  const removeUserChat = (chat: ChatType): void => {
     const updatedChats = chats?.filter(
       (currentChat) => chat.id !== currentChat.id
     );
     // removeChat(chat.id)
     setChats(updatedChats || []);
-  }
+  };
 
-  function shareChat() {}
+  const shareChat = () => {};
+
+  if (!chats?.length) {
+    return null;
+  }
 
   return (
     <AnimatePresence>
       {chats.map(
-        (chat, index) =>
+        (chat: ChatType, index: number) =>
           chat && (
             <motion.div
               key={chat?.id}

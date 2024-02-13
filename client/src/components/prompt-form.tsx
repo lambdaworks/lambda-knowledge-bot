@@ -1,5 +1,6 @@
-import React, { ChangeEvent } from "react";
+import React, { ChangeEvent, FormEvent, useEffect } from "react";
 import Textarea from "react-textarea-autosize";
+
 import { useEnterSubmit } from "@/lib/hooks/use-enter-submit";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -26,31 +27,29 @@ export function PromptForm({
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
   }, []);
 
+  const handleFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!input?.trim()) {
+      return;
+    }
+
+    setInput("");
+    await onSubmit(input);
+  };
+
   return (
-    <form
-      onSubmit={async (e) => {
-        e.preventDefault();
-        if (!input?.trim()) {
-          return;
-        }
-        setInput("");
-        await onSubmit(input);
-      }}
-      ref={formRef}
-    >
+    <form onSubmit={handleFormSubmit} ref={formRef}>
       <div className="relative flex flex-col w-full px-8 overflow-hidden max-h-60 grow bg-background sm:rounded-md sm:border sm:px-12">
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              onClick={(e) => {
-                e.preventDefault();
-              }}
+              onClick={(e) => e.preventDefault()}
               className={cn(
                 buttonVariants({ size: "sm", variant: "outline" }),
                 "absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4"

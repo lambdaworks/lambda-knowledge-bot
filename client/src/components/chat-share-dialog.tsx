@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useTransition } from "react";
 
 import { type DialogProps } from "@radix-ui/react-dialog";
 import { toast } from "react-hot-toast";
@@ -22,16 +22,18 @@ interface ChatShareDialogProps extends DialogProps {
   onCopy: () => void;
 }
 
+const TIME_OUT = 1000;
+
 export function ChatShareDialog({
   chat,
   onCopy,
   shareChat,
   ...props
 }: ChatShareDialogProps) {
-  const { copyToClipboard } = useCopyToClipboard({ timeout: 1000 });
-  const [isSharePending, startShareTransition] = React.useTransition();
+  const { copyToClipboard } = useCopyToClipboard({ timeout: TIME_OUT });
+  const [isSharePending, startShareTransition] = useTransition();
 
-  const copyShareLink = React.useCallback(
+  const copyShareLink = useCallback(
     async (chat: ChatType) => {
       const url = new URL(window.location.href);
       if (chat.id) url.pathname = chat.id;
@@ -53,6 +55,11 @@ export function ChatShareDialog({
     [copyToClipboard, onCopy]
   );
 
+  const handleCopy = (): void => {
+    // @ts-expect-error
+    startShareTransition(async () => copyShareLink(chat as Chat));
+  };
+
   return (
     <Dialog {...props}>
       <DialogContent>
@@ -69,13 +76,7 @@ export function ChatShareDialog({
           </div>
         </div>
         <DialogFooter className="items-center">
-          <Button
-            disabled={isSharePending}
-            onClick={() => {
-              // @ts-expect-error
-              startShareTransition(async () => copyShareLink(chat as Chat));
-            }}
-          >
+          <Button disabled={isSharePending} onClick={handleCopy}>
             {isSharePending ? (
               <>
                 <IconSpinner className="mr-2 animate-spin" />

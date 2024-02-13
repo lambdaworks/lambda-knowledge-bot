@@ -1,9 +1,10 @@
+import React from "react";
+
 import { cn } from "@/lib/utils";
 import { SidebarList } from "@/components/sidebar-list";
 import { buttonVariants } from "@/components/ui/button";
 import { IconPlus } from "@/components/ui/icons";
 import { ChatType } from "@/lib/types";
-import React from "react";
 
 interface ChatHistoryProps {
   chats: ChatType[];
@@ -11,9 +12,10 @@ interface ChatHistoryProps {
 }
 
 export function ChatHistory({ chats = [], setChats }: ChatHistoryProps) {
-  const handleNewChatClick = () => {
+  const handleNewChatClick = (): void => {
     window.location.href = window.location.origin;
   };
+
   return (
     <div className="flex flex-col h-full">
       <div className="px-2 my-4">

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 
@@ -16,27 +17,31 @@ import { Button } from "./ui/button";
 import { TooltipTrigger } from "@radix-ui/react-tooltip";
 import { Tooltip } from "./ui/tooltip";
 import { handleDislikeMessage, handleLikeMessage } from "@/api/api";
-import { useState } from "react";
 
 export interface ChatMessageProps {
   message: Message;
 }
 
 export function ChatMessage({ message, ...props }: ChatMessageProps) {
-  const [liked, setLiked] = useState(message.liked);
-  const [disliked, setDisliked] = useState(message.disliked);
+  const [isLiked, setIsLiked] = useState<boolean>(message.liked);
+  const [isDisliked, setIsDisliked] = useState<boolean>(message.disliked);
 
-  function likeMessage() {
+  const likeMessage = (): void => {
     handleLikeMessage();
-    setLiked(!liked);
-    if (!liked) setDisliked(false);
-  }
+    setIsLiked(!isLiked);
+    if (!isLiked) {
+      setIsDisliked(false);
+    }
+  };
 
-  function dislikeMessage() {
+  const dislikeMessage = (): void => {
     handleDislikeMessage();
-    setDisliked(!disliked);
-    if (!disliked) setLiked(false);
-  }
+    setIsDisliked(!isDisliked);
+
+    if (!isDisliked) {
+      setIsLiked(false);
+    }
+  };
 
   return (
     <div
@@ -103,7 +108,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
                 <Button
                   variant="ghost"
                   className={`w-5 h-5 p-0 ${
-                    liked ? "bg-light-background" : "bg-background"
+                    isLiked ? "bg-light-background" : "bg-background"
                   }`}
                   style={{ marginRight: "5px" }}
                   onClick={likeMessage}
@@ -118,7 +123,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
                 <Button
                   variant="ghost"
                   className={`w-5 h-5 p-0 ${
-                    disliked ? "bg-light-background" : "bg-background"
+                    isDisliked ? "bg-light-background" : "bg-background"
                   }`}
                   onClick={dislikeMessage}
                 >
