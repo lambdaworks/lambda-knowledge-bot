@@ -1,4 +1,6 @@
+import React from "react";
 import { motion } from "framer-motion";
+
 import { buttonVariants } from "@/components/ui/button";
 import { IconMessage, IconUsers } from "@/components/ui/icons";
 import {
@@ -9,7 +11,6 @@ import {
 import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 import { type ChatType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import React from "react";
 
 interface SidebarItemProps {
   index: number;
@@ -22,7 +23,15 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
   const [newChatId, setNewChatId] = useLocalStorage("newChatId", null);
   const shouldAnimate = index === 0 && isActive && newChatId;
 
-  if (!chat?.id) return null;
+  const handleAnimationCompleted = () => {
+    if (index === chat.title.length - 1) {
+      setNewChatId(null);
+    }
+  };
+
+  if (!chat?.id) {
+    return null;
+  }
 
   return (
     <motion.div
@@ -94,11 +103,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
                     delay: index * 0.05,
                     staggerChildren: 0.05,
                   }}
-                  onAnimationComplete={() => {
-                    if (index === chat.title.length - 1) {
-                      setNewChatId(null);
-                    }
-                  }}
+                  onAnimationComplete={handleAnimationCompleted}
                 >
                   {character}
                 </motion.span>

@@ -8,14 +8,18 @@ interface ChatMessageActionsProps extends React.ComponentProps<"div"> {
   message: Message;
 }
 
+const TIME_OUT = 2000;
+
 export function ChatMessageActions({
   message,
   className,
   ...props
 }: ChatMessageActionsProps) {
-  const { isCopied, copyToClipboard } = useCopyToClipboard({ timeout: 2000 });
+  const { isCopied, copyToClipboard } = useCopyToClipboard({
+    timeout: TIME_OUT,
+  });
 
-  const onCopy = () => {
+  const onCopy = (): void => {
     if (isCopied) return;
     copyToClipboard(message.content);
   };

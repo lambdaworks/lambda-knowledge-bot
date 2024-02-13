@@ -1,15 +1,17 @@
+import { useEffect, useRef } from "react";
+
 import { Separator } from "@/components/ui/separator";
 import { ChatMessage } from "@/components/chat-message";
 import { Message } from "@/lib/types";
-import { useEffect, useRef } from "react";
 
 export interface ChatList {
   messages: Message[];
 }
 
+const SCROLL_BOTTOM_OFFSET = 200;
+
 export function ChatList({ messages }: ChatList) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const SCROLL_BOTTOM_OFFSET = 200;
 
   const scrollToBottom = () => {
     setTimeout(() => {
@@ -27,7 +29,7 @@ export function ChatList({ messages }: ChatList) {
 
   return (
     <div className="relative mx-auto max-w-2xl px-4">
-      {messages.map((message, index) => (
+      {messages.map((message: Message, index: number) => (
         <div key={index}>
           <ChatMessage message={message} />
           {index < messages.length - 1 && (

@@ -1,5 +1,4 @@
 import { Sidebar } from "@/components/sidebar";
-
 import { ChatHistory } from "@/components/chat-history";
 import { ChatType } from "@/lib/types";
 

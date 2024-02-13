@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,9 +32,17 @@ export function SidebarActions({
   removeChat,
   shareChat,
 }: SidebarActionsProps) {
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
-  const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
-  const [isRemovePending, _] = React.useTransition();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
+  const [isRemovePending, _] = useTransition();
+
+  const handleDelete = (
+    event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+  ) => {
+    event.preventDefault();
+    removeChat();
+    toast.success("Chat deleted");
+  };
 
   return (
     <>
@@ -43,7 +52,7 @@ export function SidebarActions({
             <Button
               variant="ghost"
               className="w-6 h-6 p-0 hover:bg-background"
-              onClick={() => setShareDialogOpen(true)}
+              onClick={() => setIsShareDialogOpen(true)}
             >
               <IconShare />
               <span className="sr-only">Share</span>
@@ -57,7 +66,7 @@ export function SidebarActions({
               variant="ghost"
               className="w-6 h-6 p-0 hover:bg-background"
               disabled={isRemovePending}
-              onClick={() => setDeleteDialogOpen(true)}
+              onClick={() => setIsDeleteDialogOpen(true)}
             >
               <IconTrash />
               <span className="sr-only">Delete</span>
@@ -69,11 +78,14 @@ export function SidebarActions({
       <ChatShareDialog
         chat={chat}
         shareChat={shareChat}
-        open={shareDialogOpen}
-        onOpenChange={setShareDialogOpen}
-        onCopy={() => setShareDialogOpen(false)}
+        open={isShareDialogOpen}
+        onOpenChange={setIsShareDialogOpen}
+        onCopy={() => setIsShareDialogOpen(false)}
       />
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
@@ -88,13 +100,7 @@ export function SidebarActions({
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isRemovePending}
-              onClick={(
-                event: React.MouseEvent<HTMLButtonElement, MouseEvent>
-              ) => {
-                event.preventDefault();
-                removeChat();
-                toast.success("Chat deleted");
-              }}
+              onClick={handleDelete}
             >
               {isRemovePending && <IconSpinner className="mr-2 animate-spin" />}
               Delete

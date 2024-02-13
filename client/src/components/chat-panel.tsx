@@ -1,4 +1,6 @@
-import React from "react";
+import { useState } from "react";
+import { StreamingTextResponse } from "ai";
+
 import { Button } from "@/components/ui/button";
 import { PromptForm } from "@/components/prompt-form";
 import { ButtonScrollToBottom } from "@/components/button-scroll-to-bottom";
@@ -6,7 +8,6 @@ import { IconRefresh, IconShare, IconStop } from "@/components/ui/icons";
 import { FooterText } from "@/components/footer";
 import { ChatShareDialog } from "@/components/chat-share-dialog";
 import { Message } from "@/lib/types";
-import { StreamingTextResponse } from "ai";
 
 export interface ChatPanelProps {
   title?: string;
@@ -39,7 +40,14 @@ export function ChatPanel({
   setInput,
   messages,
 }: ChatPanelProps) {
-  const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+
+  const handlePromptSubmit = async (value: string) => {
+    await append({
+      content: value,
+      role: "user",
+    });
+  };
 
   return (
     <div className="fixed inset-x-0 bottom-0 w-full bg-gradient-to-b from-muted/30 from-0% to-muted/30 to-50% animate-in duration-300 ease-in-out dark:from-background/10 dark:from-10% dark:to-background/80 peer-[[data-state=open]]:group-[]:lg:pl-[250px] peer-[[data-state=open]]:group-[]:xl:pl-[300px]">
@@ -47,11 +55,7 @@ export function ChatPanel({
       <div className="mx-auto sm:max-w-2xl sm:px-4">
         <div className="flex items-center justify-center h-12">
           {isLoading ? (
-            <Button
-              variant="outline"
-              onClick={() => stop()}
-              className="bg-background"
-            >
+            <Button variant="outline" onClick={stop} className="bg-background">
               <IconStop className="mr-2" />
               Stop generating
             </Button>
@@ -75,9 +79,7 @@ export function ChatPanel({
                       open={shareDialogOpen}
                       onOpenChange={setShareDialogOpen}
                       onCopy={() => setShareDialogOpen(false)}
-                      shareChat={() => {
-                        console.log("SHARE");
-                      }}
+                      shareChat={() => {}}
                       chat={{
                         title,
                         messages,
@@ -91,12 +93,7 @@ export function ChatPanel({
         </div>
         <div className="px-4 py-2 space-y-4 border-t shadow-lg bg-background sm:rounded-t-xl sm:border md:py-4">
           <PromptForm
-            onSubmit={async (value) => {
-              await append({
-                content: value,
-                role: "user",
-              });
-            }}
+            onSubmit={handlePromptSubmit}
             input={input}
             setInput={setInput}
             isLoading={isLoading}
