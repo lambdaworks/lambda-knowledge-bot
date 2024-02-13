@@ -1,5 +1,5 @@
-import React from 'react'
-import { toast } from 'react-hot-toast'
+import React from "react";
+import { toast } from "react-hot-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -8,33 +8,32 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
-  AlertDialogTitle
-} from '@/components/ui/alert-dialog'
-import { Button } from '@/components/ui/button'
-import { IconShare, IconSpinner, IconTrash } from '@/components/ui/icons'
-import { ChatShareDialog } from '@/components/chat-share-dialog'
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { IconShare, IconSpinner, IconTrash } from "@/components/ui/icons";
+import { ChatShareDialog } from "@/components/chat-share-dialog";
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import { ChatType } from '@/lib/types'
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ChatType } from "@/lib/types";
 
 interface SidebarActionsProps {
-  chat: ChatType
-  removeChat: () => void
-  shareChat: () => void
+  chat: ChatType;
+  removeChat: () => void;
+  shareChat: () => void;
 }
 
 export function SidebarActions({
   chat,
   removeChat,
-  shareChat
+  shareChat,
 }: SidebarActionsProps) {
-
-  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
-  const [shareDialogOpen, setShareDialogOpen] = React.useState(false)
-  const [isRemovePending, _] = React.useTransition()
+  const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = React.useState(false);
+  const [isRemovePending, _] = React.useTransition();
 
   return (
     <>
@@ -89,10 +88,12 @@ export function SidebarActions({
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isRemovePending}
-              onClick={(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-                event.preventDefault()
+              onClick={(
+                event: React.MouseEvent<HTMLButtonElement, MouseEvent>
+              ) => {
+                event.preventDefault();
                 removeChat();
-                toast.success('Chat deleted')
+                toast.success("Chat deleted");
               }}
             >
               {isRemovePending && <IconSpinner className="mr-2 animate-spin" />}
@@ -102,5 +103,5 @@ export function SidebarActions({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
+  );
 }

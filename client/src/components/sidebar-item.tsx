@@ -1,28 +1,28 @@
-import { motion } from 'framer-motion'
-import { buttonVariants } from '@/components/ui/button'
-import { IconMessage, IconUsers } from '@/components/ui/icons'
+import { motion } from "framer-motion";
+import { buttonVariants } from "@/components/ui/button";
+import { IconMessage, IconUsers } from "@/components/ui/icons";
 import {
   Tooltip,
   TooltipContent,
-  TooltipTrigger
-} from '@/components/ui/tooltip'
-import { useLocalStorage } from '@/lib/hooks/use-local-storage'
-import { type ChatType } from '@/lib/types'
-import { cn } from '@/lib/utils'
-import React from 'react'
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { useLocalStorage } from "@/lib/hooks/use-local-storage";
+import { type ChatType } from "@/lib/types";
+import { cn } from "@/lib/utils";
+import React from "react";
 
 interface SidebarItemProps {
-  index: number
-  chat: ChatType
-  children: React.ReactNode
+  index: number;
+  chat: ChatType;
+  children: React.ReactNode;
 }
 
 export function SidebarItem({ index, chat, children }: SidebarItemProps) {
-  const isActive = true
-  const [newChatId, setNewChatId] = useLocalStorage('newChatId', null)
-  const shouldAnimate = index === 0 && isActive && newChatId
+  const isActive = true;
+  const [newChatId, setNewChatId] = useLocalStorage("newChatId", null);
+  const shouldAnimate = index === 0 && isActive && newChatId;
 
-  if (!chat?.id) return null
+  if (!chat?.id) return null;
 
   return (
     <motion.div
@@ -30,18 +30,18 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
       variants={{
         initial: {
           height: 0,
-          opacity: 0
+          opacity: 0,
         },
         animate: {
-          height: 'auto',
-          opacity: 1
-        }
+          height: "auto",
+          opacity: 1,
+        },
       }}
-      initial={shouldAnimate ? 'initial' : undefined}
-      animate={shouldAnimate ? 'animate' : undefined}
+      initial={shouldAnimate ? "initial" : undefined}
+      animate={shouldAnimate ? "animate" : undefined}
       transition={{
         duration: 0.25,
-        ease: 'easeIn'
+        ease: "easeIn",
       }}
     >
       <div className="text-gray-800 absolute left-2 top-1 flex h-6 w-6 items-center justify-center">
@@ -62,9 +62,9 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
       <a
         href={chat.id}
         className={cn(
-          buttonVariants({ variant: 'ghost' }),
-          'text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10',
-          isActive && 'bg-zinc-200 pr-16 font-semibold dark:bg-zinc-800'
+          buttonVariants({ variant: "ghost" }),
+          "text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10",
+          isActive && "bg-zinc-200 pr-16 font-semibold dark:bg-zinc-800"
         )}
       >
         <div
@@ -73,30 +73,30 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
         >
           <span className="whitespace-nowrap">
             {shouldAnimate ? (
-              chat.title.split('').map((character, index) => (
+              chat.title.split("").map((character, index) => (
                 <motion.span
                   key={index}
                   variants={{
                     initial: {
                       opacity: 0,
-                      x: -100
+                      x: -100,
                     },
                     animate: {
                       opacity: 1,
-                      x: 0
-                    }
+                      x: 0,
+                    },
                   }}
-                  initial={shouldAnimate ? 'initial' : undefined}
-                  animate={shouldAnimate ? 'animate' : undefined}
+                  initial={shouldAnimate ? "initial" : undefined}
+                  animate={shouldAnimate ? "animate" : undefined}
                   transition={{
                     duration: 0.25,
-                    ease: 'easeIn',
+                    ease: "easeIn",
                     delay: index * 0.05,
-                    staggerChildren: 0.05
+                    staggerChildren: 0.05,
                   }}
                   onAnimationComplete={() => {
                     if (index === chat.title.length - 1) {
-                      setNewChatId(null)
+                      setNewChatId(null);
                     }
                   }}
                 >
@@ -111,5 +111,5 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
       </a>
       {isActive && <div className="absolute right-2 top-1">{children}</div>}
     </motion.div>
-  )
+  );
 }

@@ -1,10 +1,10 @@
-import { Separator } from '@/components/ui/separator'
-import { ChatMessage } from '@/components/chat-message'
-import { Message } from '@/lib/types'
-import { useEffect, useRef } from 'react';
+import { Separator } from "@/components/ui/separator";
+import { ChatMessage } from "@/components/chat-message";
+import { Message } from "@/lib/types";
+import { useEffect, useRef } from "react";
 
 export interface ChatList {
-  messages: Message[]
+  messages: Message[];
 }
 
 export function ChatList({ messages }: ChatList) {
@@ -22,7 +22,7 @@ export function ChatList({ messages }: ChatList) {
   }, [messages]);
 
   if (!messages.length) {
-    return null
+    return null;
   }
 
   return (
@@ -37,5 +37,5 @@ export function ChatList({ messages }: ChatList) {
       ))}
       <div ref={messagesEndRef} />
     </div>
-  )
+  );
 }

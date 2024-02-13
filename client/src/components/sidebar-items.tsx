@@ -1,25 +1,26 @@
-import { ChatType } from '@/lib/types'
-import { AnimatePresence, motion } from 'framer-motion'
+import { ChatType } from "@/lib/types";
+import { AnimatePresence, motion } from "framer-motion";
 
-import { SidebarActions } from '@/components/sidebar-actions'
-import { SidebarItem } from '@/components/sidebar-item'
+import { SidebarActions } from "@/components/sidebar-actions";
+import { SidebarItem } from "@/components/sidebar-item";
 
 interface SidebarItemsProps {
-  chats?: ChatType[]
+  chats?: ChatType[];
   setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
 export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
-
-  if (!chats?.length) return null
+  if (!chats?.length) return null;
 
   function removeUserChat(chat: ChatType) {
-    const updatedChats = chats?.filter((currentChat) => chat.id !== currentChat.id);
+    const updatedChats = chats?.filter(
+      (currentChat) => chat.id !== currentChat.id
+    );
     // removeChat(chat.id)
-    setChats(updatedChats || [])
+    setChats(updatedChats || []);
   }
 
-  function shareChat() { }
+  function shareChat() {}
 
   return (
     <AnimatePresence>
@@ -30,7 +31,7 @@ export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
               key={chat?.id}
               exit={{
                 opacity: 0,
-                height: 0
+                height: 0,
               }}
             >
               <SidebarItem index={index} chat={chat}>
@@ -44,5 +45,5 @@ export function SidebarItems({ chats, setChats }: SidebarItemsProps) {
           )
       )}
     </AnimatePresence>
-  )
+  );
 }

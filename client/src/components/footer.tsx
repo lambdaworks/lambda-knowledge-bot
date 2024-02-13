@@ -1,19 +1,21 @@
-import React from 'react'
+import React from "react";
 
-import { cn } from '@/lib/utils'
-import { ExternalLink } from '@/components/external-link'
+import { cn } from "@/lib/utils";
+import { ExternalLink } from "@/components/external-link";
 
-export function FooterText({ className, ...props }: React.ComponentProps<'p'>) {
+export function FooterText({ className, ...props }: React.ComponentProps<"p">) {
   return (
     <p
       className={cn(
-        'px-2 text-center text-xs leading-normal text-muted-foreground',
+        "px-2 text-center text-xs leading-normal text-muted-foreground",
         className
       )}
       {...props}
     >
-      Chatbot provided by{' '}
-      <ExternalLink href="https://www.lambdaworks.io/">LambdaWorks</ExternalLink>
+      Chatbot provided by{" "}
+      <ExternalLink href="https://www.lambdaworks.io/">
+        LambdaWorks
+      </ExternalLink>
     </p>
-  )
+  );
 }

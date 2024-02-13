@@ -1,50 +1,53 @@
-import { LOCAL_STORAGE_KEYS } from '@/types/storage'
-import React from 'react'
+import { LOCAL_STORAGE_KEYS } from "@/types/storage";
+import React from "react";
 
 interface SidebarContext {
-  isSidebarOpen: boolean
-  toggleSidebar: () => void
-  isLoading: boolean
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+  isLoading: boolean;
 }
 
 const SidebarContext = React.createContext<SidebarContext | undefined>(
   undefined
-)
+);
 
 export function useSidebar() {
-  const context = React.useContext(SidebarContext)
+  const context = React.useContext(SidebarContext);
   if (!context) {
-    throw new Error('useSidebarContext must be used within a SidebarProvider')
+    throw new Error("useSidebarContext must be used within a SidebarProvider");
   }
-  return context
+  return context;
 }
 
 interface SidebarProviderProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 export function SidebarProvider({ children }: SidebarProviderProps) {
-  const [isSidebarOpen, setSidebarOpen] = React.useState(true)
-  const [isLoading, setLoading] = React.useState(true)
+  const [isSidebarOpen, setSidebarOpen] = React.useState(true);
+  const [isLoading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const value = localStorage.getItem(LOCAL_STORAGE_KEYS.sidebar)
+    const value = localStorage.getItem(LOCAL_STORAGE_KEYS.sidebar);
     if (value) {
-      setSidebarOpen(JSON.parse(value))
+      setSidebarOpen(JSON.parse(value));
     }
-    setLoading(false)
-  }, [])
+    setLoading(false);
+  }, []);
 
   const toggleSidebar = () => {
-    setSidebarOpen(value => {
-      const newState = !value
-      localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, JSON.stringify(newState))
-      return newState
-    })
-  }
+    setSidebarOpen((value) => {
+      const newState = !value;
+      localStorage.setItem(
+        LOCAL_STORAGE_KEYS.sidebar,
+        JSON.stringify(newState)
+      );
+      return newState;
+    });
+  };
 
   if (isLoading) {
-    return null
+    return null;
   }
 
   return (
@@ -53,5 +56,5 @@ export function SidebarProvider({ children }: SidebarProviderProps) {
     >
       {children}
     </SidebarContext.Provider>
-  )
+  );
 }
