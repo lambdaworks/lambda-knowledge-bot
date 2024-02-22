@@ -13,5 +13,12 @@
   <body>
     <div id="root"></div>
     <script type="module" src="src/main.tsx"></script>
+    <script type="module" crossorigin id="knowle-widget" async>
+      if (window.location.pathname.includes("/knowle-widget")) {
+        var script = document.createElement("script");
+        script.src = "./src/scripts/widget.js";
+        document.body.appendChild(script);
+      }
+    </script>
   </body>
 </html>
