@@ -1,7 +1,7 @@
 import React from "react";
 
 const Widget: React.FC = () => {
-  return <div>Widget Testing Field</div>;
+  return <div>Widget Field</div>;
 };
 
 export default Widget;
