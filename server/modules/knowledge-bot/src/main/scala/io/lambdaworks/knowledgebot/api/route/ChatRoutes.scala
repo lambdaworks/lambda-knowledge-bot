@@ -17,13 +17,16 @@ import com.softwaremill.session.{HeaderST, SetSessionTransport}
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
 import io.lambdaworks.knowledgebot.api.JwtSessionManager._
+import io.lambdaworks.knowledgebot.api.auth.AuthService
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
-import spray.json.enrichAny
+import spray.json.{JsString, enrichAny}
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(implicit val system: ActorSystem[_]) {
+final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], authService: AuthService)(implicit
+  val system: ActorSystem[_]
+) {
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
   private implicit val timeout: Timeout = 5.seconds
@@ -54,6 +57,12 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
                   complete(source)
                 }
               }
+            }
+          }
+        } ~ get {
+          authService.authenticated { _ =>
+            complete {
+              JsString("Hello from knowle")
             }
           }
         }

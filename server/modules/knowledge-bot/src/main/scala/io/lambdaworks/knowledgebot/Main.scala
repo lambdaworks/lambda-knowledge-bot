@@ -15,6 +15,7 @@ import com.typesafe.config.{Config, ConfigFactory}
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
 import io.lambdaworks.knowledgebot.actor.model.InteractionFeedback
 import io.lambdaworks.knowledgebot.actor.slack.SlackMessageListenerActor
+import io.lambdaworks.knowledgebot.api.auth.AuthService
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes
 import io.lambdaworks.knowledgebot.fetcher.DocumentFetcher
 import io.lambdaworks.knowledgebot.fetcher.github.GitHubDocumentFetcher
@@ -47,6 +48,12 @@ object Main {
         config.getString("github.webhook.secret")
       )
     }.toOption
+
+  val authService: AuthService =
+    new AuthService(
+      config.getString("auth0.domain"),
+      config.getString("auth0.audience")
+    )
 
   val documentFetcher: Option[DocumentFetcher] =
     Try {
@@ -98,7 +105,9 @@ object Main {
     val messageRouterActor = system.spawn(MessageRouterActor(), "MessageRouterActor")
 
     val serverRoutes =
-      new ChatRoutes(messageRouterActor).chatRoutes ~ listenerService.fold[Route](RouteDirectives.reject)(_.routes)
+      new ChatRoutes(messageRouterActor, authService).chatRoutes ~ listenerService.fold[Route](RouteDirectives.reject)(
+        _.routes
+      )
 
     Http()
       .newServerAt(config.getString("api.host"), config.getInt("api.port"))

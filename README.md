@@ -58,6 +58,8 @@ The rest of the setup revolves around providing the environment variables outlin
 | OPENAI_API_KEY         | OpenAI API key                                                         |                 |
 | QDRANT_API_KEY         | Qdrant API key                                                         |                 |
 | QDRANT_COLLECTION_NAME | Name of the Qdrant collection where vector embeddings are stored       |                 |
+| AUTH0_DOMAIN           | Auth0 Domain                                                           |                 |
+| AUTH0_AUDIENCE         | Auth0 Audience (Identifier)                                            |                 |
 
 If you want to run the application locally, you can store the environment variables in a `.env` file placed in the root directory.
 
