@@ -13,15 +13,18 @@ import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
-import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage, UserMessage}
+import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes.NewUserMessage
-import spray.json._
-
+import io.lambdaworks.knowledgebot.api.auth.AuthService
+import spray.json.DefaultJsonProtocol._
+import spray.json.enrichAny
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(implicit val system: ActorSystem[_]) {
+final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], authService: AuthService)(implicit
+  val system: ActorSystem[_]
+) {
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
   private implicit val timeout: Timeout = 5.seconds
@@ -49,24 +52,30 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
       pathPrefix("chats") {
         pathEnd {
           get {
-            onSuccess(getChats(???)) { chats =>
-              complete(chats.head)
+            authService.authenticated { userId =>
+              onSuccess(getChats(userId)) { chats =>
+                complete(chats)
+              }
             }
           } ~
             post {
-              entity(as[NewUserMessage]) { message =>
-                onSuccess(postChatMessage(message, None, ???)) { source =>
-                  complete(source)
+              authService.authenticated { userId =>
+                entity(as[NewUserMessage]) { message =>
+                  onSuccess(postChatMessage(message, None, userId)) { source =>
+                    complete(source)
+                  }
                 }
               }
             }
         } ~
           path(Segment) { chatId =>
             pathEnd {
+              authService.authenticated { userId =>
               entity(as[NewUserMessage]) { message =>
-                onSuccess(postChatMessage(message, Some(chatId), ???)) { source =>
+                onSuccess(postChatMessage(message, Some(chatId), userId)) { source =>
                   complete(source)
                 }
+              }
               }
             }
           } ~
@@ -74,7 +83,7 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(i
             pathEnd {
               get {
                 onSuccess(getChatHistory(chatId)) { messages =>
-                  complete(messages.head)
+                  complete(messages)
                 }
               }
             }
