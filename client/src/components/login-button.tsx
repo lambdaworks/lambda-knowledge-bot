@@ -4,17 +4,8 @@ import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from "@/types/storage";
 
 import { Button } from "./ui/button";
 
-interface LoginButtonProps {
-  setEmail: (value: string | null) => void;
-}
-
-const LoginButton: React.FC<LoginButtonProps> = ({ setEmail }) => {
+const LoginButton: React.FC = () => {
   const { user, loginWithRedirect, isAuthenticated } = useAuth0();
-
-  if (user?.email) {
-    sessionStorage.setItem(SESSION_STORAGE_KEYS.email, user?.email);
-    setEmail(user.email);
-  }
 
   if (isAuthenticated) {
     return null;

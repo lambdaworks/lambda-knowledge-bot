@@ -14,31 +14,18 @@ import LoginButton from "./login-button";
 import { Button } from "./ui/button";
 
 function UserOrLogin() {
-  const [email, setEmail] = useState<string | null>(
-    sessionStorage.getItem(SESSION_STORAGE_KEYS.email)
-  );
-
   const [chats, setChats] = useState<ChatType[]>([]);
-  const { logout } = useAuth0();
+  const { isAuthenticated, logout } = useAuth0();
 
   const handleLogout = async (): Promise<void> => {
-    await logout();
+    await logout({ logoutParams: { returnTo: window.location.origin } });
     sessionStorage.removeItem(SESSION_STORAGE_KEYS.email);
     localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "false");
   };
 
-  useEffect(() => {
-    const storedEmail = sessionStorage.getItem(SESSION_STORAGE_KEYS.email);
-    setEmail(storedEmail);
-
-    if (isEmpty(storedEmail)) {
-      localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "false");
-    }
-  }, []);
-
   return (
     <>
-      {!isEmpty(email) && (
+      {isAuthenticated && (
         <>
           <SidebarMobile>
             <ChatHistory chats={chats} setChats={setChats} />
@@ -47,7 +34,7 @@ function UserOrLogin() {
         </>
       )}
       <div className="flex align-items-center">
-        {!isEmpty(email) ? (
+        {isAuthenticated ? (
           <>
             <IconSeparator className="size-6 text-muted-foreground/50 me-2" />
             <Button
@@ -55,11 +42,11 @@ function UserOrLogin() {
               className="btn btn-primary"
               onClick={handleLogout}
             >
-              Logout
+              Log out
             </Button>
           </>
         ) : (
-          <LoginButton setEmail={setEmail} />
+          <LoginButton />
         )}
       </div>
     </>
