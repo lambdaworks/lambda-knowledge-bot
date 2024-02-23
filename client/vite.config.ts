@@ -8,6 +8,20 @@ export default defineConfig({
     commonjsOptions: {
       include: ["tailwind.config.js", "node_modules/**"],
     },
+    rollupOptions: {
+      input: {
+        index: "./index.html",
+        custom: "./widget.js",
+      },
+      output: {
+        entryFileNames: ({ name }) => {
+          if (name === "custom") {
+            return "knowle-widget.js";
+          }
+          return "[name].js";
+        },
+      },
+    },
   },
   optimizeDeps: {
     include: ["tailwind-config"],

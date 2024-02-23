@@ -9,15 +9,13 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Knowle</title>
-    <script type="module" crossorigin async>
-      if (window.location.pathname.includes("/knowle-widget")) {
-        var script = document.createElement("script");
-        script.src = "src/assets/scripts/widget.js";
-        script.async = true;
-        script.id = "knowle-widget";
-        document.head.appendChild(script);
-      }
-    </script>
+    <script
+      type="module"
+      crossorigin
+      id="knowle-widget"
+      src="./widget.js"
+      async
+    ></script>
   </head>
   <body>
     <div id="root"></div>
