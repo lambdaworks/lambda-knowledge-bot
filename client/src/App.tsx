@@ -10,9 +10,8 @@ import "@/index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Widget from "./pages/widget";
 
-const auth0Domain = import.meta.env.VITE_DOMAINE;
+const auth0Domain = import.meta.env.VITE_DOMAIN;
 const clientId = import.meta.env.VITE_CLIENT_ID;
-const url = import.meta.env.VITE_FRONT_URL;
 
 const router = createBrowserRouter([
   {
@@ -46,7 +45,11 @@ const App = (): JSX.Element => {
     <Auth0Provider
       domain={auth0Domain}
       clientId={clientId}
-      authorizationParams={{ redirect_uri: `${url}` }}
+      authorizationParams={{
+        redirect_uri: window.location.origin,
+        audience: `https://${auth0Domain}/api/v2/`,
+        scope: "read:current_user update:current_user_metadata",
+      }}
     >
       <div className={cn("font-sans antialiased")}>
         <Toaster />

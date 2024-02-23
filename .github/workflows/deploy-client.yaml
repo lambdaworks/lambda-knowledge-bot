@@ -2,9 +2,9 @@ name: Deploy client to AWS
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
-      - 'client/**'
+      - "client/**"
   workflow_dispatch:
 
 jobs:
@@ -13,7 +13,7 @@ jobs:
       id-token: write
       contents: read
     runs-on: ubuntu-latest
-  
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -35,7 +35,7 @@ jobs:
           echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
           echo "VITE_FRONT_URL=${{ secrets.VITE_FRONT_URL }}" >> .env
           echo "VITE_CLIENT_ID=${{ secrets.VITE_CLIENT_ID }}" >> .env
-          echo "VITE_DOMAINE=${{ secrets.VITE_DOMAINE }}" >> .env
+          echo "VITE_DOMAIN=${{ secrets.VITE_DOMAIN }}" >> .env
           echo "VITE_STAGE=${{ secrets.VITE_STAGE }}" >> .env
           source .env
 
