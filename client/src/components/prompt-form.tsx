@@ -43,6 +43,14 @@ export function PromptForm({
     await onSubmit(input);
   };
 
+  const handleOnKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (isLoading || input === "") {
+      return;
+    }
+
+    onKeyDown(e);
+  };
+
   return (
     <form onSubmit={handleFormSubmit} ref={formRef}>
       <div className="relative flex flex-col w-full px-8 overflow-hidden max-h-60 grow bg-background sm:rounded-md sm:border sm:px-12">
@@ -64,7 +72,7 @@ export function PromptForm({
         <Textarea
           ref={inputRef}
           tabIndex={0}
-          onKeyDown={onKeyDown}
+          onKeyDown={handleOnKeyDown}
           rows={1}
           value={input}
           onChange={(e: ChangeEvent<HTMLTextAreaElement>) =>
