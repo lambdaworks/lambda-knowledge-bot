@@ -11,12 +11,12 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: "./index.html",
-        custom: "./widget.js",
+        custom: "./knowle-widget.js",
       },
       output: {
         entryFileNames: ({ name }) => {
           if (name === "custom") {
-            return "widget.js";
+            return "knowle-widget.js";
           }
           return "[name].js";
         },
