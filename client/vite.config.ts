@@ -16,7 +16,7 @@ export default defineConfig({
       output: {
         entryFileNames: ({ name }) => {
           if (name === "custom") {
-            return "knowle-widget.js";
+            return "widget.js";
           }
           return "[name].js";
         },
