@@ -22,8 +22,6 @@ import io.lambdaworks.langchain.schema.document.{Document => LangchainDocument}
 import me.shadaj.scalapy.py
 import org.joda.time.{DateTime, DateTimeZone}
 
-import scala.concurrent.duration.DurationInt
-
 object KnowledgeBotActor {
   sealed trait Event
   final case class MessageHistoryRequest(replyBack: ActorRef[List[ChatMessage]])     extends Event
@@ -35,12 +33,12 @@ object KnowledgeBotActor {
   final case class ResponseData(
     messageToken: String,
     relevantDocuments: Option[List[Document]],
-    chat: Chat
+    chat: Option[Chat]
   )
   final case class ServerSentEvent(data: ResponseData, `type`: String)
   final case class SessionInfo(source: Source[ServerSentEvent, _], session: String)
 
-  def apply(session: String, routerActor: ActorRef[MessageRouterActor.Event])(implicit
+  def apply(chat: Chat, routerActor: ActorRef[MessageRouterActor.Event])(implicit
     system: ActorSystem[_]
   ): Behavior[Event] =
     Behaviors.setup { context =>
@@ -52,12 +50,12 @@ object KnowledgeBotActor {
         new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! MessageToken(_), withMemory = true)
       val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
-      new KnowledgeBotActor(session, routerActor, retrieverActor).acceptEvents(Nil)
+      new KnowledgeBotActor(chat, routerActor, retrieverActor).acceptEvents(Nil)
     }
 }
 
 private final class KnowledgeBotActor(
-  chatId: String,
+  chat: Chat,
   routerActor: ActorRef[MessageRouterActor.Event],
   retrieverActor: ActorRef[LLMRetrieverActor.Request]
 )(implicit val system: ActorSystem[_]) {
@@ -70,13 +68,13 @@ private final class KnowledgeBotActor(
       case NewUserMessage(content, replyBack) =>
         val (queue, source) = Source.queue[ServerSentEvent](1).preMaterialize()
 
-        replyBack ! SessionInfo(source, chatId)
+        replyBack ! SessionInfo(source, chat.id)
 
         retrieverActor ! LLMRetrieverActor.Request(content)
 
         processMessageTokens(messageHistory :+ UserMessage(DateTime.now(DateTimeZone.UTC), content, None), queue)
       case InactivityTimeout =>
-        routerActor ! MessageRouterActor.SessionExpired(chatId)
+        routerActor ! MessageRouterActor.SessionExpired(chat.id)
 
         Behaviors.stopped
     }
@@ -90,7 +88,7 @@ private final class KnowledgeBotActor(
         Behaviors.same
       case MessageToken(text) =>
         if (text.nonEmpty) {
-          queue.offer(ServerSentEvent(ResponseData(messageToken = text, None), "in_progress"))
+          queue.offer(ServerSentEvent(ResponseData(messageToken = text, None, None), "in_progress"))
         }
 
         Behaviors.same
@@ -104,7 +102,8 @@ private final class KnowledgeBotActor(
           ServerSentEvent(
             ResponseData(
               messageToken = "",
-              relevantDocuments = Some(relevantDocuments)
+              relevantDocuments = Some(relevantDocuments),
+              chat = Some(chat)
             ),
             "finish"
           )
@@ -118,7 +117,7 @@ private final class KnowledgeBotActor(
           )
         )
       case InactivityTimeout =>
-        routerActor ! MessageRouterActor.SessionExpired(chatId)
+        routerActor ! MessageRouterActor.SessionExpired(chat.id)
 
         Behaviors.stopped
     }

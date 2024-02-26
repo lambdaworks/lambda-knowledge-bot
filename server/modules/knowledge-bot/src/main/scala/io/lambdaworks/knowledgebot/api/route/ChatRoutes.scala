@@ -14,11 +14,12 @@ import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
 import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
+import io.lambdaworks.knowledgebot.api.auth.AuthService
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes.NewUserMessage
-import io.lambdaworks.knowledgebot.api.auth.AuthService
 import spray.json.DefaultJsonProtocol._
 import spray.json.enrichAny
+
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
 

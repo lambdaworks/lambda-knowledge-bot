@@ -36,13 +36,15 @@ object MessageRouterActor {
           chatId
             .flatMap(sessionActors.get)
             .fold {
-              val chatId      = UUID.randomUUID().toString
-              val sessionActor = context.spawn(KnowledgeBotActor(chatId, context.self), s"KnowledgeBotActor-$chatId")
+              val chatId = UUID.randomUUID().toString
+              val chat   = Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC))
 
-              sessionActor ! KnowledgeBotActor.NewUserMessage(content, replyBack)
+              val knowledgeBotActor = context.spawn(KnowledgeBotActor(chat, context.self), s"KnowledgeBotActor-$chatId")
+
+              knowledgeBotActor ! KnowledgeBotActor.NewUserMessage(content, replyBack)
 
               route(
-                sessionActors + (chatId -> (Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC)), sessionActor))
+                sessionActors + (chatId -> (chat, knowledgeBotActor))
               )
             } { sessionTuple =>
               sessionTuple._2 ! KnowledgeBotActor.NewUserMessage(content, replyBack)

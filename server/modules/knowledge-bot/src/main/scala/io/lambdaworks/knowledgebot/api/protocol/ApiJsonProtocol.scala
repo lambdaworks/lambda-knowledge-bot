@@ -85,7 +85,7 @@ object ApiJsonProtocol {
   }
 
   implicit val responseJsonFormat: RootJsonFormat[ResponseData] =
-    jsonFormat2(ResponseData.apply)
+    jsonFormat3(ResponseData.apply)
 
   implicit val newUserMessageJsonFormat: RootJsonFormat[NewUserMessage] =
     jsonFormat1(NewUserMessage.apply)
