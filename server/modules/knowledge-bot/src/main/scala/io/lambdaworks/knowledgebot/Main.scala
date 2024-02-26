@@ -13,7 +13,7 @@ import com.amazonaws.services.dynamodbv2.document.DynamoDB
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import com.typesafe.config.{Config, ConfigFactory}
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
-import io.lambdaworks.knowledgebot.actor.model.InteractionFeedback
+import io.lambdaworks.knowledgebot.actor.model.slack.InteractionFeedback
 import io.lambdaworks.knowledgebot.actor.slack.SlackMessageListenerActor
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes
 import io.lambdaworks.knowledgebot.fetcher.DocumentFetcher
