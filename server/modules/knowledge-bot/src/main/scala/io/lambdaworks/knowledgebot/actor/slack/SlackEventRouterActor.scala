@@ -6,7 +6,8 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.util.Timeout
 import io.lambdaworks.knowledgebot.actor.FeedbackStoreActor
-import io.lambdaworks.knowledgebot.actor.model.{Feedback, InteractionFeedback, Message, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.slack.{InteractionFeedback, Message, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.Feedback
 import io.lambdaworks.knowledgebot.actor.slack.SlackEventRouterActor.{
   Event,
   InteractionFeedbackEvent,
