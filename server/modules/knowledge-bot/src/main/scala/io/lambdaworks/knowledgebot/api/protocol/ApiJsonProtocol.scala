@@ -61,6 +61,9 @@ object ApiJsonProtocol {
     }
   }
 
+  implicit val documentJsonFormat: RootJsonFormat[Document] =
+    jsonFormat2(Document.apply)
+
   implicit val userMessageJsonFormat: RootJsonFormat[UserMessage] =
     jsonFormat4(UserMessage.apply)
 
@@ -80,9 +83,6 @@ object ApiJsonProtocol {
         case json                  => throw DeserializationException(s"Error parsing $json as NewUserMessage")
       }
   }
-
-  implicit val documentJsonFormat: RootJsonFormat[Document] =
-    jsonFormat2(Document.apply)
 
   implicit val responseJsonFormat: RootJsonFormat[ResponseData] =
     jsonFormat2(ResponseData.apply)
