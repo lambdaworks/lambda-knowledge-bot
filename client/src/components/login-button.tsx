@@ -1,7 +1,5 @@
 import { useAuth0 } from "@auth0/auth0-react";
 
-import { LOCAL_STORAGE_KEYS } from "@/types/storage";
-
 import { Button } from "./ui/button";
 
 const LoginButton: React.FC = () => {
@@ -13,7 +11,6 @@ const LoginButton: React.FC = () => {
 
   const handleLoginWithRedirection = () => {
     loginWithRedirect();
-    localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "true");
   };
 
   return (

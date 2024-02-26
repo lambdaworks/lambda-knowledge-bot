@@ -1,5 +1,7 @@
-import { LOCAL_STORAGE_KEYS } from "@/types/storage";
-import React from "react";
+import React, { useContext } from "react";
+import { observer } from "mobx-react-lite";
+
+import { StoreContext } from "@/store/context";
 
 interface SidebarContext {
   isSidebarOpen: boolean;
@@ -23,38 +25,34 @@ interface SidebarProviderProps {
   children: React.ReactNode;
 }
 
-export function SidebarProvider({ children }: SidebarProviderProps) {
-  const [isSidebarOpen, setSidebarOpen] = React.useState(true);
-  const [isLoading, setLoading] = React.useState(true);
+export const SidebarProvider = observer(
+  ({ children }: SidebarProviderProps) => {
+    const { authStore } = useContext(StoreContext);
+    const [isSidebarOpen, setSidebarOpen] = React.useState(true);
+    const [isLoading, setLoading] = React.useState(true);
 
-  React.useEffect(() => {
-    const value = localStorage.getItem(LOCAL_STORAGE_KEYS.sidebar);
-    if (value) {
-      setSidebarOpen(JSON.parse(value));
+    React.useEffect(() => {
+      setSidebarOpen(authStore.isSessionAvailable);
+      setLoading(false);
+    }, [authStore.isSessionAvailable]);
+
+    const toggleSidebar = () => {
+      setSidebarOpen((value) => {
+        const newState = !value;
+        return newState;
+      });
+    };
+
+    if (isLoading) {
+      return null;
     }
-    setLoading(false);
-  }, []);
 
-  const toggleSidebar = () => {
-    setSidebarOpen((value) => {
-      const newState = !value;
-      localStorage.setItem(
-        LOCAL_STORAGE_KEYS.sidebar,
-        JSON.stringify(newState)
-      );
-      return newState;
-    });
-  };
-
-  if (isLoading) {
-    return null;
+    return (
+      <SidebarContext.Provider
+        value={{ isSidebarOpen, toggleSidebar, isLoading }}
+      >
+        {children}
+      </SidebarContext.Provider>
+    );
   }
-
-  return (
-    <SidebarContext.Provider
-      value={{ isSidebarOpen, toggleSidebar, isLoading }}
-    >
-      {children}
-    </SidebarContext.Provider>
-  );
-}
+);
