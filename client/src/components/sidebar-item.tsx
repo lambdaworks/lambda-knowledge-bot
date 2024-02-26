@@ -70,7 +70,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
         )}
       </div>
       <Link
-        to={`${import.meta.env.VITE_FRONTEND_URL}?chatId=${chat.id}`}
+        to={`?chatId=${chat.id}`}
         className={cn(
           buttonVariants({ variant: "ghost" }),
           "text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10",
