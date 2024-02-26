@@ -17,7 +17,7 @@ export function ChatHistory({ chats = [], setChats }: ChatHistoryProps) {
     <div className="flex flex-col h-full">
       <div className="px-2 my-4">
         <Link
-          to={import.meta.env.VITE_FRONTEND_URL}
+          to={window.location.origin}
           className={cn(
             buttonVariants({ variant: "outline" }),
             "text-black h-10 w-full justify-start bg-zinc-50 px-4 shadow-none hover:bg-zinc-200/40 dark:bg-zinc-900 dark:hover:bg-zinc-300/10 cursor-pointer"
