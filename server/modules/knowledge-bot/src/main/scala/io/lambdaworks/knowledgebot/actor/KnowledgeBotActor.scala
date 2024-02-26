@@ -16,7 +16,7 @@ import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{
   ServerSentEvent,
   SessionInfo
 }
-import io.lambdaworks.knowledgebot.actor.model.{AssistantMessage, ChatMessage, Document, UserMessage}
+import io.lambdaworks.knowledgebot.actor.model.{AssistantMessage, Chat, ChatMessage, Document, UserMessage}
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
 import io.lambdaworks.langchain.schema.document.{Document => LangchainDocument}
 import me.shadaj.scalapy.py
@@ -34,7 +34,8 @@ object KnowledgeBotActor {
 
   final case class ResponseData(
     messageToken: String,
-    relevantDocuments: Option[List[Document]]
+    relevantDocuments: Option[List[Document]],
+    chat: Chat
   )
   final case class ServerSentEvent(data: ResponseData, `type`: String)
   final case class SessionInfo(source: Source[ServerSentEvent, _], session: String)
@@ -43,7 +44,7 @@ object KnowledgeBotActor {
     system: ActorSystem[_]
   ): Behavior[Event] =
     Behaviors.setup { context =>
-      //context.setReceiveTimeout(10.minutes, InactivityTimeout)
+      // context.setReceiveTimeout(10.minutes, InactivityTimeout)
 
       val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
 
@@ -56,7 +57,7 @@ object KnowledgeBotActor {
 }
 
 private final class KnowledgeBotActor(
-  session: String,
+  chatId: String,
   routerActor: ActorRef[MessageRouterActor.Event],
   retrieverActor: ActorRef[LLMRetrieverActor.Request]
 )(implicit val system: ActorSystem[_]) {
@@ -69,13 +70,13 @@ private final class KnowledgeBotActor(
       case NewUserMessage(content, replyBack) =>
         val (queue, source) = Source.queue[ServerSentEvent](1).preMaterialize()
 
-        replyBack ! SessionInfo(source, session)
+        replyBack ! SessionInfo(source, chatId)
 
         retrieverActor ! LLMRetrieverActor.Request(content)
 
         processMessageTokens(messageHistory :+ UserMessage(DateTime.now(DateTimeZone.UTC), content, None), queue)
       case InactivityTimeout =>
-        routerActor ! MessageRouterActor.SessionExpired(session)
+        routerActor ! MessageRouterActor.SessionExpired(chatId)
 
         Behaviors.stopped
     }
@@ -117,7 +118,7 @@ private final class KnowledgeBotActor(
           )
         )
       case InactivityTimeout =>
-        routerActor ! MessageRouterActor.SessionExpired(session)
+        routerActor ! MessageRouterActor.SessionExpired(chatId)
 
         Behaviors.stopped
     }
