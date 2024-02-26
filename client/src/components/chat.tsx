@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { StreamingTextResponse } from "ai";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useNavigation } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { ChatList } from "@/components/chat-list";
@@ -28,6 +28,7 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   let chat: ChatType | undefined = chats.find((chat) => chat.id === id);
   const [messages, setMessages] = useState<Message[]>(chat?.messages || []);
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const urlParams = new URLSearchParams(location.search);
@@ -38,7 +39,9 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
     if (chatId) {
       const chat = chats.find((chat) => chat.id.toString() === chatId);
       setMessages(chat?.messages || []);
-    } else {
+    }
+
+    if (!urlParams.get("chatId")) {
       setMessages([]);
     }
   }, [chats, location]);
@@ -61,8 +64,8 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
 
   const append: (val: AppendParams) => Promise<void> = async (val) => {
     // Ensure content is a string
-    const content = typeof val.content === "string" ? val.content : "";
 
+    const content = typeof val.content === "string" ? val.content : "";
     messages.push({
       content,
       role: val.role,
@@ -77,10 +80,15 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
         id: String(chats.length + 1),
         title: content,
         createdAt: new Date(),
-        messages: [],
+        messages: messages,
       };
+
       chat = newChat;
       setChats([...chats, newChat]);
+
+      const searchParams = new URLSearchParams();
+      searchParams.append("chatId", String(chats.length + 1));
+      navigate(`?${searchParams}`);
     }
 
     try {
