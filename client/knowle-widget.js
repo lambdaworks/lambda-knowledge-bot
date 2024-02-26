@@ -41,7 +41,6 @@ const chatBotTemplate = `
             </svg>
           </button>
         </div>
-        <span id="made-by">Proudly made by <a href="https://www.lambdaworks.io/" target="_blank" id="lambdaworks">LambdaWorks</a><span>
       </div>
   </div>
   <div id="chat-bot">
