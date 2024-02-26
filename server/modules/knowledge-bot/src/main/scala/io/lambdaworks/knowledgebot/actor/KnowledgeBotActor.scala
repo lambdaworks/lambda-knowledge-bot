@@ -6,30 +6,32 @@ import akka.stream.BoundedSourceQueue
 import akka.stream.scaladsl.Source
 import io.lambdaworks.knowledgebot.Main
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{
-  ChatMessage,
-  Document,
   Event,
   InactivityTimeout,
   LLMResponse,
-  NewToken,
+  MessageHistoryRequest,
+  MessageToken,
+  NewUserMessage,
   ResponseData,
   ServerSentEvent,
   SessionInfo
 }
+import io.lambdaworks.knowledgebot.actor.model.{AssistantMessage, ChatMessage, Document, UserMessage}
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
 import io.lambdaworks.langchain.schema.document.{Document => LangchainDocument}
 import me.shadaj.scalapy.py
+import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.concurrent.duration.DurationInt
 
 object KnowledgeBotActor {
   sealed trait Event
-  final case class ChatMessage(text: String, replyBack: ActorRef[SessionInfo]) extends Event
-  private final case class NewToken(text: String)                              extends Event
-  private final case class LLMResponse(response: Map[String, py.Any])          extends Event
-  private final case object InactivityTimeout                                  extends Event
+  final case class MessageHistoryRequest(replyBack: ActorRef[List[ChatMessage]])     extends Event
+  final case class NewUserMessage(content: String, replyBack: ActorRef[SessionInfo]) extends Event
+  private final case class MessageToken(text: String)                                extends Event
+  private final case class LLMResponse(response: Map[String, py.Any])                extends Event
+  private final case object InactivityTimeout                                        extends Event
 
-  final case class Document(source: String, topic: String)
   final case class ResponseData(
     messageToken: String,
     relevantDocuments: Option[List[Document]]
@@ -45,10 +47,11 @@ object KnowledgeBotActor {
 
       val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
 
-      val retriever      = new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! NewToken(_), withMemory = true)
+      val retriever =
+        new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! MessageToken(_), withMemory = true)
       val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
-      new KnowledgeBotActor(session, routerActor, retrieverActor).acceptMessage()
+      new KnowledgeBotActor(session, routerActor, retrieverActor).acceptEvents(Nil)
     }
 }
 
@@ -57,49 +60,62 @@ private final class KnowledgeBotActor(
   routerActor: ActorRef[MessageRouterActor.Event],
   retrieverActor: ActorRef[LLMRetrieverActor.Request]
 )(implicit val system: ActorSystem[_]) {
-  private def acceptMessage(): Behavior[Event] =
+  private def acceptEvents(messageHistory: List[ChatMessage]): Behavior[Event] =
     Behaviors.receiveMessage {
-      case ChatMessage(text, replyBack) =>
+      case MessageHistoryRequest(replyBack) =>
+        replyBack ! messageHistory
+
+        Behaviors.same
+      case NewUserMessage(content, replyBack) =>
         val (queue, source) = Source.queue[ServerSentEvent](1).preMaterialize()
 
         replyBack ! SessionInfo(source, session)
 
-        retrieverActor ! LLMRetrieverActor.Request(text)
+        retrieverActor ! LLMRetrieverActor.Request(content)
 
-        processTokens(queue)
+        processMessageTokens(messageHistory :+ UserMessage(DateTime.now(DateTimeZone.UTC), content, None), queue)
       case InactivityTimeout =>
         routerActor ! MessageRouterActor.SessionExpired(session)
 
         Behaviors.stopped
     }
 
-  private def processTokens(queue: BoundedSourceQueue[ServerSentEvent]): Behavior[Event] =
+  private def processMessageTokens(
+    messageHistory: List[ChatMessage],
+    queue: BoundedSourceQueue[ServerSentEvent]
+  ): Behavior[Event] =
     Behaviors.receiveMessage {
-      case _: ChatMessage =>
+      case _: NewUserMessage =>
         Behaviors.same
-      case NewToken(text) =>
+      case MessageToken(text) =>
         if (text.nonEmpty) {
           queue.offer(ServerSentEvent(ResponseData(messageToken = text, None), "in_progress"))
         }
 
         Behaviors.same
       case LLMResponse(response) =>
+        val relevantDocuments = response("source_documents")
+          .as[List[LangchainDocument]]
+          .map(d => Document(source = d.metadata("source"), topic = d.metadata("topic")))
+          .distinct
+
         queue.offer(
           ServerSentEvent(
             ResponseData(
               messageToken = "",
-              relevantDocuments = Some(
-                response("source_documents")
-                  .as[List[LangchainDocument]]
-                  .map(d => Document(source = d.metadata("source"), topic = d.metadata("topic")))
-                  .distinct
-              )
+              relevantDocuments = Some(relevantDocuments)
             ),
             "finish"
           )
         )
 
-        acceptMessage()
+        acceptEvents(
+          messageHistory :+ AssistantMessage(
+            DateTime.now(DateTimeZone.UTC),
+            response("result").as[String],
+            relevantDocuments
+          )
+        )
       case InactivityTimeout =>
         routerActor ! MessageRouterActor.SessionExpired(session)
 

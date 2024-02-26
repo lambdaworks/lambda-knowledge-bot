@@ -2,7 +2,8 @@ package io.lambdaworks.knowledgebot.actor
 
 import akka.actor.typed.Behavior
 import akka.actor.typed.scaladsl.Behaviors
-import io.lambdaworks.knowledgebot.actor.model.{Feedback, Interaction, InteractionFeedback, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.slack.{Interaction, InteractionFeedback, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.{Feedback, slack}
 import io.lambdaworks.knowledgebot.repository.Repository
 
 import scala.concurrent.duration.DurationInt
@@ -29,7 +30,7 @@ object FeedbackStoreActor {
           store(interactions.updated(interaction.id, interaction), repository)
         case StoreInteractionFeedback(id, feedback) =>
           interactions.get(id).foreach { interaction =>
-            repository.put(InteractionFeedback(feedback, interaction))
+            repository.put(slack.InteractionFeedback(feedback, interaction))
           }
 
           Behaviors.same
