@@ -43,7 +43,7 @@ object KnowledgeBotActor {
     system: ActorSystem[_]
   ): Behavior[Event] =
     Behaviors.setup { context =>
-      context.setReceiveTimeout(10.minutes, InactivityTimeout)
+      //context.setReceiveTimeout(10.minutes, InactivityTimeout)
 
       val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
 
