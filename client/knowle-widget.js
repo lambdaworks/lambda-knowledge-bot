@@ -173,9 +173,9 @@ async function generateBotResponse(userInput) {
           }
         } else if (eventType === "finish") {
           if (decodedChunk.relevantDocuments?.length) {
-            answer += "\n\nSource:\n";
+            answer += "\n\nRelevant documents:\n";
             decodedChunk.relevantDocuments.map(
-              (document) => (answer += "- " + document.source + "\n")
+              (document) => (answer += document.source + ", ")
             );
           }
           loopRunner = false;
