@@ -11,6 +11,7 @@ import {
 import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 import { type ChatType } from "@/lib/types";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface SidebarItemProps {
   index: number;
@@ -35,7 +36,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
 
   return (
     <motion.div
-      className="relative h-8"
+      className="relative h-8 cursor-pointer"
       variants={{
         initial: {
           height: 0,
@@ -68,8 +69,8 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
           <IconMessage className="mr-2" />
         )}
       </div>
-      <a
-        href={chat.id}
+      <Link
+        to={`${import.meta.env.VITE_FRONTEND_URL}?chatId=${chat.id}`}
         className={cn(
           buttonVariants({ variant: "ghost" }),
           "text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10",
@@ -113,7 +114,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
             )}
           </span>
         </div>
-      </a>
+      </Link>
       {isActive && <div className="absolute right-2 top-1">{children}</div>}
     </motion.div>
   );

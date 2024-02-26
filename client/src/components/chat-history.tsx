@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { SidebarList } from "@/components/sidebar-list";
@@ -12,23 +13,19 @@ interface ChatHistoryProps {
 }
 
 export function ChatHistory({ chats = [], setChats }: ChatHistoryProps) {
-  const handleNewChatClick = (): void => {
-    window.location.href = window.location.origin;
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="px-2 my-4">
-        <div
-          onClick={handleNewChatClick}
+        <Link
+          to={import.meta.env.VITE_FRONTEND_URL}
           className={cn(
             buttonVariants({ variant: "outline" }),
-            "text-black h-10 w-full justify-start bg-zinc-50 px-4 shadow-none hover:bg-zinc-200/40 dark:bg-zinc-900 dark:hover:bg-zinc-300/10"
+            "text-black h-10 w-full justify-start bg-zinc-50 px-4 shadow-none hover:bg-zinc-200/40 dark:bg-zinc-900 dark:hover:bg-zinc-300/10 cursor-pointer"
           )}
         >
           <IconPlus className="-translate-x-2 stroke-2" />
           New Chat
-        </div>
+        </Link>
       </div>
       <React.Suspense
         fallback={

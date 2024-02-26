@@ -9,13 +9,18 @@
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Knowle</title>
-    <script
-      type="module"
-      crossorigin
-      id="knowle-widget"
-      src="./knowle-widget.js"
-      async
-    ></script>
+
+    <!-- Conditionally load the widget script only on the "test-widget" route -->
+    <script type="module" crossorigin>
+      const currentRoute = window.location.pathname;
+      if (currentRoute === "/test-widget") {
+        const script = document.createElement("script");
+        script.type = "module";
+        script.src = "./knowle-widget.js";
+        script.async = true;
+        document.head.appendChild(script);
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { StreamingTextResponse } from "ai";
+import { useLocation, useParams } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
 import { ChatList } from "@/components/chat-list";
@@ -26,16 +27,21 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const [input, setInput] = useState<string>("");
   let chat: ChatType | undefined = chats.find((chat) => chat.id === id);
   const [messages, setMessages] = useState<Message[]>(chat?.messages || []);
+  const location = useLocation();
 
   useEffect(() => {
-    const parts = window.location.href.split("/");
-    const chatId = parts[parts.length - 1];
+    const urlParams = new URLSearchParams(location.search);
+    const chatId = urlParams.get("chatId");
+
     // add condition when chat list is empty to fetch from BE
     // const messages = fetchChatMessages(chatId);
-    const messages = chats.find((chat) => chat.id.toString() === chatId)
-      ?.messages;
-    setMessages(messages || []);
-  }, []);
+    if (chatId) {
+      const chat = chats.find((chat) => chat.id.toString() === chatId);
+      setMessages(chat?.messages || []);
+    } else {
+      setMessages([]);
+    }
+  }, [chats, location]);
 
   const stop = (): void => {
     stopGenerating();
