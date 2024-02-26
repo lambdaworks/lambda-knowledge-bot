@@ -1,5 +1,6 @@
 import React, { ChangeEvent, FormEvent, useEffect } from "react";
 import Textarea from "react-textarea-autosize";
+import { Link } from "react-router-dom";
 
 import { useEnterSubmit } from "@/lib/hooks/use-enter-submit";
 import { cn } from "@/lib/utils";
@@ -56,8 +57,8 @@ export function PromptForm({
       <div className="relative flex flex-col w-full px-8 overflow-hidden max-h-60 grow bg-background sm:rounded-md sm:border sm:px-12">
         <Tooltip>
           <TooltipTrigger asChild>
-            <button
-              onClick={(e) => e.preventDefault()}
+            <Link
+              to={window.location.origin}
               className={cn(
                 buttonVariants({ size: "sm", variant: "outline" }),
                 "absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4"
@@ -65,7 +66,7 @@ export function PromptForm({
             >
               <IconPlus />
               <span className="sr-only">New Chat</span>
-            </button>
+            </Link>
           </TooltipTrigger>
           <TooltipContent>New Chat</TooltipContent>
         </Tooltip>
