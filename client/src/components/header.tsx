@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
+import { observer } from "mobx-react-lite";
 
-import { LOCAL_STORAGE_KEYS, SESSION_STORAGE_KEYS } from "@/types/storage";
+import { StoreContext } from "@/store/context";
 import { ChatType } from "@/lib/types";
 
 import { SidebarMobile } from "./sidebar-mobile";
@@ -12,19 +13,25 @@ import { SidebarToggle } from "./sidebar-toggle";
 import LoginButton from "./login-button";
 import { Button } from "./ui/button";
 
-function UserOrLogin() {
+const UserOrLogin = observer(() => {
   const [chats, setChats] = useState<ChatType[]>([]);
+  const { authStore } = useContext(StoreContext);
   const { isAuthenticated, logout } = useAuth0();
+
+  useEffect(() => {
+    if (!authStore.isSessionAvailable && isAuthenticated) {
+      authStore.setIsSessionAvailable(true);
+    }
+  }, [isAuthenticated, authStore]);
 
   const handleLogout = async (): Promise<void> => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
-    sessionStorage.removeItem(SESSION_STORAGE_KEYS.email);
-    localStorage.setItem(LOCAL_STORAGE_KEYS.sidebar, "false");
+    authStore.setIsSessionAvailable(false);
   };
 
   return (
     <>
-      {isAuthenticated && (
+      {authStore.isSessionAvailable && (
         <>
           <SidebarMobile>
             <ChatHistory chats={chats} setChats={setChats} />
@@ -33,7 +40,7 @@ function UserOrLogin() {
         </>
       )}
       <div className="flex align-items-center">
-        {isAuthenticated ? (
+        {authStore.isSessionAvailable ? (
           <>
             <IconSeparator className="size-6 text-muted-foreground/50 me-2" />
             <Button
@@ -50,7 +57,7 @@ function UserOrLogin() {
       </div>
     </>
   );
-}
+});
 
 export function Header() {
   return (
