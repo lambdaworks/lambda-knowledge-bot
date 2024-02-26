@@ -44,7 +44,7 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
     userId: String
   ): Future[Source[ServerSentEvent, _]] =
     messageRouterActor
-      .ask[SessionInfo](MessageRouterActor.NewUserMessage(chatId, message.content, userId, _))
+      .ask[SessionInfo](MessageRouterActor.NewUserMessage(chatId, userId, message.content, _))
       .map(_.source.map(response => ServerSentEvent(response.data.toJson.compactPrint, response.`type`)))
 
   val chatRoutes: Route =
@@ -70,12 +70,14 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
         } ~
           path(Segment) { chatId =>
             pathEnd {
-              authService.authenticated { userId =>
-              entity(as[NewUserMessage]) { message =>
-                onSuccess(postChatMessage(message, Some(chatId), userId)) { source =>
-                  complete(source)
+              post {
+                authService.authenticated { userId =>
+                  entity(as[NewUserMessage]) { message =>
+                    onSuccess(postChatMessage(message, Some(chatId), userId)) { source =>
+                      complete(source)
+                    }
+                  }
                 }
-              }
               }
             }
           } ~
