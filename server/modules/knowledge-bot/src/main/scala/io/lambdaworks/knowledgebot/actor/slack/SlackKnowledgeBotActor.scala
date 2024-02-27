@@ -5,7 +5,7 @@ import akka.actor.typed.scaladsl.{Behaviors, StashBuffer}
 import akka.actor.typed.{ActorRef, Behavior}
 import akka.actor.{ActorSystem, Scheduler}
 import io.lambdaworks.knowledgebot.Main
-import io.lambdaworks.knowledgebot.actor.model.{Interaction, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.slack.{Interaction, SlackMessageId}
 import io.lambdaworks.knowledgebot.actor.slack.SlackKnowledgeBotActor._
 import io.lambdaworks.knowledgebot.actor.{FeedbackStoreActor, LLMRetrieverActor}
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever

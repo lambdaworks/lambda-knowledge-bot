@@ -1,7 +1,7 @@
 package io.lambdaworks.knowledgebot.repository.dynamodb
 
 import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item}
-import io.lambdaworks.knowledgebot.actor.model.InteractionFeedback
+import io.lambdaworks.knowledgebot.actor.model.slack.InteractionFeedback
 import io.lambdaworks.knowledgebot.repository.Repository
 
 class InteractionFeedbackRepository(client: DynamoDB, tableName: String) extends Repository[InteractionFeedback] {

@@ -3,7 +3,8 @@ package io.lambdaworks.knowledgebot.actor.slack
 import akka.actor.typed.ActorRef
 import akka.actor.typed.scaladsl.adapter.ClassicActorContextOps
 import akka.actor.{Actor, ActorSystem}
-import io.lambdaworks.knowledgebot.actor.model._
+import io.lambdaworks.knowledgebot.actor.model.slack.{InteractionFeedback, Message, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.{Negative, Positive}
 import io.lambdaworks.knowledgebot.actor.slack.SlackMessageListenerActor.reactionRegex
 import io.lambdaworks.knowledgebot.repository.Repository
 import slack.SlackUtil.{extractMentionedIds, isDirectMsg}

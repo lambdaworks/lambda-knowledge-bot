@@ -5,7 +5,7 @@ import akka.actor.typed.receptionist.{Receptionist, ServiceKey}
 import akka.actor.typed.scaladsl.{Behaviors, StashBuffer}
 import akka.actor.typed.{ActorRef, Behavior}
 import io.lambdaworks.knowledgebot.actor.FeedbackStoreActor
-import io.lambdaworks.knowledgebot.actor.model.{Message, SlackMessageId}
+import io.lambdaworks.knowledgebot.actor.model.slack.{Message, SlackMessageId}
 import io.lambdaworks.knowledgebot.actor.slack.SlackMessageHandlerActor._
 import slack.rtm.SlackRtmClient
 

@@ -11,54 +11,90 @@ import akka.stream.scaladsl.Source
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives._
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
-import com.softwaremill.session.SessionDirectives.{optionalSession, setSession}
-import com.softwaremill.session.SessionOptions.oneOff
-import com.softwaremill.session.{HeaderST, SetSessionTransport}
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
-import io.lambdaworks.knowledgebot.api.JwtSessionManager._
+import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
+import io.lambdaworks.knowledgebot.api.auth.AuthService
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
+import io.lambdaworks.knowledgebot.api.route.ChatRoutes.NewUserMessage
+import spray.json.DefaultJsonProtocol._
 import spray.json.enrichAny
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{ExecutionContextExecutor, Future}
 
-final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event])(implicit val system: ActorSystem[_]) {
+final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], authService: AuthService)(implicit
+  val system: ActorSystem[_]
+) {
   implicit val executionContext: ExecutionContextExecutor = system.executionContext
 
   private implicit val timeout: Timeout = 5.seconds
 
-  private val sessionTransport: SetSessionTransport = HeaderST
-
-  val corsSettings: CorsSettings =
+  private val corsSettings: CorsSettings =
     CorsSettings.defaultSettings.withAllowGenericHttpRequests(true).withExposedHeaders(Seq("Set-Authorization"))
 
+  private def getChats(userId: String): Future[List[Chat]] =
+    messageRouterActor.ask[List[Chat]](MessageRouterActor.UserChatsRequest(userId, _))
+
+  private def getChatHistory(chatId: String): Future[List[ChatMessage]] =
+    messageRouterActor.ask[List[ChatMessage]](MessageRouterActor.ChatHistoryRequest(chatId, _))
+
   private def postChatMessage(
-    message: ChatMessage,
-    session: Option[SessionData]
-  ): Future[(Source[ServerSentEvent, _], String)] =
+    message: NewUserMessage,
+    chatId: Option[String],
+    userId: String
+  ): Future[Source[ServerSentEvent, _]] =
     messageRouterActor
-      .ask[SessionInfo](MessageRouterActor.ChatMessage(session.map(_.value), message.text, _))
-      .map(info =>
-        (info.source.map(response => ServerSentEvent(response.data.toJson.compactPrint, response.`type`)), info.session)
-      )
+      .ask[SessionInfo](MessageRouterActor.NewUserMessage(chatId, userId, message.content, _))
+      .map(_.source.map(response => ServerSentEvent(response.data.toJson.compactPrint, response.`type`)))
 
   val chatRoutes: Route =
     cors(corsSettings) {
-      path("chat") {
-        post {
-          optionalSession(oneOff, sessionTransport) { session =>
-            entity(as[ChatMessage]) { message =>
-              onSuccess(postChatMessage(message, session)) { (source, session) =>
-                setSession(oneOff, sessionTransport, SessionData(session)) {
-                  complete(source)
+      pathPrefix("chats") {
+        pathEnd {
+          get {
+            authService.authenticated { userId =>
+              onSuccess(getChats(userId)) { chats =>
+                complete(chats)
+              }
+            }
+          } ~
+            post {
+              authService.authenticated { userId =>
+                entity(as[NewUserMessage]) { message =>
+                  onSuccess(postChatMessage(message, None, userId)) { source =>
+                    complete(source)
+                  }
+                }
+              }
+            }
+        } ~
+          path(Segment) { chatId =>
+            pathEnd {
+              post {
+                authService.authenticated { userId =>
+                  entity(as[NewUserMessage]) { message =>
+                    onSuccess(postChatMessage(message, Some(chatId), userId)) { source =>
+                      complete(source)
+                    }
+                  }
+                }
+              }
+            }
+          } ~
+          path(Segment / "messages") { chatId =>
+            pathEnd {
+              get {
+                onSuccess(getChatHistory(chatId)) { messages =>
+                  complete(messages)
                 }
               }
             }
           }
-        }
       }
     }
 }
 
-case class ChatMessage(text: String)
+object ChatRoutes {
+  final case class NewUserMessage(content: String)
+}
