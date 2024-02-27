@@ -67,6 +67,8 @@ jobs:
           container-name: knowle
           image: ${{ steps.login-ecr.outputs.registry }}/knowle:${{ steps.sha_short.outputs.sha_short }}
           environment-variables: |
+            AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }}
+            AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }}
             DYNAMODB_REGION=${{ secrets.DYNAMODB_REGION }}
             DYNAMODB_TABLE_NAME=${{ secrets.DYNAMODB_TABLE_NAME }}
             CLICKUP_COMMON_DOC_URL=${{ secrets.CLICKUP_COMMON_DOC_URL }}
