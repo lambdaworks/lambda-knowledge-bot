@@ -1,7 +1,7 @@
 {
     "containerDefinitions": [
         {
-            "name": "",
+            "name": "knowle",
             "image": "",
             "cpu": 0,
             "memoryReservation": 512,
