@@ -55,7 +55,7 @@ jobs:
         with:
           context: /home/runner/work/lambda-knowledge-bot/lambda-knowledge-bot/server/modules/knowledge-bot/target/docker/stage/
           push: true
-          tags: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
+          tags: ${{ steps.login-ecr.outputs.registry }}/knowle:${{ steps.sha_short.outputs.sha_short }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
@@ -64,8 +64,8 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: aws/task-definition-server.json
-          container-name: lambda-knowledge-bot-server
-          image: ${{ steps.login-ecr.outputs.registry }}/lambda-knowledge-bot-server:${{ steps.sha_short.outputs.sha_short }}
+          container-name: knowle
+          image: ${{ steps.login-ecr.outputs.registry }}/knowle:${{ steps.sha_short.outputs.sha_short }}
           environment-variables: |
             DYNAMODB_REGION=${{ secrets.DYNAMODB_REGION }}
             DYNAMODB_TABLE_NAME=${{ secrets.DYNAMODB_TABLE_NAME }}
@@ -85,6 +85,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.render-task-def.outputs.task-definition }}
-          service: lambda-knowledge-bot-server
+          service: knowle
           cluster: lambdaworks-cluster
           force-new-deployment: true
