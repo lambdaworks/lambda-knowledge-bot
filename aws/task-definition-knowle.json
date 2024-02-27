@@ -1,7 +1,7 @@
 {
     "containerDefinitions": [
         {
-            "name": "lambda-knowledge-bot-server",
+            "name": "knowle",
             "image": "",
             "cpu": 0,
             "memoryReservation": 512,
@@ -19,14 +19,14 @@
             "logConfiguration": {
                 "logDriver": "awslogs",
                 "options": {
-                    "awslogs-group": "/ecs/lambda-knowledge-bot-server",
+                    "awslogs-group": "/ecs/knowle",
                     "awslogs-region": "us-east-1",
-                    "awslogs-stream-prefix": "lambda-knowledge-bot-server"
+                    "awslogs-stream-prefix": "knowle"
                 }
             }
         }
     ],
-    "family": "lambda-knowledge-bot-server",
+    "family": "knowle",
     "taskRoleArn": "arn:aws:iam::195175520793:role/ecs-task-role",
     "executionRoleArn": "arn:aws:iam::195175520793:role/ecs-execution-role",
     "networkMode": "host",
