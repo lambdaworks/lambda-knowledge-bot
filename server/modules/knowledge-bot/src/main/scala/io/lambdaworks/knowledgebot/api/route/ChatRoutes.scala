@@ -31,7 +31,7 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
   private implicit val timeout: Timeout = 5.seconds
 
   private val corsSettings: CorsSettings =
-    CorsSettings.defaultSettings.withAllowGenericHttpRequests(true).withExposedHeaders(Seq("Set-Authorization"))
+    CorsSettings.defaultSettings
 
   private def getChats(userId: String): Future[List[Chat]] =
     messageRouterActor.ask[List[Chat]](MessageRouterActor.UserChatsRequest(userId, _))
