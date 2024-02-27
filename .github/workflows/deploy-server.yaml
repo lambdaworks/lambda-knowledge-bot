@@ -63,7 +63,7 @@ jobs:
         id: render-task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: aws/task-definition-server.json
+          task-definition: aws/task-definition-knowle.json
           container-name: knowle
           image: ${{ steps.login-ecr.outputs.registry }}/knowle:${{ steps.sha_short.outputs.sha_short }}
           environment-variables: |
