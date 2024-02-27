@@ -36,8 +36,8 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
   private def getChats(userId: String): Future[List[Chat]] =
     messageRouterActor.ask[List[Chat]](MessageRouterActor.UserChatsRequest(userId, _))
 
-  private def getChatHistory(chatId: String): Future[List[ChatMessage]] =
-    messageRouterActor.ask[List[ChatMessage]](MessageRouterActor.ChatHistoryRequest(chatId, _))
+  private def getChatHistory(userId: String, chatId: String): Future[List[ChatMessage]] =
+    messageRouterActor.ask[List[ChatMessage]](MessageRouterActor.ChatHistoryRequest(userId, chatId, _))
 
   private def postChatMessage(
     message: NewUserMessage,
@@ -85,8 +85,10 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
           path(Segment / "messages") { chatId =>
             pathEnd {
               get {
-                onSuccess(getChatHistory(chatId)) { messages =>
-                  complete(messages)
+                authService.authenticated { userId =>
+                  onSuccess(getChatHistory(userId, chatId)) { messages =>
+                    complete(messages)
+                  }
                 }
               }
             }
