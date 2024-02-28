@@ -65,10 +65,10 @@ object ApiJsonProtocol {
     jsonFormat2(Document.apply)
 
   implicit val userMessageJsonFormat: RootJsonFormat[UserMessage] =
-    jsonFormat4(UserMessage.apply)
+    jsonFormat7(UserMessage.apply)
 
   implicit val assistantMessageJsonFormat: RootJsonFormat[AssistantMessage] =
-    jsonFormat4(AssistantMessage.apply)
+    jsonFormat7(AssistantMessage.apply)
 
   implicit object ChatMessageJsonFormat extends RootJsonFormat[ChatMessage] {
     def write(obj: ChatMessage): JsValue = obj match {

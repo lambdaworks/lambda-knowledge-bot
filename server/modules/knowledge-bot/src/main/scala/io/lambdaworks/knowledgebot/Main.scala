@@ -22,7 +22,11 @@ import io.lambdaworks.knowledgebot.fetcher.github.GitHubDocumentFetcher
 import io.lambdaworks.knowledgebot.listener.ListenerService
 import io.lambdaworks.knowledgebot.listener.github.GitHubPushListenerService
 import io.lambdaworks.knowledgebot.repository.Repository
-import io.lambdaworks.knowledgebot.repository.dynamodb.InteractionFeedbackRepository
+import io.lambdaworks.knowledgebot.repository.dynamodb.{
+  ChatMessageRepository,
+  ChatRepository,
+  InteractionFeedbackRepository
+}
 import io.lambdaworks.knowledgebot.vectordb.VectorDatabase
 import io.lambdaworks.knowledgebot.vectordb.qdrant.QdrantDatabase
 import slack.rtm.SlackRtmClient
@@ -78,11 +82,19 @@ object Main {
     .standard()
     .withRegion(config.getString("dynamodb.region"))
     .build()
+  // DEV MODE
+  //    .standard().withEndpointConfiguration(
+  //    new AwsClientBuilder.EndpointConfiguration("http://localhost:" + 8001, config.getString("dynamodb.region"))).build();
 
   val dynamoDB: DynamoDB = new DynamoDB(client)
 
   val interactionFeedbackRepository: Repository[InteractionFeedback] =
     new InteractionFeedbackRepository(dynamoDB, config.getString("dynamodb.tableName"))
+  val chatRepository: ChatRepository =
+    new ChatRepository(dynamoDB, config.getString("dynamodb.mainTableName"))
+
+  val chatMessageRepository: ChatMessageRepository =
+    new ChatMessageRepository(dynamoDB, config.getString("dynamodb.mainTableName"))
 
   def main(args: Array[String]): Unit = {
     listenerService.foreach { listenerService =>
@@ -102,7 +114,8 @@ object Main {
       client.addEventListener(slackMessageListenerActor)
     }
 
-    val messageRouterActor = system.spawn(MessageRouterActor(), "MessageRouterActor")
+    val messageRouterActor =
+      system.spawn(MessageRouterActor(chatRepository, chatMessageRepository), "MessageRouterActor")
 
     val serverRoutes =
       new ChatRoutes(messageRouterActor, authService).chatRoutes ~ listenerService.fold[Route](RouteDirectives.reject)(

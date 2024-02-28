@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
+import io.lambdaworks.knowledgebot.repository.dynamodb.{ChatMessageRepository, ChatRepository}
 import org.joda.time.{DateTime, DateTimeZone}
 
 import java.util.UUID
@@ -17,49 +18,52 @@ object MessageRouterActor {
     content: String,
     replyBack: ActorRef[SessionInfo]
   ) extends Event
-  final case class ChatHistoryRequest(chatId: String, replyBack: ActorRef[List[ChatMessage]]) extends Event
-  final case class SessionExpired(session: String)                                            extends Event
+  final case class ChatHistoryRequest(userId: String, chatId: String, replyBack: ActorRef[List[ChatMessage]])
+      extends Event
+  final case class SessionExpired(session: String) extends Event
 
-  def apply()(implicit system: ActorSystem[_]): Behavior[Event] =
-    route(Map.empty)
+  def apply(chatRepository: ChatRepository, chatMessageRepository: ChatMessageRepository)(implicit
+    system: ActorSystem[_]
+  ): Behavior[Event] =
+    route(chatRepository, chatMessageRepository)
 
-  def route(
-    sessionActors: Map[String, (Chat, ActorRef[KnowledgeBotActor.Event])]
-  )(implicit system: ActorSystem[_]): Behavior[Event] =
+  def route(chatRepository: ChatRepository, chatMessageRepository: ChatMessageRepository)(implicit
+    system: ActorSystem[_]
+  ): Behavior[Event] =
     Behaviors.receive { (context, event) =>
       event match {
         case UserChatsRequest(userId, replyBack) =>
-          replyBack ! sessionActors.toList.map(_._2._1).filter(_.userId == userId)
-
+          val chatsDB = chatRepository.getAllForUser(userId)
+          replyBack ! chatsDB
           Behaviors.same
         case NewUserMessage(chatId, userId, content, replyBack) =>
-          chatId
-            .flatMap(sessionActors.get)
-            .fold {
-              val chatId = UUID.randomUUID().toString
-              val chat   = Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC))
-
-              val knowledgeBotActor = context.spawn(KnowledgeBotActor(chat, context.self), s"KnowledgeBotActor-$chatId")
-
-              knowledgeBotActor ! KnowledgeBotActor.NewUserMessage(content, replyBack)
-
-              route(
-                sessionActors + (chatId -> (chat, knowledgeBotActor))
-              )
-            } { sessionTuple =>
-              sessionTuple._2 ! KnowledgeBotActor.NewUserMessage(content, replyBack)
-
-              route(sessionActors)
-            }
-        case ChatHistoryRequest(chatId, replyBack) =>
-          sessionActors.get(chatId) match {
-            case Some((_, chatActor)) =>
-              chatActor ! KnowledgeBotActor.MessageHistoryRequest(replyBack)
+          val chat = chatId.fold {
+            val chatId = UUID.randomUUID().toString
+            val chat   = Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC))
+            chatRepository.put(chat)
+            chat
+          } { chatId =>
+            chatRepository
+              .get(userId, chatId)
+              .fold {
+                val chat = Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC))
+                chatRepository.put(chat)
+                chat
+              } { chat =>
+                chat
+              }
           }
 
+          val knowledgeBotActor =
+            context.spawn(KnowledgeBotActor(chat, chatMessageRepository, context.self), s"KnowledgeBotActor-${chat.id}")
+          knowledgeBotActor ! KnowledgeBotActor.NewUserMessage(content, replyBack)
+
+          route(chatRepository, chatMessageRepository)
+        case ChatHistoryRequest(userId, chatId, replyBack) =>
+          val chatMessagesDB = chatMessageRepository.getAllForUserAndChat(userId, chatId)
+          replyBack ! chatMessagesDB
+
           Behaviors.same
-        case SessionExpired(session) =>
-          route(sessionActors.removed(session))
       }
     }
 }

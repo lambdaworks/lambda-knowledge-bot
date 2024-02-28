@@ -7,28 +7,27 @@ import akka.stream.scaladsl.Source
 import io.lambdaworks.knowledgebot.Main
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{
   Event,
-  InactivityTimeout,
   LLMResponse,
-  MessageHistoryRequest,
   MessageToken,
   NewUserMessage,
   ResponseData,
   ServerSentEvent,
   SessionInfo
 }
-import io.lambdaworks.knowledgebot.actor.model.{AssistantMessage, Chat, ChatMessage, Document, UserMessage}
+import io.lambdaworks.knowledgebot.actor.model.{AssistantMessage, Chat, Document, UserMessage}
+import io.lambdaworks.knowledgebot.repository.dynamodb.ChatMessageRepository
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
 import io.lambdaworks.langchain.schema.document.{Document => LangchainDocument}
 import me.shadaj.scalapy.py
 import org.joda.time.{DateTime, DateTimeZone}
 
+import java.util.UUID
+
 object KnowledgeBotActor {
   sealed trait Event
-  final case class MessageHistoryRequest(replyBack: ActorRef[List[ChatMessage]])     extends Event
   final case class NewUserMessage(content: String, replyBack: ActorRef[SessionInfo]) extends Event
   private final case class MessageToken(text: String)                                extends Event
   private final case class LLMResponse(response: Map[String, py.Any])                extends Event
-  private final case object InactivityTimeout                                        extends Event
 
   final case class ResponseData(
     messageToken: String,
@@ -38,8 +37,8 @@ object KnowledgeBotActor {
   final case class ServerSentEvent(data: ResponseData, `type`: String)
   final case class SessionInfo(source: Source[ServerSentEvent, _], session: String)
 
-  def apply(chat: Chat, routerActor: ActorRef[MessageRouterActor.Event])(implicit
-    system: ActorSystem[_]
+  def apply(chat: Chat, chatMessageRepository: ChatMessageRepository, routerActor: ActorRef[MessageRouterActor.Event])(
+    implicit system: ActorSystem[_]
   ): Behavior[Event] =
     Behaviors.setup { context =>
       // context.setReceiveTimeout(10.minutes, InactivityTimeout)
@@ -50,37 +49,32 @@ object KnowledgeBotActor {
         new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! MessageToken(_), withMemory = true)
       val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
-      new KnowledgeBotActor(chat, routerActor, retrieverActor).acceptEvents(Nil)
+      new KnowledgeBotActor(chat, routerActor, retrieverActor, chatMessageRepository).acceptEvents()
     }
 }
 
 private final class KnowledgeBotActor(
   chat: Chat,
   routerActor: ActorRef[MessageRouterActor.Event],
-  retrieverActor: ActorRef[LLMRetrieverActor.Request]
+  retrieverActor: ActorRef[LLMRetrieverActor.Request],
+  chatMessageRepository: ChatMessageRepository
 )(implicit val system: ActorSystem[_]) {
-  private def acceptEvents(messageHistory: List[ChatMessage]): Behavior[Event] =
-    Behaviors.receiveMessage {
-      case MessageHistoryRequest(replyBack) =>
-        replyBack ! messageHistory
+  private def acceptEvents(): Behavior[Event] =
+    Behaviors.receiveMessage { case NewUserMessage(content, replyBack) =>
+      val (queue, source) = Source.queue[ServerSentEvent](1).preMaterialize()
 
-        Behaviors.same
-      case NewUserMessage(content, replyBack) =>
-        val (queue, source) = Source.queue[ServerSentEvent](1).preMaterialize()
+      replyBack ! SessionInfo(source, chat.id)
 
-        replyBack ! SessionInfo(source, chat.id)
+      retrieverActor ! LLMRetrieverActor.Request(content)
 
-        retrieverActor ! LLMRetrieverActor.Request(content)
+      val msgId       = UUID.randomUUID().toString
+      val userMessage = UserMessage(msgId, chat.userId, chat.id, DateTime.now(DateTimeZone.UTC), content, None)
+      chatMessageRepository.put(userMessage)
 
-        processMessageTokens(messageHistory :+ UserMessage(DateTime.now(DateTimeZone.UTC), content, None), queue)
-      case InactivityTimeout =>
-        routerActor ! MessageRouterActor.SessionExpired(chat.id)
-
-        Behaviors.stopped
+      processMessageTokens(queue)
     }
 
   private def processMessageTokens(
-    messageHistory: List[ChatMessage],
     queue: BoundedSourceQueue[ServerSentEvent]
   ): Behavior[Event] =
     Behaviors.receiveMessage {
@@ -109,15 +103,16 @@ private final class KnowledgeBotActor(
           )
         )
 
-        acceptEvents(
-          messageHistory :+ AssistantMessage(
-            DateTime.now(DateTimeZone.UTC),
-            response("result").as[String],
-            relevantDocuments
-          )
+        val msgId = UUID.randomUUID().toString
+        val assistantMessage = AssistantMessage(
+          msgId,
+          chat.userId,
+          chat.id,
+          DateTime.now(DateTimeZone.UTC),
+          response("result").as[String],
+          relevantDocuments
         )
-      case InactivityTimeout =>
-        routerActor ! MessageRouterActor.SessionExpired(chat.id)
+        chatMessageRepository.put(assistantMessage)
 
         Behaviors.stopped
     }
