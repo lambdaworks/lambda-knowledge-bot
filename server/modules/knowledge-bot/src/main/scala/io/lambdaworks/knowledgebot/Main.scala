@@ -2,7 +2,7 @@ package io.lambdaworks.knowledgebot
 
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.adapter.ClassicActorSystemOps
-import akka.actor.{ActorSystem => UntypedActorSystem, Props, Scheduler}
+import akka.actor.{Props, Scheduler, ActorSystem => UntypedActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -16,7 +16,7 @@ import io.lambdaworks.knowledgebot.actor.MessageRouterActor
 import io.lambdaworks.knowledgebot.actor.model.slack.InteractionFeedback
 import io.lambdaworks.knowledgebot.actor.slack.SlackMessageListenerActor
 import io.lambdaworks.knowledgebot.api.auth.AuthService
-import io.lambdaworks.knowledgebot.api.route.ChatRoutes
+import io.lambdaworks.knowledgebot.api.route.{ChatRoutes, SwaggerRoutes}
 import io.lambdaworks.knowledgebot.fetcher.DocumentFetcher
 import io.lambdaworks.knowledgebot.fetcher.github.GitHubDocumentFetcher
 import io.lambdaworks.knowledgebot.listener.ListenerService
@@ -117,10 +117,12 @@ object Main {
     val messageRouterActor =
       system.spawn(MessageRouterActor(chatRepository, chatMessageRepository), "MessageRouterActor")
 
+    val routes: ChatRoutes     = new ChatRoutes(messageRouterActor, authService)
+    val swagger: SwaggerRoutes = new SwaggerRoutes()
+
     val serverRoutes =
-      new ChatRoutes(messageRouterActor, authService).chatRoutes ~ listenerService.fold[Route](RouteDirectives.reject)(
-        _.routes
-      )
+      routes.chatRoutes ~ swagger.swaggerRoute ~ listenerService
+        .fold[Route](RouteDirectives.reject)(_.routes)
 
     Http()
       .newServerAt(config.getString("api.host"), config.getInt("api.port"))
