@@ -67,21 +67,16 @@ jobs:
           container-name: knowle
           image: ${{ steps.login-ecr.outputs.registry }}/knowle:${{ steps.sha_short.outputs.sha_short }}
           environment-variables: |
-            AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }}
-            AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }}
             DYNAMODB_REGION=${{ secrets.DYNAMODB_REGION }}
             DYNAMODB_TABLE_NAME=${{ secrets.DYNAMODB_TABLE_NAME }}
-            CLICKUP_COMMON_DOC_URL=${{ secrets.CLICKUP_COMMON_DOC_URL }}
-            GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-            GITHUB_USER=${{ secrets.GITHUB_USER }}
-            GITHUB_REPO=${{ secrets.GITHUB_REPO }}
-            GITHUB_WEBHOOK_SECRET=${{ secrets.GITHUB_WEBHOOK_SECRET }}
             QDRANT_CLUSTER_URL=${{ secrets.QDRANT_CLUSTER_URL }}
             QDRANT_API_KEY=${{ secrets.QDRANT_API_KEY }}
             QDRANT_COLLECTION_NAME=${{ secrets.QDRANT_COLLECTION_NAME }}
             SESSION_SERVER_SECRET=${{ secrets.SESSION_SERVER_SECRET }}
             OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-            SLACK_TOKEN=${{ secrets.SLACK_TOKEN }}
+            AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }}
+            AUTH0_AUDIENCE=${{ secrets.AUTH0_AUDIENCE }}
+            DYNAMODB_MAIN_TABLE_NAME=${{ secrets.DYNAMODB_MAIN_TABLE_NAME }}
 
       - name: Deploy to Amazon ECS service
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
