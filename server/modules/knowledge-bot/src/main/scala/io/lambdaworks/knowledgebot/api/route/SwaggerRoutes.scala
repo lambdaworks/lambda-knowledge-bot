@@ -3,9 +3,8 @@ package io.lambdaworks.knowledgebot.api.route
 import akka.actor.typed.ActorSystem
 import akka.http.scaladsl.server.Route
 import akka.stream.scaladsl.Source
-import akka.util.ByteString
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor
-import io.lambdaworks.knowledgebot.actor.model.Chat
+import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes.NewUserMessage
 import org.joda.time.DateTime
@@ -93,15 +92,14 @@ final class SwaggerRoutes(implicit
       .summary("Remove user chats")
       .tag("ChatHistoryService")
 
-  private val chatMessagesEndpoint
-    : Endpoint[Unit, (String, Option[String], Option[String], String), Unit, String, Any] =
+  private val chatMessagesEndpoint: Endpoint[Unit, (String, String), Unit, ChatMessage, Any] =
     endpoint.get
-      .in("chat" / "messages")
-      .in(query[String]("chatId"))
-      .in(query[Option[String]]("page"))
-      .in(query[Option[String]]("limit"))
+      .in("chats" / path[String]("chatId") / "messages")
+//      .in(query[String]("chatId"))
+//      .in(query[Option[String]]("page"))
+//      .in(query[Option[String]]("limit"))
       .in(header[String]("Authentication").description("JWT token for authentication"))
-      .out(jsonBody[String].description("Successful final response with JWT token"))
+      .out(jsonBody[ChatMessage].description("Successful final response with JWT token"))
       .errorOut(
         oneOf(
           oneOfVariant(statusCode(StatusCode.Unauthorized).description("JWT token is invalid")),
