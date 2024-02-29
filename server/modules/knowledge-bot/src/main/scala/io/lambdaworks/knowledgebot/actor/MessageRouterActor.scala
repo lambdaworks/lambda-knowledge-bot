@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.Behaviors
 import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
+import io.lambdaworks.knowledgebot.api.route.ChatRoutes
 import io.lambdaworks.knowledgebot.repository.dynamodb.{ChatMessageRepository, ChatRepository}
 import org.joda.time.{DateTime, DateTimeZone}
 
@@ -40,14 +41,16 @@ object MessageRouterActor {
           val chat = chatId.fold {
             val chatId = UUID.randomUUID().toString
             val chat   = Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC))
-            chatRepository.put(chat)
+            if (userId != ChatRoutes.Anonymous)
+              chatRepository.put(chat)
             chat
           } { chatId =>
             chatRepository
               .get(userId, chatId)
               .fold {
                 val chat = Chat(chatId, userId, content, DateTime.now(DateTimeZone.UTC))
-                chatRepository.put(chat)
+                if (userId != ChatRoutes.Anonymous)
+                  chatRepository.put(chat)
                 chat
               } { chat =>
                 chat
@@ -55,7 +58,7 @@ object MessageRouterActor {
           }
 
           val knowledgeBotActor =
-            context.spawn(KnowledgeBotActor(chat, chatMessageRepository, context.self), s"KnowledgeBotActor-${chat.id}")
+            context.spawn(KnowledgeBotActor(chat, chatMessageRepository), s"KnowledgeBotActor-${chat.id}")
           knowledgeBotActor ! KnowledgeBotActor.NewUserMessage(content, replyBack)
 
           route(chatRepository, chatMessageRepository)
