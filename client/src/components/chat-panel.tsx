@@ -37,7 +37,7 @@ export function ChatPanel({
   reload,
   input,
   setInput,
-  messages,
+  messages = [],
 }: ChatPanelProps) {
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
 

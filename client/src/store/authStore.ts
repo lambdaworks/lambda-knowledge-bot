@@ -13,6 +13,8 @@ export default class AuthStore {
     makeAutoObservable(this, {
       rootStore: false,
     });
+
+    this.initPersist();
   }
 
   initPersist() {
@@ -27,6 +29,10 @@ export default class AuthStore {
     runInAction(() => {
       this.isSessionAvailable = isSessionAvailable;
     });
+  }
+
+  handleLogout() {
+    this.rootStore.clearStore();
   }
 
   clearStore() {

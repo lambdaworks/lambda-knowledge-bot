@@ -1,17 +1,37 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 
-import { ChatType } from "@/lib/types";
-import { handleFetchAllUserChats } from "@/api/api";
 import { Chat } from "@/components/chat";
-
 import ChatLayout from "./layout";
+import { StoreContext } from "@/store";
+import { useAuth0 } from "@auth0/auth0-react";
 
-export default function IndexPage() {
-  const [chats, setChats] = useState<ChatType[]>(handleFetchAllUserChats());
+const IndexPage = () => {
+  const { chatStore } = useContext(StoreContext);
+  const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    const fetchChats = async () => {
+      const token = await getAccessTokenSilently();
+      chatStore.setIsChatListLoaded(false);
+      await chatStore.fetchChats(token || undefined);
+      chatStore.setIsChatListLoaded(true);
+    };
+
+    isAuthenticated && fetchChats();
+  }, [isAuthenticated, chatStore]);
+
+  // Persist currentChat only when users are logged in
+  useEffect(() => {
+    if (isAuthenticated) {
+      chatStore.initPersist();
+    }
+  }, [isAuthenticated]);
 
   return (
-    <ChatLayout chats={chats} setChats={setChats}>
-      <Chat chats={chats} setChats={setChats} />
+    <ChatLayout>
+      <Chat />
     </ChatLayout>
   );
-}
+};
+
+export default IndexPage;
