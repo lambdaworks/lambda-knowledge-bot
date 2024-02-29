@@ -1,9 +1,8 @@
 package io.lambdaworks.knowledgebot.repository.dynamodb
 
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
-import com.amazonaws.services.dynamodbv2.document.utils.{NameMap, ValueMap}
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap
 import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item}
-import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import io.lambdaworks.knowledgebot.actor.model.Chat
 import io.lambdaworks.knowledgebot.repository.Repository
 import org.joda.time.DateTime
@@ -32,37 +31,21 @@ class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Cha
 
   def getAllForUser(userId: String): List[Chat] = {
     val query = new QuerySpec()
-      .withKeyConditionExpression("#pk = :pk and begins_with(#sk, :sk)")
-      .withNameMap(
-        new NameMap()
-          .`with`("#pk", "pk")
-          .`with`("#sk", "sk")
-      )
+      .withKeyConditionExpression("pk = :pk and begins_with(sk, :chat)")
       .withValueMap(
         new ValueMap()
           .withString(":pk", s"USER#$userId")
-          .withString(":sk", "CHAT#")
+          .withString(":chat", "CHAT#")
       )
       .withScanIndexForward(false)
 
-    println(table.getTableName)
-    println(query.getKeyConditionExpression)
-    println(query.getNameMap)
-    println(query.getValueMap)
+    val response = table.query(query)
 
-    try {
-      val response = table.query(query)
+    val chats: List[Chat] = response.iterator.asScala.map { it =>
+      Chat(it.getString("id"), it.getString("userId"), it.getString("title"), new DateTime(it.getString("createdAt")))
+    }.toList
 
-      val chats: List[Chat] = response.iterator.asScala.map { it =>
-        Chat(it.getString("id"), it.getString("userId"), it.getString("title"), new DateTime(it.getString("createdAt")))
-      }.toList
-
-      chats
-    } catch {
-      case e: AmazonDynamoDBException =>
-        e.printStackTrace()
-        Nil
-    }
+    chats
   }
 
   def put(item: Chat): Unit = {
