@@ -3,6 +3,7 @@ package io.lambdaworks.knowledgebot.repository.dynamodb
 import com.amazonaws.services.dynamodbv2.document.spec.QuerySpec
 import com.amazonaws.services.dynamodbv2.document.utils.ValueMap
 import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item}
+import com.amazonaws.services.dynamodbv2.model.AmazonDynamoDBException
 import io.lambdaworks.knowledgebot.actor.model.Chat
 import io.lambdaworks.knowledgebot.repository.Repository
 import org.joda.time.DateTime
@@ -39,13 +40,23 @@ class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Cha
       )
       .withScanIndexForward(false)
 
-    val response = table.query(query)
+    println(table.getTableName)
+    println(query.getKeyConditionExpression)
+    println(query.getValueMap)
 
-    val chats: List[Chat] = response.iterator.asScala.map { it =>
-      Chat(it.getString("id"), it.getString("userId"), it.getString("title"), new DateTime(it.getString("createdAt")))
-    }.toList
+    try {
+      val response = table.query(query)
 
-    chats
+      val chats: List[Chat] = response.iterator.asScala.map { it =>
+        Chat(it.getString("id"), it.getString("userId"), it.getString("title"), new DateTime(it.getString("createdAt")))
+      }.toList
+
+      chats
+    } catch {
+      case e: AmazonDynamoDBException =>
+        e.printStackTrace()
+        Nil
+    }
   }
 
   def put(item: Chat): Unit = {
