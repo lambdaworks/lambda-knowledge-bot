@@ -10,8 +10,8 @@ export interface Message {
 export interface ChatType extends Record<string, any> {
   id: string;
   title: string;
-  createdAt: Date;
-  messages: Message[];
+  createdAt: Date | null;
+  messages?: Message[];
   sharePath?: string;
 }
 

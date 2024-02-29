@@ -1,7 +1,4 @@
-import { ChatType, Message } from "@/lib/types";
-import { SESSION_STORAGE_KEYS } from "@/types/storage";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { Message } from "@/lib/types";
 export let stopGeneratingAnswer: boolean = false;
 
 interface Document {
@@ -19,105 +16,108 @@ export const handleDislikeMessage = (): boolean => {
 
 export const removeAllUserChats = () => {};
 
-export const handleFetchAllUserChats = (): ChatType[] => {
-  const mock1: ChatType = {
-    id: "1",
-    title: "Example1",
-    createdAt: new Date(),
-    messages: [
-      {
-        id: "1",
-        content: "Hello!",
-        role: "user",
-        liked: false,
-        disliked: false,
-      },
-      {
-        id: "2",
-        content: "How can I help you?",
-        role: "system",
-        liked: false,
-        disliked: false,
-      },
-    ],
-  };
-  const mock2: ChatType = {
-    id: "2",
-    title: "Example2",
-    createdAt: new Date(),
-    messages: [
-      {
-        id: "2",
-        content: "Hello",
-        role: "user",
-        liked: false,
-        disliked: false,
-      },
-      {
-        id: "2",
-        content: "Hello",
-        role: "system",
-        liked: false,
-        disliked: false,
-      },
-    ],
-  };
-  return [mock1, mock2];
-};
-
-const getHeaders = (chatId: string | undefined) => {
-  const headers: { [key: string]: string } = {
-    "Content-Type": "application/json",
-  };
-
-  if (sessionStorage.getItem(`${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`)) {
-    const token = sessionStorage.getItem(
-      `${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`
-    );
-    headers["Authorization"] = `Bearer ${token}`;
-  }
-  return headers;
-};
-
 export const handleFetchAnswer = async (
   chatId: string | undefined,
-  question: string
-): Promise<ReadableStreamDefaultReader<string>> => {
-  const response = await fetch(`https://${API_URL}/chat`, {
-    method: "POST",
-    headers: getHeaders(chatId),
-    body: JSON.stringify({
-      text: question,
-    }),
-  });
-  if (response.headers) {
-    const token = response.headers.get("set-authorization");
-    if (token) {
-      sessionStorage.setItem(
-        `${SESSION_STORAGE_KEYS.CHAT_TOKEN}${chatId}`,
-        token
-      );
+  question: string,
+  token?: string
+): Promise<string> => {
+  let answer = "";
+
+  const headers = new Headers();
+  headers.append("Content-Type", "application/json");
+
+  if (token) {
+    headers.append("Authorization", `Bearer ${token}`);
+  }
+
+  try {
+    const aborter = new AbortController();
+    const response = await fetch(
+      chatId
+        ? `https://knowle-api.lambdaworks.io/chats/${chatId}`
+        : "https://knowle-api.lambdaworks.io/chats",
+      {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          content: question,
+        }),
+        signal: aborter.signal,
+      }
+    );
+
+    const reader = response?.body?.getReader();
+    const decoder = new TextDecoder();
+    let loopRunner = true;
+
+    while (loopRunner) {
+      //@ts-ignore
+      const { value } = await reader?.read();
+
+      const decodedChunkString = decoder.decode(value, { stream: true });
+
+      let dataIndex = decodedChunkString.indexOf("data:");
+      let eventIndex = decodedChunkString.indexOf("event:");
+
+      while (dataIndex !== -1 && eventIndex !== -1) {
+        const jsonData = decodedChunkString.substring(
+          dataIndex + 5,
+          eventIndex
+        );
+
+        const decodedChunk = JSON.parse(jsonData);
+
+        let eventType = null;
+        const eventTypeMatch = decodedChunkString.match(/event:(\w+)/);
+        if (eventTypeMatch) {
+          eventType = eventTypeMatch[1];
+        }
+
+        if (eventType === "in_progress") {
+          if (decodedChunk.messageToken) {
+            answer += decodedChunk.messageToken;
+          }
+        } else if (eventType === "finish") {
+          if (decodedChunk.relevantDocuments?.length) {
+            answer += "\n\nRelevant documents:\n";
+            decodedChunk.relevantDocuments.map(
+              (document: any) => (answer += document.source + ", ")
+            );
+          }
+          loopRunner = false;
+          break;
+        }
+
+        dataIndex = decodedChunkString.indexOf("data:", eventIndex);
+        eventIndex = decodedChunkString.indexOf("event:", dataIndex);
+      }
     }
-  }
-  const responseBody = response.body;
 
-  if (!responseBody) {
-    throw new Error("Response body is undefined");
+    if (!loopRunner) {
+      aborter.abort();
+    }
+  } catch (error) {
+    console.error("Error fetching bot response:", error);
+    return "Sorry, something went wrong. Please try again later.";
   }
 
-  return responseBody.pipeThrough(new TextDecoderStream()).getReader();
+  return answer || "I don't know.";
 };
 
 export const regenerateMessage = async (
   id: string | undefined,
-  messages: Message[],
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  currentMessages: Message[],
+  addCurrentMessage: (message: Message) => void,
+  removeLastMessage: () => void
 ): Promise<void> => {
-  if (messages.length === 0) return;
+  if (currentMessages.length === 0) {
+    return;
+  }
+
   try {
-    const lastMessage = messages[messages.length - 1];
-    setMessages((currentMessages) => currentMessages.slice(0, -1));
-    await appendBotAnswer(id, lastMessage.content, setMessages);
+    const lastMessage = currentMessages[currentMessages.length - 1];
+    removeLastMessage();
+    await appendBotAnswer(id, lastMessage.content, addCurrentMessage);
   } catch (error) {
     console.error("Error regenerating response:", error);
     return;
@@ -128,100 +128,23 @@ export function stopGenerating() {
   stopGeneratingAnswer = true;
 }
 
-async function* streamAsyncIterator(reader: ReadableStreamDefaultReader) {
-  stopGeneratingAnswer = false;
-  try {
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) return;
-      yield value;
-    }
-  } finally {
-    reader.releaseLock();
-  }
-}
-
 export const appendBotAnswer = async (
-  id: string | undefined,
+  chatId: string | undefined,
   question: string,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>
+  addCurrentMessage: (message: Message) => void,
+  token?: string
 ) => {
   try {
-    const reader = await handleFetchAnswer(id, question);
-    let firstToken = true;
-    for await (const value of streamAsyncIterator(reader)) {
-      firstToken = await parseAnswer(value, setMessages, firstToken);
-      if (value.includes("event:finish") || stopGeneratingAnswer) {
-        return;
-      }
-    }
+    const answer = await handleFetchAnswer(chatId, question, token);
+
+    addCurrentMessage({
+      content: answer,
+      role: "system",
+      id: `message_${answer.length}`,
+      liked: false,
+      disliked: false,
+    });
   } catch (error) {
     return;
   }
-};
-
-export const parseAnswer = async (
-  value: string,
-  setMessages: React.Dispatch<React.SetStateAction<Message[]>>,
-  firstToken: boolean
-): Promise<boolean> => {
-  if (value.startsWith("data:")) {
-    setMessages((currentMessages) => {
-      const data = parseData(value);
-      const updatedMessages = [...currentMessages];
-      if (!firstToken) {
-        const lastMessageIndex = updatedMessages.length - 1;
-        const lastMessage = updatedMessages[lastMessageIndex];
-        lastMessage.content += data.messageToken;
-        if (data.relevantDocuments) {
-          const documentLinks = parseRelevantDocuments(data.relevantDocuments);
-          if (documentLinks) {
-            lastMessage.content += `\n\n Relevant documents: ${documentLinks}`;
-          }
-        }
-        updatedMessages[lastMessageIndex] = lastMessage;
-      } else {
-        updatedMessages.push({
-          content: data.messageToken,
-          role: "system",
-          id: `message_${updatedMessages.length}`,
-          liked: false,
-          disliked: false,
-        });
-      }
-      return updatedMessages;
-    });
-    return false;
-  }
-  return firstToken;
-};
-
-export const parseData = (
-  value: string
-): { messageToken: string; relevantDocuments: Document[] } => {
-  const data: { messageToken: string; relevantDocuments: Document[] } = {
-    messageToken: "",
-    relevantDocuments: [],
-  };
-  const sentences = value.split("\n");
-  sentences.forEach((sentence) => {
-    if (sentence.startsWith("data:")) {
-      const val = JSON.parse(sentence.substring(5));
-      data.messageToken += val.messageToken;
-      if (val.relevantDocuments) {
-        data.relevantDocuments = [
-          ...data.relevantDocuments,
-          ...val.relevantDocuments,
-        ];
-      }
-    }
-  });
-  return data;
-};
-
-export const parseRelevantDocuments = (documents: Document[]): string => {
-  const documentLinks = documents
-    .map((doc: Document) => `[${doc.topic}](${doc.source})`)
-    .join(", ");
-  return documentLinks;
 };

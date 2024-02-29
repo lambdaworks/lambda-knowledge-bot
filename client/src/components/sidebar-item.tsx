@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useContext } from "react";
 import { motion } from "framer-motion";
+import { useAuth0 } from "@auth0/auth0-react";
+import { Link } from "react-router-dom";
 
 import { buttonVariants } from "@/components/ui/button";
 import { IconMessage, IconUsers } from "@/components/ui/icons";
@@ -11,7 +13,7 @@ import {
 import { useLocalStorage } from "@/lib/hooks/use-local-storage";
 import { type ChatType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { StoreContext } from "@/store";
 
 interface SidebarItemProps {
   index: number;
@@ -21,6 +23,8 @@ interface SidebarItemProps {
 
 export function SidebarItem({ index, chat, children }: SidebarItemProps) {
   const isActive = true;
+  const { getAccessTokenSilently } = useAuth0();
+  const { chatStore } = useContext(StoreContext);
   const [newChatId, setNewChatId] = useLocalStorage("newChatId", null);
   const shouldAnimate = index === 0 && isActive && newChatId;
 
@@ -28,6 +32,12 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
     if (index === chat.title.length - 1) {
       setNewChatId(null);
     }
+  };
+
+  const getChatMessages = async (): Promise<void> => {
+    chatStore.setCurrentChat(chat);
+    const accessToken = await getAccessTokenSilently();
+    await chatStore.fetchChatMessages(accessToken, chat.id);
   };
 
   if (!chat?.id) {
@@ -76,6 +86,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
           "text-gray-800 group w-full px-8 transition-colors hover:bg-zinc-200/40 dark:hover:bg-zinc-300/10",
           isActive && "bg-zinc-200 pr-16 font-semibold dark:bg-zinc-800"
         )}
+        onClick={getChatMessages}
       >
         <div
           className="title relative max-h-5 flex-1 select-none overflow-hidden text-ellipsis break-all"

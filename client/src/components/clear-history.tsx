@@ -18,7 +18,7 @@ import { removeAllUserChats } from "@/api/api";
 
 interface ClearHistoryProps {
   isEnabled: boolean;
-  clearChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
+  clearChats: (chats: ChatType[]) => void;
 }
 
 export function ClearHistory({

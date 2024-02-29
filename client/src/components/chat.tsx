@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { StreamingTextResponse } from "ai";
-import { useLocation, useNavigate, useNavigation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { observer } from "mobx-react-lite";
 
 import { cn } from "@/lib/utils";
 import { ChatList } from "@/components/chat-list";
 import { ChatPanel } from "@/components/chat-panel";
 import { EmptyScreen } from "@/components/empty-screen";
-import { ChatScrollAnchor } from "@/components/chat-scroll-anchor";
-import { ChatType, Message } from "@/lib/types";
+import { Message } from "@/lib/types";
 import { appendBotAnswer, regenerateMessage, stopGenerating } from "@/api/api";
+import { StoreContext } from "@/store";
+import { ChatScrollAnchor } from "./chat-scroll-anchor";
+import { emptyChat } from "@/store/chatStore";
+import { useAuth0 } from "@auth0/auth0-react";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages?: Message[];
   id?: string;
-  chats: ChatType[];
-  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
 }
 
 interface AppendParams {
@@ -22,29 +24,13 @@ interface AppendParams {
   role: "function" | "data" | "system" | "user" | "assistant" | "tool" | "bot";
 }
 
-export function Chat({ id, className, chats = [], setChats }: ChatProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [input, setInput] = useState<string>("");
-  let chat: ChatType | undefined = chats.find((chat) => chat.id === id);
-  const [messages, setMessages] = useState<Message[]>(chat?.messages || []);
+export const Chat = observer(({ className }: ChatProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    const urlParams = new URLSearchParams(location.search);
-    const chatId = urlParams.get("chatId");
-
-    // add condition when chat list is empty to fetch from BE
-    // const messages = fetchChatMessages(chatId);
-    if (chatId) {
-      const chat = chats.find((chat) => chat.id.toString() === chatId);
-      setMessages(chat?.messages || []);
-    }
-
-    if (!urlParams.get("chatId")) {
-      setMessages([]);
-    }
-  }, [chats, location]);
+  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { chatStore, authStore } = useContext(StoreContext);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [input, setInput] = useState<string>("");
 
   const stop = (): void => {
     stopGenerating();
@@ -54,7 +40,12 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   const reload = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      await regenerateMessage(chat?.id, messages, setMessages);
+      await regenerateMessage(
+        chatStore.currentChat?.id,
+        chatStore.currentChat.messages || [],
+        chatStore.addCurrentMessage,
+        chatStore.removeLastMessage
+      );
     } catch (error) {
       console.error(error);
     } finally {
@@ -64,36 +55,49 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
 
   const append: (val: AppendParams) => Promise<void> = async (val) => {
     // Ensure content is a string
-
     const content = typeof val.content === "string" ? val.content : "";
-    messages.push({
+    const newMessage = {
       content,
       role: val.role,
       id: "34",
       liked: false,
       disliked: false,
-    });
-    setMessages(messages);
+    };
 
-    if (messages.length === 1 && val.role === "user") {
-      const newChat: ChatType = {
-        id: String(chats.length + 1),
-        title: content,
-        createdAt: new Date(),
-        messages: messages,
-      };
-
-      chat = newChat;
-      setChats([...chats, newChat]);
-
-      const searchParams = new URLSearchParams();
-      searchParams.append("chatId", String(chats.length + 1));
-      navigate(`?${searchParams}`);
+    if (!!chatStore.currentChat.id) {
+      chatStore.addCurrentMessage(newMessage);
+    } else {
+      chatStore.setCurrentChat(emptyChat);
+      chatStore.addCurrentMessage(newMessage);
     }
 
     try {
       setIsLoading(true);
-      await appendBotAnswer(chat?.id, content, setMessages);
+      let token;
+
+      if (isAuthenticated) {
+        token = await getAccessTokenSilently();
+      }
+
+      await appendBotAnswer(
+        chatStore.currentChat?.id,
+        content,
+        (message) => chatStore.addCurrentMessage(message),
+        token
+      );
+
+      if (!chatStore.currentChat?.id && token) {
+        // Fetch chats and take id from the first one in chats array
+        const chats = await chatStore.fetchChats(token);
+        if (chats) {
+          chatStore.setChats(chats);
+          chatStore.setCurrentChatId(chats[0].id);
+
+          const searchParams = new URLSearchParams();
+          searchParams.append("chatId", String(chats[0].id));
+          navigate(`?${searchParams}`);
+        }
+      }
     } catch (error) {
       console.error(error);
     } finally {
@@ -104,9 +108,9 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
   return (
     <>
       <div className={cn("pb-[200px] pt-4 md:pt-10", className)}>
-        {messages.length ? (
+        {chatStore.currentChat?.messages?.length ? (
           <>
-            <ChatList messages={messages} />
+            <ChatList messages={chatStore.currentChat.messages || []} />
             <ChatScrollAnchor trackVisibility={isLoading} />
           </>
         ) : (
@@ -119,10 +123,10 @@ export function Chat({ id, className, chats = [], setChats }: ChatProps) {
         stop={stop}
         append={append}
         reload={reload}
-        messages={messages}
+        messages={chatStore.currentChat.messages || []}
         input={input}
         setInput={setInput}
       />
     </>
   );
-}
+});

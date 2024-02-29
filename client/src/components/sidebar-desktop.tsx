@@ -4,7 +4,7 @@ import { ChatType } from "@/lib/types";
 
 interface SidebarProps {
   chats: ChatType[];
-  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
+  setChats: (chats: ChatType[]) => void;
 }
 
 export function SidebarDesktop({ chats, setChats }: SidebarProps) {

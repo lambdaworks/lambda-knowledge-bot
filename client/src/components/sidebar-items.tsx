@@ -6,7 +6,7 @@ import { SidebarItem } from "@/components/sidebar-item";
 
 interface SidebarItemsProps {
   chats?: ChatType[];
-  setChats: React.Dispatch<React.SetStateAction<ChatType[]>>;
+  setChats: (chats: ChatType[]) => void;
 }
 
 export function SidebarItems({ chats, setChats }: SidebarItemsProps) {

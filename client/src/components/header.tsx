@@ -26,7 +26,7 @@ const UserOrLogin = observer(() => {
 
   const handleLogout = async (): Promise<void> => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
-    authStore.setIsSessionAvailable(false);
+    authStore.handleLogout();
   };
 
   return (
