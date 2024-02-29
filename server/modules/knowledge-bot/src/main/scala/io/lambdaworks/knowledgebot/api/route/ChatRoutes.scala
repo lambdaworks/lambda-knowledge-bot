@@ -60,9 +60,9 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
             }
           } ~
             post {
-              authService.authenticated { userId =>
+              authService.maybeAuthenticated { userId =>
                 entity(as[NewUserMessage]) { message =>
-                  onSuccess(postChatMessage(message, None, userId)) { source =>
+                  onSuccess(postChatMessage(message, None, userId.getOrElse(ChatRoutes.Anonymous))) { source =>
                     complete(source)
                   }
                 }
@@ -99,4 +99,5 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
 
 object ChatRoutes {
   final case class NewUserMessage(content: String)
+  val Anonymous = "Anonymous"
 }

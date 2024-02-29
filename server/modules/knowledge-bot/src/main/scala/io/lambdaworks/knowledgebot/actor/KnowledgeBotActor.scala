@@ -15,6 +15,7 @@ import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{
   SessionInfo
 }
 import io.lambdaworks.knowledgebot.actor.model.{AssistantMessage, Chat, Document, UserMessage}
+import io.lambdaworks.knowledgebot.api.route.ChatRoutes
 import io.lambdaworks.knowledgebot.repository.dynamodb.ChatMessageRepository
 import io.lambdaworks.knowledgebot.retrieval.openai.GPTRetriever
 import io.lambdaworks.langchain.schema.document.{Document => LangchainDocument}
@@ -37,8 +38,8 @@ object KnowledgeBotActor {
   final case class ServerSentEvent(data: ResponseData, `type`: String)
   final case class SessionInfo(source: Source[ServerSentEvent, _], session: String)
 
-  def apply(chat: Chat, chatMessageRepository: ChatMessageRepository, routerActor: ActorRef[MessageRouterActor.Event])(
-    implicit system: ActorSystem[_]
+  def apply(chat: Chat, chatMessageRepository: ChatMessageRepository)(implicit
+    system: ActorSystem[_]
   ): Behavior[Event] =
     Behaviors.setup { context =>
       // context.setReceiveTimeout(10.minutes, InactivityTimeout)
@@ -49,13 +50,12 @@ object KnowledgeBotActor {
         new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! MessageToken(_), withMemory = true)
       val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
-      new KnowledgeBotActor(chat, routerActor, retrieverActor, chatMessageRepository).acceptEvents()
+      new KnowledgeBotActor(chat, retrieverActor, chatMessageRepository).acceptEvents()
     }
 }
 
 private final class KnowledgeBotActor(
   chat: Chat,
-  routerActor: ActorRef[MessageRouterActor.Event],
   retrieverActor: ActorRef[LLMRetrieverActor.Request],
   chatMessageRepository: ChatMessageRepository
 )(implicit val system: ActorSystem[_]) {
@@ -67,9 +67,11 @@ private final class KnowledgeBotActor(
 
       retrieverActor ! LLMRetrieverActor.Request(content)
 
-      val msgId       = UUID.randomUUID().toString
-      val userMessage = UserMessage(msgId, chat.userId, chat.id, DateTime.now(DateTimeZone.UTC), content, None)
-      chatMessageRepository.put(userMessage)
+      if (chat.userId != ChatRoutes.Anonymous) {
+        val msgId       = UUID.randomUUID().toString
+        val userMessage = UserMessage(msgId, chat.userId, chat.id, DateTime.now(DateTimeZone.UTC), content, None)
+        chatMessageRepository.put(userMessage)
+      }
 
       processMessageTokens(queue)
     }
@@ -103,16 +105,18 @@ private final class KnowledgeBotActor(
           )
         )
 
-        val msgId = UUID.randomUUID().toString
-        val assistantMessage = AssistantMessage(
-          msgId,
-          chat.userId,
-          chat.id,
-          DateTime.now(DateTimeZone.UTC),
-          response("result").as[String],
-          relevantDocuments
-        )
-        chatMessageRepository.put(assistantMessage)
+        if (chat.userId != ChatRoutes.Anonymous) {
+          val msgId = UUID.randomUUID().toString
+          val assistantMessage = AssistantMessage(
+            msgId,
+            chat.userId,
+            chat.id,
+            DateTime.now(DateTimeZone.UTC),
+            response("result").as[String],
+            relevantDocuments
+          )
+          chatMessageRepository.put(assistantMessage)
+        }
 
         Behaviors.stopped
     }

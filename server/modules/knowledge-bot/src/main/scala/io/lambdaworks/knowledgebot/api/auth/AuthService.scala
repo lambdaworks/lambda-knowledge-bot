@@ -28,11 +28,18 @@ class AuthService(domain: String, audience: String) {
   def authenticated: Directive1[String] =
     optionalHeaderValueByName("Authorization").flatMap {
       case Some(token) =>
-        val sub = this.validateJWT(token)
+        val sub = validateJWT(token)
         sub match {
           case Some(id) => provide(id)
           case _        => complete(StatusCodes.Unauthorized)
         }
       case _ => complete(StatusCodes.Unauthorized)
     }
+
+  def maybeAuthenticated: Directive1[Option[String]] =
+    optionalHeaderValueByName("Authorization").flatMap {
+      case Some(token) => provide(validateJWT(token))
+      case _           => provide(None)
+    }
+
 }
