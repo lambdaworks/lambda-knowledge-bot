@@ -1,10 +1,4 @@
-import { Message } from "@/lib/types";
 export let stopGeneratingAnswer: boolean = false;
-
-interface Document {
-  source: string;
-  topic: string;
-}
 
 export const handleLikeMessage = (): boolean => {
   return true;
@@ -104,47 +98,6 @@ export const handleFetchAnswer = async (
   return answer || "I don't know.";
 };
 
-export const regenerateMessage = async (
-  id: string | undefined,
-  currentMessages: Message[],
-  addCurrentMessage: (message: Message) => void,
-  removeLastMessage: () => void
-): Promise<void> => {
-  if (currentMessages.length === 0) {
-    return;
-  }
-
-  try {
-    const lastMessage = currentMessages[currentMessages.length - 1];
-    removeLastMessage();
-    await appendBotAnswer(id, lastMessage.content, addCurrentMessage);
-  } catch (error) {
-    console.error("Error regenerating response:", error);
-    return;
-  }
-};
-
 export function stopGenerating() {
   stopGeneratingAnswer = true;
 }
-
-export const appendBotAnswer = async (
-  chatId: string | undefined,
-  question: string,
-  addCurrentMessage: (message: Message) => void,
-  token?: string
-) => {
-  try {
-    const answer = await handleFetchAnswer(chatId, question, token);
-
-    addCurrentMessage({
-      content: answer,
-      role: "system",
-      id: `message_${answer.length}`,
-      liked: false,
-      disliked: false,
-    });
-  } catch (error) {
-    return;
-  }
-};

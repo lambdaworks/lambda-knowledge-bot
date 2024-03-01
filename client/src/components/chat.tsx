@@ -1,18 +1,18 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { StreamingTextResponse } from "ai";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { observer } from "mobx-react-lite";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import { cn } from "@/lib/utils";
 import { ChatList } from "@/components/chat-list";
 import { ChatPanel } from "@/components/chat-panel";
 import { EmptyScreen } from "@/components/empty-screen";
 import { Message } from "@/lib/types";
-import { appendBotAnswer, regenerateMessage, stopGenerating } from "@/api/api";
+import { stopGenerating } from "@/api/api";
 import { StoreContext } from "@/store";
 import { ChatScrollAnchor } from "./chat-scroll-anchor";
 import { emptyChat } from "@/store/chatStore";
-import { useAuth0 } from "@auth0/auth0-react";
 
 export interface ChatProps extends React.ComponentProps<"div"> {
   initialMessages?: Message[];
@@ -25,10 +25,9 @@ interface AppendParams {
 }
 
 export const Chat = observer(({ className }: ChatProps) => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { getAccessTokenSilently, isAuthenticated } = useAuth0();
-  const { chatStore, authStore } = useContext(StoreContext);
+  const { chatStore } = useContext(StoreContext);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [input, setInput] = useState<string>("");
 
@@ -40,11 +39,9 @@ export const Chat = observer(({ className }: ChatProps) => {
   const reload = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      await regenerateMessage(
+      await chatStore.regenerateMessage(
         chatStore.currentChat?.id,
-        chatStore.currentChat.messages || [],
-        chatStore.addCurrentMessage,
-        chatStore.removeLastMessage
+        chatStore.currentChat.messages || []
       );
     } catch (error) {
       console.error(error);
@@ -79,10 +76,9 @@ export const Chat = observer(({ className }: ChatProps) => {
         token = await getAccessTokenSilently();
       }
 
-      await appendBotAnswer(
+      await chatStore.appendBotAnswer(
         chatStore.currentChat?.id,
         content,
-        (message) => chatStore.addCurrentMessage(message),
         token
       );
 
@@ -107,16 +103,40 @@ export const Chat = observer(({ className }: ChatProps) => {
 
   return (
     <>
-      <div className={cn("pb-[200px] pt-4 md:pt-10", className)}>
-        {chatStore.currentChat?.messages?.length ? (
-          <>
-            <ChatList messages={chatStore.currentChat.messages || []} />
-            <ChatScrollAnchor trackVisibility={isLoading} />
-          </>
-        ) : (
-          <EmptyScreen setInput={setInput} />
-        )}
-      </div>
+      {!chatStore.isMessageListLoaded ? (
+        <div className="flex flex-col flex-1 overflow-visible pt-10 md:pt-10 max-w-2xl mx-auto">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div className="relative mb-4 px-4">
+              <div className="relative flex flex-row items-start md:-ml-12 ">
+                <div
+                  key={i}
+                  className="relative z-10 w-8 h-8 mr-5 rounded-md shrink-0 bg-zink-950 dark:bg-gray-800 animate-gradient"
+                />
+                <div
+                  key={`${i} + 1`}
+                  className="flex-1 h-8 rounded-md shrink-0 bg-zink-950 dark:bg-gray-800 animate-gradient"
+                />
+              </div>
+              <div
+                data-orientation="horizontal"
+                role="none"
+                className="flex-1 shrink-0 bg-border h-[1px] w-full my-4 md:my-8"
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className={cn("pb-[200px] pt-4 md:pt-10", className)}>
+          {chatStore.currentChat?.messages?.length ? (
+            <>
+              <ChatList messages={chatStore.currentChat.messages || []} />
+              <ChatScrollAnchor trackVisibility={isLoading} />
+            </>
+          ) : (
+            <EmptyScreen setInput={setInput} />
+          )}
+        </div>
+      )}
       <ChatPanel
         title="title"
         isLoading={isLoading}
