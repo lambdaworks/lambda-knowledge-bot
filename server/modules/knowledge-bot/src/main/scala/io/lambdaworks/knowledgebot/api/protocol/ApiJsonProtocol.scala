@@ -1,7 +1,7 @@
 package io.lambdaworks.knowledgebot.api.protocol
 
 import akka.http.scaladsl.unmarshalling.Unmarshaller
-import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.ResponseData
+import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.{ResponseData, ServerSentEvent}
 import io.lambdaworks.knowledgebot.actor.model.{
   Assistant,
   AssistantMessage,
@@ -92,4 +92,8 @@ object ApiJsonProtocol {
 
   implicit val newUserMessageJsonFormat: RootJsonFormat[NewUserMessage] =
     jsonFormat1(NewUserMessage.apply)
+
+  implicit val sseJsonFormat: RootJsonFormat[ServerSentEvent] =
+    jsonFormat2(ServerSentEvent.apply)
+
 }
