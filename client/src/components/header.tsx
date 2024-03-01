@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { observer } from "mobx-react-lite";
 
 import { StoreContext } from "@/store/context";
-import { ChatType } from "@/lib/types";
 
 import { SidebarMobile } from "./sidebar-mobile";
 import { ChatHistory } from "./chat-history";
@@ -14,8 +13,7 @@ import LoginButton from "./login-button";
 import { Button } from "./ui/button";
 
 const UserOrLogin = observer(() => {
-  const [chats, setChats] = useState<ChatType[]>([]);
-  const { authStore } = useContext(StoreContext);
+  const { authStore, chatStore } = useContext(StoreContext);
   const { isAuthenticated, logout } = useAuth0();
 
   useEffect(() => {
@@ -34,7 +32,10 @@ const UserOrLogin = observer(() => {
       {authStore.isSessionAvailable && (
         <>
           <SidebarMobile>
-            <ChatHistory chats={chats} setChats={setChats} />
+            <ChatHistory
+              chats={chatStore.chats}
+              setChats={chatStore.setChats}
+            />
           </SidebarMobile>
           <SidebarToggle />
         </>
