@@ -1,9 +1,8 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect } from "react";
 import { useAuth0 } from "@auth0/auth0-react";
 import { observer } from "mobx-react-lite";
 
 import { StoreContext } from "@/store/context";
-import { ChatType } from "@/lib/types";
 
 import { SidebarMobile } from "./sidebar-mobile";
 import { ChatHistory } from "./chat-history";
