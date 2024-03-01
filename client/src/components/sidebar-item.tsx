@@ -36,6 +36,7 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
 
   const getChatMessages = async (): Promise<void> => {
     chatStore.setCurrentChat(chat);
+    chatStore.setIsMessageListLoaded(false);
     const accessToken = await getAccessTokenSilently();
     await chatStore.fetchChatMessages(accessToken, chat.id);
   };

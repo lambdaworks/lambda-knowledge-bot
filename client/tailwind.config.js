@@ -82,6 +82,10 @@ export default {
             transform: "translateX(-100%)",
           },
         },
+        "gradient-animation": {
+          "0%": { backgroundColor: "#5a5c5e" },
+          "100%": { backgroundColor: "#2c2d2e" },
+        },
       },
       animation: {
         "slide-from-left":
@@ -90,6 +94,7 @@ export default {
           "slide-to-left 0.25s cubic-bezier(0.82, 0.085, 0.395, 0.895)",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        gradient: "gradient-animation 1.5s ease-in-out infinite alternate",
       },
     },
   },
