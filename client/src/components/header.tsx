@@ -14,8 +14,7 @@ import LoginButton from "./login-button";
 import { Button } from "./ui/button";
 
 const UserOrLogin = observer(() => {
-  const [chats, setChats] = useState<ChatType[]>([]);
-  const { authStore } = useContext(StoreContext);
+  const { authStore, chatStore } = useContext(StoreContext);
   const { isAuthenticated, logout } = useAuth0();
 
   useEffect(() => {
@@ -34,7 +33,10 @@ const UserOrLogin = observer(() => {
       {authStore.isSessionAvailable && (
         <>
           <SidebarMobile>
-            <ChatHistory chats={chats} setChats={setChats} />
+            <ChatHistory
+              chats={chatStore.chats}
+              setChats={chatStore.setChats}
+            />
           </SidebarMobile>
           <SidebarToggle />
         </>
