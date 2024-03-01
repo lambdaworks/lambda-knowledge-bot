@@ -64,7 +64,9 @@ export const Chat = observer(({ className }: ChatProps) => {
     if (!!chatStore.currentChat.id) {
       chatStore.addCurrentMessage(newMessage);
     } else {
-      chatStore.setCurrentChat(emptyChat);
+      if (isAuthenticated) {
+        chatStore.setCurrentChat(emptyChat);
+      }
       chatStore.addCurrentMessage(newMessage);
     }
 
@@ -106,7 +108,7 @@ export const Chat = observer(({ className }: ChatProps) => {
       {!chatStore.isMessageListLoaded ? (
         <div className="flex flex-col flex-1 overflow-visible pt-10 md:pt-10 max-w-2xl mx-auto">
           {Array.from({ length: 2 }).map((_, i) => (
-            <div className="relative mb-4 px-4">
+            <div className="relative mb-4 px-4" key={i}>
               <div className="relative flex flex-row items-start md:-ml-12 ">
                 <div
                   key={i}
