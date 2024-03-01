@@ -8,7 +8,7 @@
             "portMappings": [
                 {
                     "containerPort": 8000,
-                    "hostPort": 8000,
+                    "hostPort": 0,
                     "protocol": "tcp"
                 }
             ],
@@ -29,7 +29,6 @@
     "family": "knowle",
     "taskRoleArn": "arn:aws:iam::195175520793:role/ecs-task-role",
     "executionRoleArn": "arn:aws:iam::195175520793:role/ecs-execution-role",
-    "networkMode": "host",
     "requiresCompatibilities": [
         "EC2"
     ]
