@@ -15,6 +15,7 @@ import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.MessageRouterActor
 import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
 import io.lambdaworks.knowledgebot.api.auth.AuthService
+import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol.DateJsonFormat.stringToDateTime
 import io.lambdaworks.knowledgebot.api.protocol.ApiJsonProtocol._
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes.NewUserMessage
 import spray.json.DefaultJsonProtocol._
@@ -33,11 +34,16 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
   private val corsSettings: CorsSettings =
     CorsSettings.defaultSettings
 
-  private def getChats(userId: String): Future[List[Chat]] =
-    messageRouterActor.ask[List[Chat]](MessageRouterActor.UserChatsRequest(userId, _))
+  private def getChats(userId: String, limit: Int, lastKey: Option[String]): Future[List[Chat]] =
+    messageRouterActor.ask[List[Chat]](MessageRouterActor.UserChatsRequest(userId, limit, lastKey, _))
 
-  private def getChatHistory(userId: String, chatId: String): Future[List[ChatMessage]] =
-    messageRouterActor.ask[List[ChatMessage]](MessageRouterActor.ChatHistoryRequest(userId, chatId, _))
+  private def getChatHistory(
+    userId: String,
+    chatId: String,
+    limit: Int,
+    lastKey: Option[String]
+  ): Future[List[ChatMessage]] =
+    messageRouterActor.ask[List[ChatMessage]](MessageRouterActor.ChatHistoryRequest(userId, chatId, limit, lastKey, _))
 
   private def postChatMessage(
     message: NewUserMessage,
@@ -54,8 +60,10 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
         pathEnd {
           get {
             authService.authenticated { userId =>
-              onSuccess(getChats(userId)) { chats =>
-                complete(chats)
+              parameters("limit".withDefault(20), "lastKey".as(stringToDateTime).optional) { (limit, lastKey) =>
+                onSuccess(getChats(userId, limit, lastKey.map(_.toString()))) { chats =>
+                  complete(chats)
+                }
               }
             }
           } ~
@@ -86,8 +94,10 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
             pathEnd {
               get {
                 authService.authenticated { userId =>
-                  onSuccess(getChatHistory(userId, chatId)) { messages =>
-                    complete(messages)
+                  parameters("limit".withDefault(20), "lastKey".as(stringToDateTime).optional) { (limit, lastKey) =>
+                    onSuccess(getChatHistory(userId, chatId, limit, lastKey.map(_.toString()))) { messages =>
+                      complete(messages)
+                    }
                   }
                 }
               }

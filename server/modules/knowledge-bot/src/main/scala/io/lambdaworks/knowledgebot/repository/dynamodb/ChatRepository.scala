@@ -29,7 +29,7 @@ class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Cha
     chats.headOption
   }
 
-  def getAllForUser(userId: String): List[Chat] = {
+  def getAllForUser(userId: String, limit: Int, lastKey: Option[String] = None): List[Chat] = {
     val query = new QuerySpec()
       .withKeyConditionExpression("pk = :pk and begins_with(sk, :chat)")
       .withValueMap(
@@ -37,9 +37,19 @@ class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Cha
           .withString(":pk", s"USER#$userId")
           .withString(":chat", "CHAT#")
       )
+      .withMaxResultSize(limit)
       .withScanIndexForward(false)
 
-    val response = table.query(query)
+    val page = lastKey.fold(query) { lk =>
+      query.withExclusiveStartKey(
+        "pk",
+        s"USER#$userId",
+        "sk",
+        s"CHAT#$lk"
+      )
+    }
+
+    val response = table.query(page)
 
     val chats: List[Chat] = response.iterator.asScala.map { it =>
       Chat(it.getString("id"), it.getString("userId"), it.getString("title"), new DateTime(it.getString("createdAt")))

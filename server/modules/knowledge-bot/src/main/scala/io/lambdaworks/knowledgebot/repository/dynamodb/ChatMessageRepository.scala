@@ -19,7 +19,12 @@ import scala.jdk.CollectionConverters._
 
 class ChatMessageRepository(client: DynamoDB, tableName: String) extends Repository[ChatMessage] {
 
-  def getAllForUserAndChat(userId: String, chatId: String): List[ChatMessage] = {
+  def getAllForUserAndChat(
+    userId: String,
+    chatId: String,
+    limit: Int,
+    lastKey: Option[String] = None
+  ): List[ChatMessage] = {
     val query = new QuerySpec()
       .withKeyConditionExpression("pk = :pk and begins_with(sk, :chatId)")
       .withValueMap(
@@ -27,9 +32,19 @@ class ChatMessageRepository(client: DynamoDB, tableName: String) extends Reposit
           .withString(":pk", s"USER#$userId")
           .withString(":chatId", s"MESSAGE#$chatId")
       )
+      .withMaxResultSize(limit)
       .withScanIndexForward(false)
 
-    val response = table.query(query)
+    val page = lastKey.fold(query) { lk =>
+      query.withExclusiveStartKey(
+        "pk",
+        s"USER#$userId",
+        "sk",
+        s"MESSAGE#$chatId#$lk"
+      )
+    }
+
+    val response = table.query(page)
 
     val chats: List[ChatMessage] = response.iterator.asScala.map { it =>
       if (it.getString("role") == "User") {
