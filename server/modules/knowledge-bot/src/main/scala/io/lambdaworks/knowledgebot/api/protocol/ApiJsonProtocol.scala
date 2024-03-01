@@ -1,5 +1,6 @@
 package io.lambdaworks.knowledgebot.api.protocol
 
+import akka.http.scaladsl.unmarshalling.Unmarshaller
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.ResponseData
 import io.lambdaworks.knowledgebot.actor.model.{
   Assistant,
@@ -15,14 +16,16 @@ import io.lambdaworks.knowledgebot.actor.model.{
   UserMessage
 }
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes.NewUserMessage
-import org.joda.time.DateTime
 import org.joda.time.format.{DateTimeFormatter, ISODateTimeFormat}
+import org.joda.time.{DateTime, DateTimeZone}
 import spray.json.DefaultJsonProtocol._
 import spray.json.{DeserializationException, JsString, JsValue, RootJsonFormat, enrichAny}
 
 object ApiJsonProtocol {
   implicit object DateJsonFormat extends RootJsonFormat[DateTime] {
     private val parserISO: DateTimeFormatter = ISODateTimeFormat.dateTimeNoMillis()
+    val stringToDateTime: Unmarshaller[String, DateTime] =
+      Unmarshaller.strict[String, DateTime](new DateTime(_, DateTimeZone.UTC))
 
     def write(obj: DateTime): JsString = JsString(parserISO.print(obj))
 
