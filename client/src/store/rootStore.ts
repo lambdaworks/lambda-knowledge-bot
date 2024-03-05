@@ -10,6 +10,15 @@ export default class RootStore {
     this.chatStore = new ChatStore(this);
   }
 
+  appendTokenToHeaders(headers: Headers, token: string | undefined) {
+    headers.append("Content-Type", "application/json");
+
+    if (token) {
+      headers.append("Authorization", `Bearer ${token}`);
+    }
+    return headers;
+  }
+
   async clearStore() {
     await this.authStore.clearStoredData();
     await this.chatStore.clearStoredData();
