@@ -2,7 +2,6 @@ import { makeAutoObservable, runInAction } from "mobx";
 import { clearPersistedStore, makePersistable } from "mobx-persist-store";
 
 import { ChatType, Message } from "@/lib/types";
-import { handleFetchAnswer } from "@/api/api";
 import { EVENT_REGEX } from "@/utils/regex";
 import { CHATS_PER_PAGE } from "@/utils/constants";
 
@@ -234,7 +233,7 @@ export default class ChatStore {
     token?: string
   ) {
     try {
-      const answer = await handleFetchAnswer(chatId, question, token);
+      const answer = await this.handleFetchAnswer(chatId, question, token);
 
       this.addCurrentMessage({
         content: answer,
@@ -248,15 +247,19 @@ export default class ChatStore {
     }
   }
 
-  async regenerateMessage(id: string | undefined, currentMessages: Message[]) {
+  async regenerateMessage(
+    id: string | undefined,
+    currentMessages: Message[],
+    accessToken: string | undefined
+  ) {
     if (currentMessages.length === 0) {
       return;
     }
 
     try {
-      const lastMessage = currentMessages[currentMessages.length - 1];
+      const lastQuestionByUser = currentMessages[currentMessages.length - 2];
       this.removeLastMessage();
-      await this.appendBotAnswer(id, lastMessage.content);
+      await this.appendBotAnswer(id, lastQuestionByUser.content, accessToken);
     } catch (error) {
       console.error("Error regenerating response:", error);
       return;
