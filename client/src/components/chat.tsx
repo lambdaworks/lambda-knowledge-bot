@@ -9,7 +9,6 @@ import { ChatList } from "@/components/chat-list";
 import { ChatPanel } from "@/components/chat-panel";
 import { EmptyScreen } from "@/components/empty-screen";
 import { Message } from "@/lib/types";
-import { stopGenerating } from "@/api/api";
 import { StoreContext } from "@/store";
 import { ChatScrollAnchor } from "./chat-scroll-anchor";
 import { emptyChat } from "@/store/chatStore";
@@ -32,19 +31,24 @@ export const Chat = observer(({ className }: ChatProps) => {
   const [input, setInput] = useState<string>("");
 
   const stop = (): void => {
-    stopGenerating();
     setIsLoading(false);
   };
 
   const reload = async (): Promise<void> => {
+    let accessToken;
+
+    if (isAuthenticated) {
+      accessToken = await getAccessTokenSilently();
+    }
+
     try {
       setIsLoading(true);
+
       await chatStore.regenerateMessage(
         chatStore.currentChat?.id,
-        chatStore.currentChat.messages || []
+        chatStore.currentChat.messages || [],
+        accessToken || undefined
       );
-    } catch (error) {
-      console.error(error);
     } finally {
       setIsLoading(false);
     }

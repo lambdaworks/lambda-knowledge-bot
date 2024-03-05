@@ -61,7 +61,7 @@ export function ChatPanel({
           ) : (
             messages?.length >= 2 && (
               <div className="flex space-x-2">
-                <Button variant="outline" onClick={() => reload()}>
+                <Button variant="outline" onClick={reload}>
                   <IconRefresh className="mr-2" />
                   Regenerate response
                 </Button>
