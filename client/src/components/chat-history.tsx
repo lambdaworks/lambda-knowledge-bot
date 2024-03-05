@@ -1,6 +1,7 @@
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { observer } from "mobx-react-lite";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import { cn } from "@/lib/utils";
 import { SidebarList } from "@/components/sidebar-list";
@@ -18,6 +19,12 @@ interface ChatHistoryProps {
 export const ChatHistory = observer(
   ({ chats = [], setChats }: ChatHistoryProps) => {
     const { chatStore } = useContext(StoreContext);
+    const { getAccessTokenSilently } = useAuth0();
+
+    const handleFetchMore = async () => {
+      const token = await getAccessTokenSilently();
+      await chatStore.fetchMoreChats(token);
+    };
 
     return (
       <div className="flex flex-col h-full">
@@ -45,7 +52,12 @@ export const ChatHistory = observer(
             ))}
           </div>
         ) : (
-          <SidebarList chats={chats} setChats={setChats} />
+          <SidebarList
+            chats={chats}
+            setChats={setChats}
+            hasMore={chatStore.hasMoreChats}
+            fetchMore={handleFetchMore}
+          />
         )}
       </div>
     );

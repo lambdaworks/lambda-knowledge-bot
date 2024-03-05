@@ -1,9 +1,12 @@
 import { makeAutoObservable, runInAction } from "mobx";
-import RootStore from "./rootStore";
 import { clearPersistedStore, makePersistable } from "mobx-persist-store";
+
 import { ChatType, Message } from "@/lib/types";
 import { handleFetchAnswer } from "@/api/api";
 import { EVENT_REGEX } from "@/utils/regex";
+import { CHATS_PER_PAGE } from "@/utils/constants";
+
+import RootStore from "./rootStore";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -13,6 +16,7 @@ export default class ChatStore {
   currentChat: ChatType = emptyChat;
   isChatListLoaded: boolean = false;
   isMessageListLoaded: boolean = true;
+  hasMoreChats: boolean = true;
   chats: ChatType[] = [];
   rootStore: RootStore;
 
@@ -73,6 +77,12 @@ export default class ChatStore {
     });
   }
 
+  setHasMoreChats(hasMoreChats: boolean) {
+    runInAction(() => {
+      this.hasMoreChats = hasMoreChats;
+    });
+  }
+
   addCurrentMessage(currentMessage: Message) {
     runInAction(() => {
       this.currentChat = {
@@ -116,18 +126,14 @@ export default class ChatStore {
     });
   }
 
-  async fetchChats(token: string | undefined) {
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-
-    if (token) {
-      headers.append("Authorization", `Bearer ${token}`);
-    }
-
+  async fetchChats(accessToken: string | undefined) {
     try {
       const response = await fetch(`https://${API_URL}/chats`, {
         method: "GET",
-        headers: headers,
+        headers: this.rootStore.appendTokenToHeaders(
+          new Headers(),
+          accessToken
+        ),
       });
 
       if (response.ok) {
@@ -141,6 +147,11 @@ export default class ChatStore {
         }));
 
         this.setChats(chats);
+
+        this.setHasMoreChats(
+          chats.length >= CHATS_PER_PAGE && chats.length !== 0
+        );
+
         return chats;
       } else {
         this.setChats([]);
@@ -151,20 +162,55 @@ export default class ChatStore {
     }
   }
 
-  async fetchChatMessages(accessToken: string, chatId: string) {
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
+  async fetchMoreChats(accessToken: string | undefined) {
+    const lastKey = this.chats[this.chats?.length - 1].createdAt;
 
-    if (accessToken) {
-      headers.append("Authorization", `Bearer ${accessToken}`);
+    try {
+      const response = await fetch(
+        `https://${API_URL}/chats?limit=${CHATS_PER_PAGE}&lastKey=${lastKey}`,
+        {
+          method: "GET",
+          headers: this.rootStore.appendTokenToHeaders(
+            new Headers(),
+            accessToken
+          ),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        const chatArray: ChatType[] = [...data].map((chat) => ({
+          id: chat.id,
+          title: chat.title,
+          createdAt: chat.createdAt,
+          userId: chat.userId,
+          messages: [],
+        }));
+
+        this.setChats([...this.chats, ...chatArray]);
+        this.setHasMoreChats(
+          chatArray.length >= CHATS_PER_PAGE && chatArray.length !== 0
+        );
+
+        return chatArray;
+      } else {
+        return [];
+      }
+    } catch (e) {
+      console.error(e);
     }
+  }
 
+  async fetchChatMessages(accessToken: string, chatId: string) {
     try {
       const response = await fetch(
         `https://${API_URL}/chats/${chatId}/messages`,
         {
           method: "GET",
-          headers: headers,
+          headers: this.rootStore.appendTokenToHeaders(
+            new Headers(),
+            accessToken
+          ),
         }
       );
 
@@ -220,16 +266,9 @@ export default class ChatStore {
   async handleFetchAnswer(
     chatId: string | undefined,
     question: string,
-    token?: string
+    accessToken?: string
   ) {
     let answer = "";
-
-    const headers = new Headers();
-    headers.append("Content-Type", "application/json");
-
-    if (token) {
-      headers.append("Authorization", `Bearer ${token}`);
-    }
 
     try {
       const aborter = new AbortController();
@@ -239,7 +278,10 @@ export default class ChatStore {
           : `https://${API_URL}/chats`,
         {
           method: "POST",
-          headers: headers,
+          headers: this.rootStore.appendTokenToHeaders(
+            new Headers(),
+            accessToken
+          ),
           body: JSON.stringify({
             content: question,
           }),
@@ -311,6 +353,7 @@ export default class ChatStore {
       this.currentChat = emptyChat;
       this.isChatListLoaded = true;
       this.isMessageListLoaded = true;
+      this.hasMoreChats = true;
     });
   }
 
