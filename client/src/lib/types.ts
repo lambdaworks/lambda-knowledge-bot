@@ -3,6 +3,7 @@ export interface Message {
   createdAt?: Date;
   content: string;
   liked: boolean;
+  relevantDocuments?: Array<{ source: string; topic: string }>;
   disliked: boolean;
   role: "system" | "user" | "assistant" | "function" | "data" | "tool" | "bot";
 }

@@ -98,7 +98,14 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             },
           }}
         >
-          {message.content}
+          {!!message?.relevantDocuments?.length
+            ? message.content +
+              "\n\n" +
+              "Relevant documents: " +
+              message.relevantDocuments
+                .map((doc: { source: string }) => doc?.source)
+                .join(", ")
+            : message.content}
         </MemoizedReactMarkdown>
         <ChatMessageActions message={message} />
         {message.role === "bot" && (
