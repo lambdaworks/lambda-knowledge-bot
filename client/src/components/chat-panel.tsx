@@ -65,7 +65,7 @@ export function ChatPanel({
                   <IconRefresh className="mr-2" />
                   Regenerate response
                 </Button>
-                {title ? (
+                {/* {title ? (
                   <>
                     <Button
                       variant="outline"
@@ -85,7 +85,7 @@ export function ChatPanel({
                       }}
                     />
                   </>
-                ) : null}
+                ) : null} */}
               </div>
             )
           )}
