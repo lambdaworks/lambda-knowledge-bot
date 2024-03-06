@@ -1,4 +1,4 @@
-import React, { ChangeEvent, FormEvent, useEffect } from "react";
+import React, { ChangeEvent, FormEvent, useContext, useEffect } from "react";
 import Textarea from "react-textarea-autosize";
 import { Link } from "react-router-dom";
 
@@ -11,6 +11,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { IconArrowElbow, IconPlus } from "@/components/ui/icons";
+import { StoreContext } from "@/store";
+import { emptyChat } from "@/store/chatStore";
 
 export interface PromptProps {
   onSubmit: (value: string) => Promise<void>;
@@ -27,6 +29,7 @@ export function PromptForm({
 }: PromptProps) {
   const { formRef, onKeyDown } = useEnterSubmit();
   const inputRef = React.useRef<HTMLTextAreaElement>(null);
+  const { chatStore } = useContext(StoreContext);
 
   useEffect(() => {
     if (inputRef.current) {
@@ -59,6 +62,7 @@ export function PromptForm({
           <TooltipTrigger asChild>
             <Link
               to={window.location.origin}
+              onClick={() => chatStore.setCurrentChat(emptyChat)}
               className={cn(
                 buttonVariants({ size: "sm", variant: "outline" }),
                 "absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4"
