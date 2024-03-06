@@ -108,7 +108,7 @@ export function ChatMessage({ message, ...props }: ChatMessageProps) {
             : message.content}
         </MemoizedReactMarkdown>
         <ChatMessageActions message={message} />
-        {message.role === "bot" && (
+        {message.role === "assistant" && (
           <>
             <Tooltip>
               <TooltipTrigger asChild>
