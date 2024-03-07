@@ -3,7 +3,7 @@ import { clearPersistedStore, makePersistable } from "mobx-persist-store";
 
 import { ChatType, Message } from "@/lib/types";
 import { EVENT_REGEX } from "@/utils/regex";
-import { CHATS_PER_PAGE } from "@/utils/constants";
+import { CHATS_PER_PAGE, MESSAGES_PER_PAGE } from "@/utils/constants";
 
 import RootStore from "./rootStore";
 
@@ -16,6 +16,7 @@ export default class ChatStore {
   isChatListLoaded: boolean = false;
   isMessageListLoaded: boolean = true;
   hasMoreChats: boolean = true;
+  hasMoreMessages: boolean = true;
   chats: ChatType[] = [];
   rootStore: RootStore;
 
@@ -82,6 +83,12 @@ export default class ChatStore {
     });
   }
 
+  setHasMoreMessages(hasMoreMessages: boolean) {
+    runInAction(() => {
+      this.hasMoreMessages = hasMoreMessages;
+    });
+  }
+
   addCurrentMessage(currentMessage: Message) {
     runInAction(() => {
       this.currentChat = {
@@ -104,6 +111,28 @@ export default class ChatStore {
       });
 
       this.chats = updatedChats;
+    });
+  }
+
+  updateCurrentMessageContent(messageId: string, content: string) {
+    runInAction(() => {
+      const updatedMessageIndex = this.currentChat.messages?.findIndex(
+        (message) => message.id === messageId
+      );
+      if (updatedMessageIndex && updatedMessageIndex !== -1) {
+        const messages = this.currentChat.messages;
+        if (messages) {
+          const updatedMessages = [...messages];
+          updatedMessages[updatedMessageIndex] = {
+            ...updatedMessages[updatedMessageIndex], // Copy the original message object
+            content: updatedMessages[updatedMessageIndex].content + content, // Update the content immutably
+          };
+          this.currentChat = {
+            ...this.currentChat,
+            messages: updatedMessages,
+          };
+        }
+      }
     });
   }
 
@@ -227,21 +256,58 @@ export default class ChatStore {
     }
   }
 
+  async fetchMoreChatMessages(accessToken: string) {
+    const messages = this.currentChat.messages;
+    let lastKey = null;
+    if (!!messages?.length) {
+      lastKey = messages[0].createdAt;
+    }
+
+    if (lastKey) {
+      try {
+        const response = await fetch(
+          `https://${API_URL}/chats/${this.currentChat.id}/messages?limit=${MESSAGES_PER_PAGE}&lastKey=${lastKey}`,
+          {
+            method: "GET",
+            headers: this.rootStore.appendTokenToHeaders(
+              new Headers(),
+              accessToken
+            ),
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          const reversedMessages = [...data].reverse();
+
+          if (!!reversedMessages.length) {
+            const updatedMessages = this.currentChat.messages
+              ? [...reversedMessages, ...this.currentChat.messages]
+              : [...reversedMessages];
+
+            this.setHasMoreMessages(
+              data.length >= MESSAGES_PER_PAGE && data.length !== 0
+            );
+
+            this.setCurrentMessages(updatedMessages);
+          }
+        } else {
+          this.setCurrentMessages([]);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        this.setIsMessageListLoaded(true);
+      }
+    }
+  }
+
   async appendBotAnswer(
     chatId: string | undefined,
     question: string,
     token?: string
   ) {
     try {
-      const answer = await this.handleFetchAnswer(chatId, question, token);
-
-      this.addCurrentMessage({
-        content: answer,
-        role: "system",
-        id: `message_${answer.length}`,
-        liked: false,
-        disliked: false,
-      });
+      await this.handleFetchAnswer(chatId, question, token);
     } catch (error) {
       return;
     }
@@ -292,9 +358,17 @@ export default class ChatStore {
         }
       );
 
+      const messageId = `message_${new Date()}`;
       const reader = response?.body?.getReader();
       const decoder = new TextDecoder();
       let loopRunner = true;
+      this.addCurrentMessage({
+        content: answer,
+        role: "system",
+        id: messageId,
+        liked: false,
+        disliked: false,
+      });
 
       while (loopRunner) {
         //@ts-ignore
@@ -322,12 +396,27 @@ export default class ChatStore {
           if (eventType === "in_progress") {
             if (decodedChunk.messageToken) {
               answer += decodedChunk.messageToken;
+              this.updateCurrentMessageContent(
+                messageId,
+                decodedChunk.messageToken
+              );
             }
           } else if (eventType === "finish") {
             if (decodedChunk.relevantDocuments?.length) {
               answer += "\n\nRelevant documents:\n";
+              this.updateCurrentMessageContent(
+                messageId,
+                "\n\nRelevant documents:\n"
+              );
+
               decodedChunk.relevantDocuments.map(
-                (document: any) => (answer += document.source + ", ")
+                (document: any, index: number, array: string[]) => {
+                  answer += document.source;
+                  if (index !== array.length - 1) {
+                    answer += ", ";
+                  }
+                  this.updateCurrentMessageContent(messageId, document.source);
+                }
               );
             }
             loopRunner = false;
@@ -357,6 +446,7 @@ export default class ChatStore {
       this.isChatListLoaded = true;
       this.isMessageListLoaded = true;
       this.hasMoreChats = true;
+      this.hasMoreMessages = true;
     });
   }
 
