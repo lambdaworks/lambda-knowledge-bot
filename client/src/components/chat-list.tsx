@@ -32,7 +32,7 @@ export function ChatList({ messages }: ChatList) {
       {messages.map((message: Message, index: number) => {
         return (
           <div key={index}>
-            <ChatMessage message={message} />
+            <ChatMessage message={message} key={message.id} />
             {index < messages.length - 1 && (
               <Separator className="my-4 md:my-8" />
             )}
