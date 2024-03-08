@@ -22,6 +22,16 @@ const UserOrLogin = observer(() => {
     }
   }, [isAuthenticated, authStore]);
 
+  // Fix deployed version when session is invalidated
+  // Refresh will check the if session is valid
+  useEffect(() => {
+    if (authStore.isSessionAvailable && !isAuthenticated) {
+      authStore.setIsSessionAvailable(false);
+      chatStore.clearStore();
+      chatStore.clearStoredData();
+    }
+  }, [isAuthenticated, authStore]);
+
   const handleLogout = async (): Promise<void> => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
     authStore.handleLogout();
