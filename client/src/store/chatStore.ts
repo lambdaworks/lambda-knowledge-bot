@@ -191,41 +191,43 @@ export default class ChatStore {
   }
 
   async fetchMoreChats(accessToken: string | undefined) {
-    const lastKey = this.chats[this.chats?.length - 1].createdAt;
+    const lastKey = this.chats[this.chats?.length - 1]?.createdAt;
 
-    try {
-      const response = await fetch(
-        `https://${API_URL}/chats?limit=${CHATS_PER_PAGE}&lastKey=${lastKey}`,
-        {
-          method: "GET",
-          headers: this.rootStore.appendTokenToHeaders(
-            new Headers(),
-            accessToken
-          ),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const chatArray: ChatType[] = [...data].map((chat) => ({
-          id: chat.id,
-          title: chat.title,
-          createdAt: chat.createdAt,
-          userId: chat.userId,
-          messages: [],
-        }));
-
-        this.setChats([...this.chats, ...chatArray]);
-        this.setHasMoreChats(
-          chatArray.length >= CHATS_PER_PAGE && chatArray.length !== 0
+    if (lastKey) {
+      try {
+        const response = await fetch(
+          `https://${API_URL}/chats?limit=${CHATS_PER_PAGE}&lastKey=${lastKey}`,
+          {
+            method: "GET",
+            headers: this.rootStore.appendTokenToHeaders(
+              new Headers(),
+              accessToken
+            ),
+          }
         );
 
-        return chatArray;
-      } else {
-        return [];
+        if (response.ok) {
+          const data = await response.json();
+          const chatArray: ChatType[] = [...data].map((chat) => ({
+            id: chat.id,
+            title: chat.title,
+            createdAt: chat.createdAt,
+            userId: chat.userId,
+            messages: [],
+          }));
+
+          this.setChats([...this.chats, ...chatArray]);
+          this.setHasMoreChats(
+            chatArray.length >= CHATS_PER_PAGE && chatArray.length !== 0
+          );
+
+          return chatArray;
+        } else {
+          return [];
+        }
+      } catch (e) {
+        console.error(e);
       }
-    } catch (e) {
-      console.error(e);
     }
   }
 
@@ -362,9 +364,10 @@ export default class ChatStore {
       const reader = response?.body?.getReader();
       const decoder = new TextDecoder();
       let loopRunner = true;
+
       this.addCurrentMessage({
         content: answer,
-        role: "system",
+        role: "assistant",
         id: messageId,
         liked: false,
         disliked: false,
