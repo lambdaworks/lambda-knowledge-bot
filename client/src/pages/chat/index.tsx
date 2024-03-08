@@ -1,13 +1,38 @@
 import { useContext, useEffect } from "react";
-
-import { Chat } from "@/components/chat";
-import ChatLayout from "./layout";
-import { StoreContext } from "@/store";
 import { useAuth0 } from "@auth0/auth0-react";
 
+import { Chat } from "@/components/chat";
+import { StoreContext } from "@/store";
+import { CHECK_TIME } from "@/utils/constants";
+
+import ChatLayout from "./layout";
+
 const IndexPage = () => {
-  const { chatStore } = useContext(StoreContext);
+  const { chatStore, authStore } = useContext(StoreContext);
   const { isAuthenticated, getAccessTokenSilently } = useAuth0();
+
+  useEffect(() => {
+    if (!authStore.isSessionAvailable && isAuthenticated) {
+      authStore.setIsSessionAvailable(true);
+    }
+  }, [isAuthenticated, authStore]);
+
+  // Fix deployed version when session is invalidated
+  // Refresh will check the if session is valid
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (!isAuthenticated) {
+      timer = setTimeout(async () => {
+        if (authStore.isSessionAvailable && !isAuthenticated) {
+          authStore.setIsSessionAvailable(false);
+          chatStore.clearStore();
+          await chatStore.clearStoredData();
+        }
+      }, CHECK_TIME);
+    }
+
+    return () => clearTimeout(timer);
+  }, [isAuthenticated, authStore, chatStore, isAuthenticated]);
 
   useEffect(() => {
     const fetchChats = async () => {
