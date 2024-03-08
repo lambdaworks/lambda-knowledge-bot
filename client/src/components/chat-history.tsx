@@ -44,7 +44,7 @@ export const ChatHistory = observer(
 
         {!chatStore.isChatListLoaded ? (
           <div className="flex flex-col flex-1 px-2 space-y-4 overflow-auto">
-            {Array.from({ length: 10 }).map((_, i) => (
+            {Array.from({ length: 3 }).map((_, i) => (
               <div
                 key={i}
                 className="w-full h-8 rounded-md shrink-0 animate-pulse bg-zinc-200 dark:bg-zinc-800"
