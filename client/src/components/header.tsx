@@ -14,23 +14,7 @@ import { Button } from "./ui/button";
 
 const UserOrLogin = observer(() => {
   const { authStore, chatStore } = useContext(StoreContext);
-  const { isAuthenticated, logout } = useAuth0();
-
-  useEffect(() => {
-    if (!authStore.isSessionAvailable && isAuthenticated) {
-      authStore.setIsSessionAvailable(true);
-    }
-  }, [isAuthenticated, authStore]);
-
-  // Fix deployed version when session is invalidated
-  // Refresh will check the if session is valid
-  useEffect(() => {
-    if (authStore.isSessionAvailable && !isAuthenticated) {
-      authStore.setIsSessionAvailable(false);
-      chatStore.clearStore();
-      chatStore.clearStoredData();
-    }
-  }, [isAuthenticated, authStore]);
+  const { logout } = useAuth0();
 
   const handleLogout = async (): Promise<void> => {
     await logout({ logoutParams: { returnTo: window.location.origin } });
