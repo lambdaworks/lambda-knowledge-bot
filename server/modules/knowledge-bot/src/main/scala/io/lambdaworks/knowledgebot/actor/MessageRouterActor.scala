@@ -31,7 +31,6 @@ object MessageRouterActor {
     lastKey: Option[String],
     replyBack: ActorRef[List[ChatMessage]]
   ) extends Event
-  final case class SessionExpired(session: String) extends Event
 
   def apply(chatRepository: ChatRepository, chatMessageRepository: ChatMessageRepository)(implicit
     system: ActorSystem[_]
