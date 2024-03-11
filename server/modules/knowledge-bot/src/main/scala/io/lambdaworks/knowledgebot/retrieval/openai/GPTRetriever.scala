@@ -17,7 +17,7 @@ class GPTRetriever(
   retriever: BaseRetriever,
   onNewToken: String => Unit,
   tokenCount: Int = 1,
-  withMemory: Boolean = false
+  conversationHistory: Option[List[(String, String)]] = None
 ) extends LLMRetriever {
   def retrieve(query: String): Map[String, py.Any] = {
     val output = qaChain(query)
@@ -74,12 +74,24 @@ class GPTRetriever(
     callbacks = List(CallbackHandler())
   )
 
+  private val memory = conversationHistory.map { history =>
+    val memory = MemoryModule.ConversationTokenBufferMemory(llm, 500, "history", "question")
+
+    history.foreach { tuple =>
+      val (input, output) = tuple
+
+      memory.saveContext(Map("question" -> input), Map("result" -> output))
+    }
+
+    memory
+  }
+
   private val qaChain = ChainsModule.RetrievalQA.fromChainType(
     llm = streamingLlm,
     retriever = retriever,
     returnSourceDocuments = true,
-    prompt = PromptsModule.PromptTemplate.fromTemplate(promptTemplate(withMemory)),
-    memory = Some(MemoryModule.ConversationTokenBufferMemory(llm, 500, "history", "question")).filter(_ => withMemory)
+    prompt = PromptsModule.PromptTemplate.fromTemplate(promptTemplate(conversationHistory.isDefined)),
+    memory = memory
   )
 }
 
