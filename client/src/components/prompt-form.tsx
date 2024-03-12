@@ -55,6 +55,11 @@ export function PromptForm({
     onKeyDown(e);
   };
 
+  const handleNewChat = () => {
+    chatStore.setCurrentChat(emptyChat);
+    chatStore.setHasMoreChats(true);
+  };
+
   return (
     <form onSubmit={handleFormSubmit} ref={formRef}>
       <div className="relative flex flex-col w-full px-8 overflow-hidden max-h-60 grow bg-background sm:rounded-md sm:border sm:px-12">
@@ -62,7 +67,7 @@ export function PromptForm({
           <TooltipTrigger asChild>
             <Link
               to={window.location.origin}
-              onClick={() => chatStore.setCurrentChat(emptyChat)}
+              onClick={handleNewChat}
               className={cn(
                 buttonVariants({ size: "sm", variant: "outline" }),
                 "absolute left-0 top-4 h-8 w-8 rounded-full bg-background p-0 sm:left-4"
