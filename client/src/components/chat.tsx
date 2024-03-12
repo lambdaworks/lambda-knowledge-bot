@@ -109,29 +109,7 @@ export const Chat = observer(({ className }: ChatProps) => {
 
   return (
     <>
-      {!chatStore.isMessageListLoaded ? (
-        <div className="flex flex-col flex-1 overflow-visible pt-10 md:pt-10 max-w-2xl mx-auto">
-          {Array.from({ length: 2 }).map((_, i) => (
-            <div className="relative mb-4 px-4" key={i}>
-              <div className="relative flex flex-row items-start md:-ml-12 ">
-                <div
-                  key={i}
-                  className="relative z-10 w-8 h-8 mr-5 rounded-md shrink-0 bg-zink-950 dark:bg-gray-800 animate-gradient"
-                />
-                <div
-                  key={`${i} + 1`}
-                  className="flex-1 h-8 rounded-md shrink-0 bg-zink-950 dark:bg-gray-800 animate-gradient"
-                />
-              </div>
-              <div
-                data-orientation="horizontal"
-                role="none"
-                className="flex-1 shrink-0 bg-border h-[1px] w-full my-4 md:my-8"
-              />
-            </div>
-          ))}
-        </div>
-      ) : (
+      {!chatStore.isMessageListLoaded ? null : (
         <div className={cn("pb-[200px] pt-4 md:pt-10", className)}>
           {chatStore.currentChat?.messages?.length ? (
             <>

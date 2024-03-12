@@ -29,14 +29,13 @@ export function SidebarItem({ index, chat, children }: SidebarItemProps) {
   const shouldAnimate = index === 0 && isActive && newChatId;
 
   const handleAnimationCompleted = () => {
-    if (index === chat.title.length - 1) {
-      setNewChatId(null);
-    }
+    index === chat.title.length - 1 && setNewChatId(null);
   };
 
   const getChatMessages = async (): Promise<void> => {
     chatStore.setCurrentChat(chat);
     chatStore.setIsMessageListLoaded(false);
+    chatStore.setHasMoreMessages(true);
     const accessToken = await getAccessTokenSilently();
     await chatStore.fetchChatMessages(accessToken, chat.id);
   };

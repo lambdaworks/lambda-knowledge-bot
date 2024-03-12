@@ -19,11 +19,17 @@ interface ChatHistoryProps {
 export const ChatHistory = observer(
   ({ chats = [], setChats }: ChatHistoryProps) => {
     const { chatStore } = useContext(StoreContext);
+
     const { getAccessTokenSilently } = useAuth0();
 
     const handleFetchMore = async () => {
       const token = await getAccessTokenSilently();
       await chatStore.fetchMoreChats(token);
+    };
+
+    const handleNewChat = () => {
+      chatStore.setCurrentChat(emptyChat);
+      chatStore.setHasMoreMessages(true);
     };
 
     return (
@@ -35,7 +41,7 @@ export const ChatHistory = observer(
               buttonVariants({ variant: "outline" }),
               "text-black h-10 w-full justify-start bg-zinc-50 px-4 shadow-none hover:bg-zinc-200/40 dark:bg-zinc-900 dark:hover:bg-zinc-300/10 cursor-pointer"
             )}
-            onClick={() => chatStore.setCurrentChat(emptyChat)}
+            onClick={handleNewChat}
           >
             <IconPlus className="-translate-x-2 stroke-2" />
             New Chat
