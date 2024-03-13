@@ -5,7 +5,7 @@ import com.amazonaws.services.dynamodbv2.document.utils.ValueMap
 import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item, PrimaryKey, TableWriteItems}
 import io.lambdaworks.knowledgebot.actor.model.Chat
 import io.lambdaworks.knowledgebot.repository.Repository
-import org.joda.time.DateTime
+import org.joda.time.{DateTime, DateTimeZone}
 
 import scala.jdk.CollectionConverters._
 
@@ -55,7 +55,7 @@ class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Cha
         it.getString("id"),
         it.getString("userId"),
         it.getString("title"),
-        new DateTime(it.getString("createdAt"))
+        new DateTime(it.getString("createdAt")).withZone(DateTimeZone.UTC)
       )
     }.toList
 
@@ -85,7 +85,12 @@ class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Cha
     val response = table.query(page)
 
     val chats: List[Chat] = response.iterator.asScala.map { it =>
-      Chat(it.getString("id"), it.getString("userId"), it.getString("title"), new DateTime(it.getString("createdAt")))
+      Chat(
+        it.getString("id"),
+        it.getString("userId"),
+        it.getString("title"),
+        new DateTime(it.getString("createdAt")).withZone(DateTimeZone.UTC)
+      )
     }.toList
 
     chats
