@@ -31,6 +31,8 @@ object MessageRouterActor {
     lastKey: Option[String],
     replyBack: ActorRef[List[ChatMessage]]
   ) extends Event
+  final case class DeleteChatRequest(chatId: String, userId: String, replyBack: ActorRef[Unit]) extends Event
+  final case class DeleteChatsRequest(userId: String, replyBack: ActorRef[Unit])                extends Event
 
   def apply(chatRepository: ChatRepository, chatMessageRepository: ChatMessageRepository)(implicit
     system: ActorSystem[_]
@@ -74,6 +76,14 @@ object MessageRouterActor {
         case ChatHistoryRequest(userId, chatId, limit, lastKey, replyBack) =>
           val chatMessagesDB = chatMessageRepository.getAllForUserAndChat(userId, chatId, limit, lastKey)
           replyBack ! chatMessagesDB
+
+          Behaviors.same
+        case DeleteChatRequest(chatId, userId, replyBack) =>
+          replyBack ! chatRepository.delete(chatId, userId)
+
+          Behaviors.same
+        case DeleteChatsRequest(userId, replyBack) =>
+          replyBack ! chatRepository.deleteAllForUser(userId)
 
           Behaviors.same
       }

@@ -4,6 +4,7 @@ import akka.actor.typed.scaladsl.AskPattern._
 import akka.actor.typed.{ActorRef, ActorSystem}
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.marshalling.sse.EventStreamMarshalling._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.sse.ServerSentEvent
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -33,6 +34,12 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
 
   private val corsSettings: CorsSettings =
     CorsSettings.defaultSettings
+
+  private def deleteChat(chatId: String, userId: String): Future[Unit] =
+    messageRouterActor.ask[Unit](MessageRouterActor.DeleteChatRequest(chatId, userId, _))
+
+  private def deleteChats(userId: String): Future[Unit] =
+    messageRouterActor.ask[Unit](MessageRouterActor.DeleteChatsRequest(userId, _))
 
   private def getChats(userId: String, limit: Int, lastKey: Option[String]): Future[List[Chat]] =
     messageRouterActor.ask[List[Chat]](MessageRouterActor.UserChatsRequest(userId, limit, lastKey, _))
@@ -75,6 +82,13 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
                   }
                 }
               }
+            } ~
+            delete {
+              authService.authenticated { userId =>
+                onSuccess(deleteChats(userId)) {
+                  complete(StatusCodes.OK)
+                }
+              }
             }
         } ~
           path(Segment) { chatId =>
@@ -87,7 +101,14 @@ final class ChatRoutes(messageRouterActor: ActorRef[MessageRouterActor.Event], a
                     }
                   }
                 }
-              }
+              } ~
+                delete {
+                  authService.authenticated { userId =>
+                    onSuccess(deleteChat(chatId, userId)) {
+                      complete(StatusCodes.OK)
+                    }
+                  }
+                }
             }
           } ~
           path(Segment / "messages") { chatId =>
