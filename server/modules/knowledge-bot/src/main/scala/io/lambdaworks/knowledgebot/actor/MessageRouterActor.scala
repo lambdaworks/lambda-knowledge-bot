@@ -1,7 +1,7 @@
 package io.lambdaworks.knowledgebot.actor
 
 import akka.actor.typed.scaladsl.Behaviors
-import akka.actor.typed.{ActorRef, ActorSystem, Behavior}
+import akka.actor.typed.{ActorRef, ActorSystem, Behavior, SupervisorStrategy}
 import io.lambdaworks.knowledgebot.actor.KnowledgeBotActor.SessionInfo
 import io.lambdaworks.knowledgebot.actor.model.{Chat, ChatMessage}
 import io.lambdaworks.knowledgebot.api.route.ChatRoutes
@@ -37,7 +37,7 @@ object MessageRouterActor {
   def apply(chatRepository: ChatRepository, chatMessageRepository: ChatMessageRepository)(implicit
     system: ActorSystem[_]
   ): Behavior[Event] =
-    route(chatRepository, chatMessageRepository)
+    Behaviors.supervise(route(chatRepository, chatMessageRepository)).onFailure(SupervisorStrategy.restart)
 
   def route(chatRepository: ChatRepository, chatMessageRepository: ChatMessageRepository)(implicit
     system: ActorSystem[_]
