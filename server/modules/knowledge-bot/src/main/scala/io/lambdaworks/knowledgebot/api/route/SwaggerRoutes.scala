@@ -77,8 +77,8 @@ final class SwaggerRoutes(implicit
 
   private val deleteChatEndpoint: Endpoint[Unit, String, Unit, String, Any] =
     endpoint.delete
-      .in("chat" / path[String]("chatId"))
-      .out(jsonBody[String].description("Successful final response with JWT token"))
+      .in("chats" / path[String]("chatId"))
+      .out(jsonBody[String].description("Successful final response"))
       .description("Remove user chat")
       .summary("Remove user chat")
       .tag("ChatService")
@@ -86,7 +86,7 @@ final class SwaggerRoutes(implicit
   private val deleteChatsEndpoint: Endpoint[Unit, Unit, Unit, String, Any] =
     endpoint.delete
       .in("chats")
-      .out(jsonBody[String].description("Successful final response with JWT token"))
+      .out(jsonBody[String].description("Successful final response"))
       .description("Remove user chats")
       .summary("Remove user chats")
       .tag("ChatService")
