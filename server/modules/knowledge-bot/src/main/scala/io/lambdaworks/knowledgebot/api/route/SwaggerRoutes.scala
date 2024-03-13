@@ -81,7 +81,7 @@ final class SwaggerRoutes(implicit
       .out(jsonBody[String].description("Successful final response with JWT token"))
       .description("Remove user chat")
       .summary("Remove user chat")
-      .tag("ChatHistoryService")
+      .tag("ChatService")
 
   private val deleteChatsEndpoint: Endpoint[Unit, Unit, Unit, String, Any] =
     endpoint.delete
@@ -89,7 +89,7 @@ final class SwaggerRoutes(implicit
       .out(jsonBody[String].description("Successful final response with JWT token"))
       .description("Remove user chats")
       .summary("Remove user chats")
-      .tag("ChatHistoryService")
+      .tag("ChatService")
 
   private val chatMessagesEndpoint: Endpoint[String, (String, Option[Int], Option[String]), Unit, ChatMessage, Any] =
     endpoint.get
@@ -106,7 +106,7 @@ final class SwaggerRoutes(implicit
       )
       .description("Retrieve all user chats")
       .summary("Retrieve messages from certain chat")
-      .tag("ChatHistoryService")
+      .tag("ChatService")
 
   private val likeChatMessageEndpoint: Endpoint[Unit, (String, String), Unit, String, Any] =
     endpoint.put
@@ -116,7 +116,7 @@ final class SwaggerRoutes(implicit
       .out(jsonBody[String].description("Successful final response with JWT token"))
       .description("Like bot message")
       .summary("Like bot message")
-      .tag("ChatHistoryService")
+      .tag("ChatService")
 
   private val dislikeChatMessageEndpoint: Endpoint[Unit, (String, String), Unit, String, Any] =
     endpoint.put
@@ -126,7 +126,7 @@ final class SwaggerRoutes(implicit
       .out(jsonBody[String].description("Successful final response with JWT token"))
       .description("Dislike bot message")
       .summary("Dislike bot message")
-      .tag("ChatHistoryService")
+      .tag("ChatService")
 
   private val myEndpoints: List[AnyEndpoint] = List(
     chatMessageEndpoint,
