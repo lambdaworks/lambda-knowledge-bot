@@ -13,6 +13,16 @@ trait ConversationTokenBufferMemory extends BaseMemory {
     inputKey: String
   ): ConversationTokenBufferMemory =
     as[py.Dynamic]
-      .applyNamed("llm" -> llm, "max_token_limit" -> maxTokenLimit, "memory_key" -> memoryKey, "input_key" -> inputKey)
+      .applyNamed(
+        "llm"             -> llm,
+        "max_token_limit" -> maxTokenLimit,
+        "memory_key"      -> memoryKey,
+        "input_key"       -> inputKey
+      )
       .as[ConversationTokenBufferMemory]
+
+  def saveContext(
+    inputs: Map[String, String],
+    outputs: Map[String, String]
+  ): Unit = as[py.Dynamic].save_context(inputs, outputs).as[Unit]
 }

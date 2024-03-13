@@ -234,7 +234,7 @@ export default class ChatStore {
   async fetchChatMessages(accessToken: string, chatId: string) {
     try {
       const response = await fetch(
-        `https://${API_URL}/chats/${chatId}/messages`,
+        `https://${API_URL}/chats/${chatId}/messages?limit=${MESSAGES_PER_PAGE}`,
         {
           method: "GET",
           headers: this.rootStore.appendTokenToHeaders(
@@ -247,9 +247,13 @@ export default class ChatStore {
       if (response.ok) {
         const data = await response.json();
         const reversedMessages = [...data].reverse();
+        this.setHasMoreMessages(
+          data.length >= MESSAGES_PER_PAGE && data.length !== 0
+        );
         this.setCurrentMessages(reversedMessages);
       } else {
         this.setCurrentMessages([]);
+        this.setHasMoreChats(false);
       }
     } catch (e) {
       console.error(e);
@@ -289,8 +293,9 @@ export default class ChatStore {
             this.setHasMoreMessages(
               data.length >= MESSAGES_PER_PAGE && data.length !== 0
             );
-
             this.setCurrentMessages(updatedMessages);
+          } else {
+            this.setHasMoreMessages(false);
           }
         } else {
           this.setCurrentMessages([]);
