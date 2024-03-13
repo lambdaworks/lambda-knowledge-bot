@@ -18,7 +18,6 @@ import org.joda.time.DateTime
 import scala.jdk.CollectionConverters._
 
 class ChatMessageRepository(client: DynamoDB, tableName: String) extends Repository[ChatMessage] {
-
   def getAllForUserAndChat(
     userId: String,
     chatId: String,
