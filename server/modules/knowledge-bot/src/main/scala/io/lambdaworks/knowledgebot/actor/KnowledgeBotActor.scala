@@ -42,12 +42,23 @@ object KnowledgeBotActor {
     system: ActorSystem[_]
   ): Behavior[Event] =
     Behaviors.setup { context =>
-      // context.setReceiveTimeout(10.minutes, InactivityTimeout)
-
       val replyBack = context.messageAdapter[LLMRetrieverActor.Response](response => LLMResponse(response.response))
 
+      val conversationHistory = chatMessageRepository
+        .getAllForUserAndChat(chat.userId, chat.id, 20)
+        .reverse
+        .grouped(2)
+        .collect { case List(input, output) =>
+          (input.content, output.content)
+        }
+        .toList
+
       val retriever =
-        new GPTRetriever(Main.vectorDatabase.asRetriever, context.self ! MessageToken(_), withMemory = true)
+        new GPTRetriever(
+          Main.vectorDatabase.asRetriever,
+          context.self ! MessageToken(_),
+          conversationHistory = Some(conversationHistory)
+        )
       val retrieverActor = context.spawn(LLMRetrieverActor(replyBack, retriever), "LLMRetrieverActor")
 
       new KnowledgeBotActor(chat, retrieverActor, chatMessageRepository).acceptEvents()

@@ -10,6 +10,7 @@ import org.joda.time.DateTime
 import scala.jdk.CollectionConverters._
 
 class ChatRepository(client: DynamoDB, tableName: String) extends Repository[Chat] {
+
   def get(userId: String, id: String): Option[Chat] = {
     val query = new QuerySpec()
       .withKeyConditionExpression("pk = :pk and id = :id")
