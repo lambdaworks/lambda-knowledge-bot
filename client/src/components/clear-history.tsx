@@ -1,4 +1,4 @@
-import React, { useState, useTransition } from "react";
+import React, { useContext, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,29 +14,31 @@ import {
 } from "@/components/ui/alert-dialog";
 import { IconSpinner } from "@/components/ui/icons";
 import { ChatType } from "@/lib/types";
-import { removeAllUserChats } from "@/api/api";
+import { StoreContext } from "@/store";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface ClearHistoryProps {
   isEnabled: boolean;
-  clearChats: (chats: ChatType[]) => void;
 }
 
-export function ClearHistory({
-  isEnabled = false,
-  clearChats,
-}: ClearHistoryProps) {
+export function ClearHistory({ isEnabled = false }: ClearHistoryProps) {
+  const { chatStore } = useContext(StoreContext);
+  const { getAccessTokenSilently } = useAuth0();
+  const [isPending, setIsPending] = useState(false);
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const [isPending, startTransition] = useTransition();
 
-  const removeAllChats = (): void => {
-    removeAllUserChats();
-    clearChats([]);
-    setIsOpen(false);
-  };
-
-  const handleDelete = (event: React.MouseEvent<HTMLButtonElement>): void => {
+  const handleDelete = async (
+    event: React.MouseEvent<HTMLButtonElement>
+  ): Promise<void> => {
     event.preventDefault();
-    startTransition(removeAllChats);
+    setIsPending(true);
+    try {
+      const accessToken = await getAccessTokenSilently();
+      await chatStore.removeAllChats(accessToken);
+    } finally {
+      setIsPending(false);
+      setIsOpen(false);
+    }
   };
 
   return (

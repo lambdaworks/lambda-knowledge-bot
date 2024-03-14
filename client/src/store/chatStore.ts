@@ -1,5 +1,6 @@
 import { makeAutoObservable, runInAction } from "mobx";
 import { clearPersistedStore, makePersistable } from "mobx-persist-store";
+import toast from "react-hot-toast";
 
 import { ChatType, Message } from "@/lib/types";
 import { EVENT_REGEX } from "@/utils/regex";
@@ -445,6 +446,49 @@ export default class ChatStore {
     }
 
     return answer || "I don't know.";
+  }
+
+  async removeChatById(accessToken: string, chatId: string) {
+    try {
+      const response = await fetch(`https://${API_URL}/chats/${chatId}`, {
+        method: "DELETE",
+        headers: this.rootStore.appendTokenToHeaders(
+          new Headers(),
+          accessToken
+        ),
+      });
+
+      if (response.ok) {
+        const updatedChats = this.chats.filter((chat) => chat.id !== chatId);
+        this.setChats(updatedChats);
+
+        toast.success("Chat deleted");
+
+        return updatedChats;
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async removeAllChats(accessToken: string) {
+    try {
+      const response = await fetch(`https://${API_URL}/chats`, {
+        method: "DELETE",
+        headers: this.rootStore.appendTokenToHeaders(
+          new Headers(),
+          accessToken
+        ),
+      });
+
+      if (response.ok) {
+        this.setChats([]);
+
+        toast.success("All chats deleted");
+      }
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   clearStore() {

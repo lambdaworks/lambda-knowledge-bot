@@ -1,4 +1,4 @@
-import React, { useState, useTransition } from "react";
+import React, { useContext, useState, useTransition } from "react";
 import { toast } from "react-hot-toast";
 
 import {
@@ -20,6 +20,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ChatType } from "@/lib/types";
+import { StoreContext } from "@/store";
+import { useAuth0 } from "@auth0/auth0-react";
 
 interface SidebarActionsProps {
   chat: ChatType;
@@ -32,16 +34,24 @@ export function SidebarActions({
   removeChat,
   shareChat,
 }: SidebarActionsProps) {
+  const { chatStore } = useContext(StoreContext);
+  const { getAccessTokenSilently } = useAuth0();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
-  const [isRemovePending, _] = useTransition();
+  const [isPending, setIsPending] = useState(false);
 
-  const handleDelete = (
+  const handleDelete = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     event.preventDefault();
-    removeChat();
-    toast.success("Chat deleted");
+    setIsPending(true);
+    try {
+      const accessToken = await getAccessTokenSilently();
+      await chatStore.removeChatById(accessToken, chat.id);
+    } finally {
+      setIsShareDialogOpen(false);
+      setIsPending(false);
+    }
   };
 
   return (
@@ -65,7 +75,7 @@ export function SidebarActions({
             <Button
               variant="ghost"
               className="w-6 h-6 p-0 hover:bg-background"
-              disabled={isRemovePending}
+              disabled={isPending}
               onClick={() => setIsDeleteDialogOpen(true)}
             >
               <IconTrash />
@@ -95,14 +105,9 @@ export function SidebarActions({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isRemovePending}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              disabled={isRemovePending}
-              onClick={handleDelete}
-            >
-              {isRemovePending && <IconSpinner className="mr-2 animate-spin" />}
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction disabled={isPending} onClick={handleDelete}>
+              {isPending && <IconSpinner className="mr-2 animate-spin" />}
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
