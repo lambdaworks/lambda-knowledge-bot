@@ -48,7 +48,7 @@ export function SidebarList({
         </InfiniteScroll>
       </div>
       <div className="flex items-center justify-between p-4">
-        <ClearHistory clearChats={setChats} isEnabled={chats?.length > 0} />
+        <ClearHistory isEnabled={chats?.length > 0} />
       </div>
     </div>
   );
