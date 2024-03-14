@@ -1,4 +1,5 @@
 import React, { useContext, useState } from "react";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -13,9 +14,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { IconSpinner } from "@/components/ui/icons";
-import { ChatType } from "@/lib/types";
 import { StoreContext } from "@/store";
-import { useAuth0 } from "@auth0/auth0-react";
 
 interface ClearHistoryProps {
   isEnabled: boolean;

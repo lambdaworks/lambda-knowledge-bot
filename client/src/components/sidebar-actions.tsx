@@ -1,5 +1,6 @@
-import React, { useContext, useState, useTransition } from "react";
-import { toast } from "react-hot-toast";
+import React, { useContext, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth0 } from "@auth0/auth0-react";
 
 import {
   AlertDialog,
@@ -12,7 +13,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { IconShare, IconSpinner, IconTrash } from "@/components/ui/icons";
+import { IconSpinner, IconTrash } from "@/components/ui/icons";
 import { ChatShareDialog } from "@/components/chat-share-dialog";
 import {
   Tooltip,
@@ -21,7 +22,6 @@ import {
 } from "@/components/ui/tooltip";
 import { ChatType } from "@/lib/types";
 import { StoreContext } from "@/store";
-import { useAuth0 } from "@auth0/auth0-react";
 
 interface SidebarActionsProps {
   chat: ChatType;
@@ -36,6 +36,7 @@ export function SidebarActions({
 }: SidebarActionsProps) {
   const { chatStore } = useContext(StoreContext);
   const { getAccessTokenSilently } = useAuth0();
+  const navigate = useNavigate();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [isShareDialogOpen, setIsShareDialogOpen] = useState<boolean>(false);
   const [isPending, setIsPending] = useState(false);
@@ -47,10 +48,22 @@ export function SidebarActions({
     setIsPending(true);
     try {
       const accessToken = await getAccessTokenSilently();
-      await chatStore.removeChatById(accessToken, chat.id);
+      // Check if chat ID is present in the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const chatIdParam = urlParams.get("chatId");
+
+      const isRemoved = await chatStore.removeChatById(
+        accessToken,
+        chat.id,
+        chatIdParam || undefined
+      );
+
+      if (chatIdParam && isRemoved && chat.id === chatIdParam) {
+        navigate("/", { replace: true });
+      }
     } finally {
-      setIsShareDialogOpen(false);
       setIsPending(false);
+      setIsShareDialogOpen(false);
     }
   };
 

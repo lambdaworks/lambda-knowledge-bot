@@ -5,5 +5,3 @@ export const handleLikeMessage = (): boolean => {
 export const handleDislikeMessage = (): boolean => {
   return true;
 };
-
-export const removeAllUserChats = () => {};
