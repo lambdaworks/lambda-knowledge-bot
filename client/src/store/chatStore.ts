@@ -448,7 +448,11 @@ export default class ChatStore {
     return answer || "I don't know.";
   }
 
-  async removeChatById(accessToken: string, chatId: string) {
+  async removeChatById(
+    accessToken: string,
+    chatId: string,
+    chatIdParam?: string
+  ) {
     try {
       const response = await fetch(`https://${API_URL}/chats/${chatId}`, {
         method: "DELETE",
@@ -462,13 +466,17 @@ export default class ChatStore {
         const updatedChats = this.chats.filter((chat) => chat.id !== chatId);
         this.setChats(updatedChats);
 
+        chatIdParam && chatIdParam === chatId && this.setCurrentChat(emptyChat);
+
         toast.success("Chat deleted");
 
-        return updatedChats;
+        return true;
       }
     } catch (e) {
       console.error(e);
     }
+
+    return false;
   }
 
   async removeAllChats(accessToken: string) {
@@ -483,6 +491,7 @@ export default class ChatStore {
 
       if (response.ok) {
         this.setChats([]);
+        this.setCurrentChat(emptyChat);
 
         toast.success("All chats deleted");
       }
