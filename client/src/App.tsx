@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import { router } from "@/utils/routes";
 
 import { StoreProvider, RootStore } from "./store";
-import "./index.css";
 
 const auth0Domain = import.meta.env.VITE_DOMAIN;
 const clientId = import.meta.env.VITE_CLIENT_ID;
