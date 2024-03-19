@@ -1,12 +1,12 @@
 import { Auth0Provider } from "@auth0/auth0-react";
 import { Toaster } from "react-hot-toast";
 import { RouterProvider } from "react-router-dom";
-import { StoreProvider, RootStore } from "./store";
 
 import { cn } from "@/lib/utils";
 import { router } from "@/utils/routes";
 
-import "@/index.css";
+import { StoreProvider, RootStore } from "./store";
+import "./index.css";
 
 const auth0Domain = import.meta.env.VITE_DOMAIN;
 const clientId = import.meta.env.VITE_CLIENT_ID;
