@@ -2,9 +2,3 @@ target/
 node_modules
 .env
 .DS_Store
-server/project
-.idea
-.bloop
-.metals
-.vscode
-.bsp
