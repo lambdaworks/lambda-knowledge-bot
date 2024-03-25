@@ -4,7 +4,7 @@ import { CreateChatDto, RateMessageDto } from './dto';
 
 @Injectable()
 export class ChatService {
-  getChats(limit: string, lastKey: string): Chat[] {
+  getChats(limit: number, lastKey: string): Chat[] {
     console.log({ sentData: { limit, lastKey } });
     return [
       {

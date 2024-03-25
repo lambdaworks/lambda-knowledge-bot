@@ -17,34 +17,34 @@ export class ChatController {
   constructor(private readonly chatService: ChatService) {}
 
   @Get('/chats')
-  getChats(
-    @Query('limit') limit: string,
+  async getChats(
+    @Query('limit') limit: number,
     @Query('lastKey') lastKey: string,
-  ): Chat[] {
+  ): Promise<Chat[]> {
     return this.chatService.getChats(limit, lastKey);
   }
   @Post('/chats')
-  newChat(@Body() chatData: CreateChatDto) {
+  async newChat(@Body() chatData: CreateChatDto) {
     return this.chatService.newChat(chatData);
   }
   @Get('/chats/:chatId/messages')
-  getChat(@Param('chatId') chatId: string): Message[] {
+  async getChat(@Param('chatId') chatId: string): Promise<Message[]> {
     return this.chatService.getMessages(chatId);
   }
   @Delete('/chats')
-  deleteChats() {
+  async deleteChats(): Promise<string> {
     return this.chatService.deleteChats();
   }
   @Delete('/chats/:chatId')
-  deleteChat(@Param('chatId') chatId: string) {
+  async deleteChat(@Param('chatId') chatId: string): Promise<string> {
     return this.chatService.deleteChat(chatId);
   }
   @Put('/chat/message/like')
-  likeMessage(@Body() dto: RateMessageDto) {
+  async likeMessage(@Body() dto: RateMessageDto): Promise<string> {
     return this.chatService.rateMessage(MessageRate.Like, dto);
   }
   @Put('/chat/message/dislike')
-  dislikeMessage(@Body() dto: RateMessageDto) {
+  async dislikeMessage(@Body() dto: RateMessageDto): Promise<string> {
     return this.chatService.rateMessage(MessageRate.Dislike, dto);
   }
 }
