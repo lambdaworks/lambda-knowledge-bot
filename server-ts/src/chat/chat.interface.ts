@@ -19,3 +19,8 @@ export enum MessageRate {
   Like = 'LIKE',
   Dislike = 'DISLIKE',
 }
+
+export interface Document {
+  source: string;
+  topic: string;
+}

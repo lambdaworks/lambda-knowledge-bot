@@ -7,6 +7,7 @@ import {
   Post,
   Put,
   Query,
+  Sse,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat, Message, MessageRate } from './chat.interface';
@@ -24,6 +25,7 @@ export class ChatController {
     return this.chatService.getChats(limit, lastKey);
   }
   @Post('/chats')
+  @Sse()
   async newChat(@Body() chatData: CreateChatDto) {
     return this.chatService.newChat(chatData);
   }

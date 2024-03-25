@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { interval, map, take } from 'rxjs';
 import { Chat, MessageRate } from './chat.interface';
 import { CreateChatDto, RateMessageDto } from './dto';
 
@@ -29,9 +30,30 @@ export class ChatService {
     ];
   }
 
-  newChat(chat: CreateChatDto) {
-    console.log({ sentChat: chat });
-    return { messageToken: "I don't know" };
+  newChat(dto: CreateChatDto) {
+    console.log({ sentChat: dto });
+    const chat = {
+      createdAt: new Date().toISOString(),
+      id: '3863e85a-56cd-478a-abd3-5417ef0d7272',
+      title: 'What about this?',
+      userId: 'google-oauth2|102026784250201720394',
+    };
+    const message = ['I', ' don', "'t", ' know', '.'];
+    return interval(300).pipe(
+      take(message.length + 1),
+      map((index) => {
+        if (index === message.length) {
+          return {
+            data: {
+              chat,
+              messageToken: '',
+              relevantDocuments: [],
+            },
+          };
+        }
+        return { data: { messageToken: message[index] } };
+      }),
+    );
   }
   deleteChats() {
     return 'OK';
