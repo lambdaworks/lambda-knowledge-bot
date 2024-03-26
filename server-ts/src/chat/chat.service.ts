@@ -5,8 +5,7 @@ import { CreateChatDto, RateMessageDto } from './dto';
 
 @Injectable()
 export class ChatService {
-  getChats(sentLimit: string, lastKey: string): Chat[] {
-    const limit = parseLimit(sentLimit);
+  getChats(limit: number, lastKey: string): Chat[] {
     console.log({ sentData: { limit, lastKey } });
     return [
       {
@@ -93,8 +92,3 @@ export class ChatService {
     return 'OK';
   }
 }
-
-const parseLimit = (sentLimit: string): number => {
-  const limit = Number(sentLimit) || 20;
-  return Math.max(Math.min(50, limit), 1);
-};

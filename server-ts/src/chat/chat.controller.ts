@@ -20,7 +20,7 @@ export class ChatController {
 
   @Get('/chats')
   async getChats(@Query() query: PaginationDto): Promise<Chat[]> {
-    return this.chatService.getChats(query.limit, query.lastKey);
+    return this.chatService.getChats(query.limit ?? 20, query.lastKey);
   }
   @Post('/chats')
   @Sse()

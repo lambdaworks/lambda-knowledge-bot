@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsUUID, IsNumberString, IsOptional } from 'class-validator';
+import { IsString, IsUUID, IsOptional, IsInt, Min, Max } from 'class-validator';
+
+import { Type } from 'class-transformer';
 export class CreateChatDto {
   @IsString()
   @ApiProperty()
@@ -10,12 +12,14 @@ export class PaginationDto {
   @IsString()
   @IsOptional()
   @ApiPropertyOptional()
-  readonly lastKey: string;
-
-  @IsNumberString()
+  readonly lastKey?: string;
   @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  @Max(50)
   @ApiPropertyOptional()
-  readonly limit: string;
+  readonly limit?: number;
 }
 
 export class SentChatIdDto {
