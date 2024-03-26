@@ -18,7 +18,8 @@ import { CreateChatDto, RateMessageDto } from './dto';
 import { PaginationDto, SentChatIdDto } from './dto/chat.dto';
 import { Auth0Guard, Auth0MaybeGuard } from 'src/auth0/auth0.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Request, Response } from 'express';
+import { Response } from 'express';
+import { RequestWithUser } from 'src/utils/interface';
 
 @Controller()
 @ApiBearerAuth()
@@ -29,9 +30,9 @@ export class ChatController {
   @UseGuards(Auth0Guard)
   async getChats(
     @Query() query: PaginationDto,
-    @Req() req: Request,
+    @Req() req: RequestWithUser,
   ): Promise<Chat[]> {
-    console.log({ userId: req['userId'] });
+    console.log({ userId: req.userId });
     return this.chatService.getChats(query.limit ?? 20, query.lastKey);
   }
   @Post('/chats')
