@@ -14,9 +14,7 @@ export const Auth0Guard = (isMaybe?: boolean) => {
       return isValid;
     }
   }
-
-  const guard = mixin(Auth0MaybeGuardMixin);
-  return guard;
+  return mixin(Auth0MaybeGuardMixin);
 };
 
 const decodeJwt = (

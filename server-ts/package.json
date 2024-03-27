@@ -32,7 +32,6 @@
     "@qdrant/js-client-rest": "^1.8.1",
     "langchain": "^0.1.29",
     "dotenv": "^16.4.5",
-    "jwt-decode": "^4.0.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
   },
