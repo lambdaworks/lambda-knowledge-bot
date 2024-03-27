@@ -17,9 +17,9 @@ import { Chat, Message, MessageRate } from './chat.interface';
 import { CreateChatDto, RateMessageDto } from './dto';
 import { PaginationDto, SentChatIdDto } from './dto/chat.dto';
 import { Response } from 'express';
-import { Auth0Guard } from 'src/auth0/auth0.guard';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { RequestWithUser } from 'src/utils/interface';
+import { Auth0Guard } from 'src/auth/auth.guard';
 
 @Controller()
 @ApiTags('ChatService')
