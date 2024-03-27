@@ -136,7 +136,7 @@ async function generateBotResponse(userInput) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        text: userInput,
+        content: userInput,
       }),
       signal: aborter.signal,
     });
