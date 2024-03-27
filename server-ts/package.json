@@ -27,6 +27,7 @@
     "@nestjs/passport": "^10.0.3",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.3.0",
+    "aws-sdk": "^2.1586.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "@qdrant/js-client-rest": "^1.8.1",
@@ -35,7 +36,8 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.0",
-    "rxjs": "^7.8.1"
+    "rxjs": "^7.8.1",
+    "uuid": "^9.0.1"
   },
   "resolutions": {
     "@langchain/core": "0.1.50"

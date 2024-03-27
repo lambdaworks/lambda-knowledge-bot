@@ -3,37 +3,28 @@ import { Chat, MessageRate } from './chat.interface';
 import { CreateChatDto, RateMessageDto } from './dto';
 import { LLMService } from 'src/llm/llm.service';
 import { Response } from 'express';
-
+import { ChatRepository } from './chat.repository';
 @Injectable()
 export class ChatService {
-  constructor(private readonly llmService: LLMService) {}
+  constructor(
+    private readonly llmService: LLMService,
+    private readonly chatRepo: ChatRepository,
+  ) {}
 
-  getChats(limit: number, lastKey: string): Chat[] {
+  async getChats(limit: number, lastKey: string): Promise<Chat[]> {
     console.log({ sentData: { limit, lastKey } });
-    return [
-      {
-        createdAt: new Date(),
-        id: 'e3c3b6bc-57e5-41c7-901c-2ff13d16a6e8',
-        title: 'What about this?',
-        userId: 'google-oauth2|102026784250201720394',
-      },
-
-      {
-        createdAt: new Date(),
-        id: '12514574-2030-48b4-99a7-350fc0c13241',
-        title: 'What about this?',
-        userId: 'google-oauth2|102026784250201720394',
-      },
-      {
-        createdAt: new Date(),
-        id: '5dc17f07-45c9-46fd-8e9b-76446e06dbd3',
-        title: 'What about this?',
-        userId: 'google-oauth2|102026784250201720394',
-      },
-    ];
+    return await this.chatRepo.getUserAllChats('userId', limit, lastKey);
   }
 
   async newChat(res: Response, dto: CreateChatDto) {
+    const now = new Date();
+    const chat: Chat = {
+      createdAt: now,
+      id: '3863e85a-56cd-478a-abd3-5417ef0d7272',
+      title: 'What about this?',
+      userId: 'google-oauth2|102026784250201720394',
+    };
+    await this.chatRepo.newChat(chat, 'userId');
     await this.llmService.retrieve(res, dto.content);
     res.end();
   }
