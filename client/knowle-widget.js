@@ -130,7 +130,7 @@ async function generateBotResponse(userInput) {
 
   try {
     const aborter = new AbortController();
-    const response = await fetch("https://knowle-api.lambdaworks.io/chat", {
+    const response = await fetch("https://knowle-api.lambdaworks.io/chats", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
