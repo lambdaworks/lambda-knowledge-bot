@@ -1,34 +1,29 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { jwtDecode } from 'jwt-decode';
+import { CanActivate, ExecutionContext, mixin } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 
-@Injectable()
-export class Auth0Guard implements CanActivate {
-  canActivate(ctx: ExecutionContext): boolean {
-    const req = ctx.switchToHttp().getRequest();
-    const authHeader = req.headers?.authorization;
-    if (!authHeader) return false;
-    const { isValid, userId } = decodeJwt(authHeader);
-    req.userId = userId;
-    return isValid;
+export const Auth0Guard = (isMaybe?: boolean) => {
+  class Auth0MaybeGuardMixin implements CanActivate {
+    jwtService = new JwtService();
+    canActivate(ctx: ExecutionContext) {
+      const req = ctx.switchToHttp().getRequest();
+      const authHeader = req.headers?.authorization;
+      if (isMaybe && !authHeader) return true;
+      if (!authHeader) return false;
+      const { isValid, userId } = decodeJwt(authHeader, this.jwtService);
+      req.userId = userId;
+      return isValid;
+    }
   }
-}
 
-@Injectable()
-export class Auth0MaybeGuard implements CanActivate {
-  canActivate(ctx: ExecutionContext): boolean {
-    const req = ctx.switchToHttp().getRequest();
-    const authHeader = req.headers?.authorization;
-    if (!authHeader) return true;
-    const { isValid, userId } = decodeJwt(authHeader);
-    req.userId = userId;
-    return isValid;
-  }
-}
+  const guard = mixin(Auth0MaybeGuardMixin);
+  return guard;
+};
 
 const decodeJwt = (
   authHeader: string,
+  jwtService: JwtService,
 ): { userId?: string; isValid: boolean } => {
-  const decoded = jwtDecode(authHeader);
+  const decoded = jwtService.decode(authHeader.substring(7));
   if (
     decoded.iss !== `https://${process.env.AUTH0_DOMAIN}/` ||
     !decoded.aud.includes(process.env.AUTH0_AUDIENCE)
