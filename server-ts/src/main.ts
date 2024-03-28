@@ -8,7 +8,17 @@ async function bootstrap() {
     .setTitle('Knowle')
     .setDescription('Documentation for the Knowle TS API')
     .setVersion('1.0')
-    .addTag('knowle')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Input your JWT token',
+        name: 'Authorization',
+        in: 'header',
+      },
+      'bearer',
+    )
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);
