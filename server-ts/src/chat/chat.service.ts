@@ -1,10 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { concat, interval, map, take } from 'rxjs';
 import { Chat, MessageRate } from './chat.interface';
 import { CreateChatDto, RateMessageDto } from './dto';
+import { LLMService } from 'src/llm/llm.service';
+import { Response } from 'express';
 
 @Injectable()
 export class ChatService {
+  constructor(private readonly llmService: LLMService) {}
+
   getChats(limit: number, lastKey: string): Chat[] {
     console.log({ sentData: { limit, lastKey } });
     return [
@@ -30,32 +33,9 @@ export class ChatService {
     ];
   }
 
-  newChat(dto: CreateChatDto) {
-    console.log({ sentChat: dto });
-    const chat = {
-      createdAt: new Date().toISOString(),
-      id: '3863e85a-56cd-478a-abd3-5417ef0d7272',
-      title: 'What about this?',
-      userId: 'google-oauth2|102026784250201720394',
-    };
-    const message = ['I', ' don', "'t", ' know', '.'];
-    const events = concat(
-      [{ data: { messageToken: message[0] }, type: 'in_progress' }],
-      interval(300).pipe(
-        take(message.length - 1),
-        map((index) => ({
-          data: { messageToken: message[index + 1] },
-          type: 'in_progress',
-        })),
-      ),
-      [
-        {
-          data: { chat, messageToken: '', relevantDocuments: [] },
-          type: 'finish',
-        },
-      ],
-    );
-    return events;
+  async newChat(res: Response, dto: CreateChatDto) {
+    await this.llmService.retrieve(res, dto.content);
+    res.end();
   }
   deleteChats() {
     return 'OK';
