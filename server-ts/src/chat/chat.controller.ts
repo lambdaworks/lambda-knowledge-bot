@@ -37,8 +37,11 @@ export class ChatController {
     @Query() query: PaginationDto,
     @Req() req: RequestWithUser,
   ): Promise<Chat[]> {
-    console.log(req.user);
-    return this.chatService.getChats(req.user.sub, query.limit, query.lastKey);
+    return await this.chatService.getChats(
+      req.user.sub,
+      query.limit,
+      query.lastKey,
+    );
   }
   @Post('/chats')
   @UseGuards(Auth0Guard(true))
@@ -70,8 +73,17 @@ export class ChatController {
   }
   @Get('/chats/:chatId/messages')
   @UseGuards(Auth0Guard())
-  async getChat(@Param() param: SentChatIdDto): Promise<Message[]> {
-    return this.chatService.getMessages(param.chatId);
+  async getChat(
+    @Req() req: RequestWithUser,
+    @Param() param: SentChatIdDto,
+    @Query() query: PaginationDto,
+  ): Promise<Message[]> {
+    return await this.chatService.getChatHistory(
+      param.chatId,
+      req.user.sub,
+      query.limit,
+      query.lastKey,
+    );
   }
   @Delete('/chats')
   @UseGuards(Auth0Guard())

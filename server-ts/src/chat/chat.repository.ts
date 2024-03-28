@@ -27,7 +27,7 @@ export class ChatRepository {
   async getUserAllChats(
     userId: string,
     limit: number,
-    lastKey: string,
+    lastKey?: string,
   ): Promise<Chat[]> {
     const command = new QueryCommand({
       TableName: DYNAMODB_MAIN_TABLE_NAME,
@@ -55,6 +55,16 @@ export class ChatRepository {
       })) || []
     );
   }
+
+  async getAllForUserAndChat(
+    userId: string,
+    chatId: string,
+    limit: number,
+    lastKey?: string,
+  ) {
+    return true;
+  }
+
   async deleteAllForUser(userId: string) {
     const queryCommand = new QueryCommand({
       TableName: DYNAMODB_MAIN_TABLE_NAME,

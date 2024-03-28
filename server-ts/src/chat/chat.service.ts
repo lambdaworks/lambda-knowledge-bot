@@ -16,7 +16,7 @@ export class ChatService {
   async getChats(
     userId: string,
     limit: number = 20,
-    lastKey: string,
+    lastKey?: string,
   ): Promise<Chat[]> {
     console.log({ sentData: { limit, lastKey } });
     return await this.chatRepo.getUserAllChats(userId, limit, lastKey);
@@ -50,8 +50,13 @@ export class ChatService {
     return 'OK';
   }
 
-  getMessages(chatId: string) {
-    console.log({ sentChatId: chatId });
+  async getChatHistory(
+    chatId: string,
+    userId: string,
+    limit: number = 20,
+    lastKey?: string,
+  ) {
+    await this.chatRepo.getAllForUserAndChat(userId, chatId, limit, lastKey);
     return [
       {
         chatId,
