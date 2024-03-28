@@ -13,9 +13,13 @@ export class ChatService {
     private readonly chatRepo: ChatRepository,
   ) {}
 
-  async getChats(limit: number, lastKey: string): Promise<Chat[]> {
+  async getChats(
+    userId: string,
+    limit: number = 20,
+    lastKey: string,
+  ): Promise<Chat[]> {
     console.log({ sentData: { limit, lastKey } });
-    return await this.chatRepo.getUserAllChats('userId', limit, lastKey);
+    return await this.chatRepo.getUserAllChats(userId, limit, lastKey);
   }
 
   async newMessage(
@@ -36,7 +40,8 @@ export class ChatService {
     res.end();
   }
 
-  deleteChats() {
+  async deleteChats(userId: string) {
+    await this.chatRepo.deleteAllForUser(userId);
     return 'OK';
   }
 

@@ -1,7 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { dynamoDBDocumentClient } from 'src/aws-config/dynamoDBClient';
 import { Chat } from './chat.interface';
-import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  PutCommand,
+  QueryCommand,
+  BatchWriteCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 const { DYNAMODB_TABLE_NAME, DYNAMODB_MAIN_TABLE_NAME } = process.env;
 @Injectable()
@@ -50,5 +54,25 @@ export class ChatRepository {
         createdAt: new Date(item.createdAt),
       })) || []
     );
+  }
+  async deleteAllForUser(userId: string) {
+    const queryCommand = new QueryCommand({
+      TableName: DYNAMODB_MAIN_TABLE_NAME,
+      KeyConditionExpression: 'pk = :pk ',
+      ExpressionAttributeValues: {
+        ':pk': `USER#${userId}`,
+      },
+    });
+    const queryResponse = await dynamoDBDocumentClient.send(queryCommand);
+    const batchDeleteCommand = new BatchWriteCommand({
+      RequestItems: {
+        [DYNAMODB_MAIN_TABLE_NAME]: queryResponse.Items.map((item) => ({
+          DeleteRequest: {
+            Key: { sk: item.sk, pk: item.pk },
+          },
+        })),
+      },
+    });
+    await dynamoDBDocumentClient.send(batchDeleteCommand);
   }
 }

@@ -38,24 +38,35 @@ export class ChatController {
     @Req() req: RequestWithUser,
   ): Promise<Chat[]> {
     console.log(req.user);
-    return this.chatService.getChats(query.limit ?? 20, query.lastKey);
+    return this.chatService.getChats(req.user.sub, query.limit, query.lastKey);
   }
   @Post('/chats')
   @UseGuards(Auth0Guard(true))
   @Sse()
-  async newChat(@Res() res: Response, @Body() body: CreateMessageDto) {
-    return await this.chatService.newMessage(res, body, 'userId');
+  async newChat(
+    @Req() req: RequestWithUser,
+    @Res() res: Response,
+    @Body() body: CreateMessageDto,
+  ) {
+    return await this.chatService.newMessage(res, body, req.user.sub);
   }
 
   @Post('/chats/:chatId')
+  @UseGuards(Auth0Guard(true))
   @Sse()
   async newMessageInChat(
+    @Req() req: RequestWithUser,
     @Res() res: Response,
     @Body() body: CreateMessageDto,
     @Param() param: SentChatIdDto,
   ) {
     console.log({ sentChatId: param.chatId });
-    return await this.chatService.newMessage(res, body, 'userId', param.chatId);
+    return await this.chatService.newMessage(
+      res,
+      body,
+      req.user.sub,
+      param.chatId,
+    );
   }
   @Get('/chats/:chatId/messages')
   @UseGuards(Auth0Guard())
@@ -64,12 +75,15 @@ export class ChatController {
   }
   @Delete('/chats')
   @UseGuards(Auth0Guard())
-  async deleteChats(): Promise<string> {
-    return this.chatService.deleteChats();
+  async deleteChats(@Req() req: RequestWithUser): Promise<string> {
+    return this.chatService.deleteChats(req.user.sub);
   }
   @Delete('/chats/:chatId')
   @UseGuards(Auth0Guard())
-  async deleteChat(@Param() param: SentChatIdDto): Promise<string> {
+  async deleteChat(
+    @Req() req: RequestWithUser,
+    @Param() param: SentChatIdDto,
+  ): Promise<string> {
     return this.chatService.deleteChat(param.chatId);
   }
   @Put('/chat/message/like')
