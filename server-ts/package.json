@@ -31,7 +31,6 @@
     "class-validator": "^0.14.1",
     "@qdrant/js-client-rest": "^1.8.1",
     "langchain": "^0.1.29",
-    "dotenv": "^16.4.5",
     "jwks-rsa": "^3.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
