@@ -8,11 +8,13 @@ import {
   Put,
   Query,
   Sse,
+  Res,
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat, Message, MessageRate } from './chat.interface';
 import { CreateChatDto, RateMessageDto } from './dto';
 import { PaginationDto, SentChatIdDto } from './dto/chat.dto';
+import { Response } from 'express';
 
 @Controller()
 export class ChatController {
@@ -24,8 +26,8 @@ export class ChatController {
   }
   @Post('/chats')
   @Sse()
-  async newChat(@Body() chatData: CreateChatDto) {
-    return this.chatService.newChat(chatData);
+  async newChat(@Res() res: Response, @Body() chatData: CreateChatDto) {
+    return this.chatService.newChat(res, chatData);
   }
   @Get('/chats/:chatId/messages')
   async getChat(@Param() dto: SentChatIdDto): Promise<Message[]> {
