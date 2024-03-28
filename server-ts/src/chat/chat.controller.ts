@@ -14,12 +14,16 @@ import {
 } from '@nestjs/common';
 import { ChatService } from './chat.service';
 import { Chat, Message, MessageRate } from './chat.interface';
-import { CreateChatDto, RateMessageDto } from './dto';
-import { PaginationDto, SentChatIdDto } from './dto/chat.dto';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { Auth0Guard } from 'src/auth/auth.guard';
 import { RequestWithUser } from 'src/utils/interface';
+import {
+  CreateMessageDto,
+  PaginationDto,
+  RateMessageDto,
+  SentChatIdDto,
+} from './dto/chat.dto';
 
 @Controller()
 @ApiTags('ChatService')
@@ -39,13 +43,24 @@ export class ChatController {
   @Post('/chats')
   @UseGuards(Auth0Guard(true))
   @Sse()
-  async newChat(@Res() res: Response, @Body() chatData: CreateChatDto) {
-    return this.chatService.newChat(res, chatData);
+  async newChat(@Res() res: Response, @Body() body: CreateMessageDto) {
+    return await this.chatService.newMessage(res, body, 'userId');
+  }
+
+  @Post('/chats/:chatId')
+  @Sse()
+  async newMessageInChat(
+    @Res() res: Response,
+    @Body() body: CreateMessageDto,
+    @Param() param: SentChatIdDto,
+  ) {
+    console.log({ sentChatId: param.chatId });
+    return await this.chatService.newMessage(res, body, 'userId', param.chatId);
   }
   @Get('/chats/:chatId/messages')
   @UseGuards(Auth0Guard())
-  async getChat(@Param() dto: SentChatIdDto): Promise<Message[]> {
-    return this.chatService.getMessages(dto.chatId);
+  async getChat(@Param() param: SentChatIdDto): Promise<Message[]> {
+    return this.chatService.getMessages(param.chatId);
   }
   @Delete('/chats')
   @UseGuards(Auth0Guard())
@@ -54,17 +69,17 @@ export class ChatController {
   }
   @Delete('/chats/:chatId')
   @UseGuards(Auth0Guard())
-  async deleteChat(@Param() dto: SentChatIdDto): Promise<string> {
-    return this.chatService.deleteChat(dto.chatId);
+  async deleteChat(@Param() param: SentChatIdDto): Promise<string> {
+    return this.chatService.deleteChat(param.chatId);
   }
   @Put('/chat/message/like')
   @UseGuards(Auth0Guard())
-  async likeMessage(@Body() dto: RateMessageDto): Promise<string> {
-    return this.chatService.rateMessage(MessageRate.Like, dto);
+  async likeMessage(@Body() body: RateMessageDto): Promise<string> {
+    return this.chatService.rateMessage(MessageRate.Like, body);
   }
   @Put('/chat/message/dislike')
   @UseGuards(Auth0Guard())
-  async dislikeMessage(@Body() dto: RateMessageDto): Promise<string> {
-    return this.chatService.rateMessage(MessageRate.Dislike, dto);
+  async dislikeMessage(@Body() body: RateMessageDto): Promise<string> {
+    return this.chatService.rateMessage(MessageRate.Dislike, body);
   }
 }

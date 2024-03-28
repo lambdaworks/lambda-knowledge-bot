@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { Chat, MessageRate } from './chat.interface';
-import { CreateChatDto, RateMessageDto } from './dto';
 import { LLMService } from 'src/llm/llm.service';
 import { Response } from 'express';
 import { ChatRepository } from './chat.repository';
+import { v4 as uuid } from 'uuid';
+import { CreateMessageDto, RateMessageDto } from './dto/chat.dto';
+
 @Injectable()
 export class ChatService {
   constructor(
@@ -16,25 +18,33 @@ export class ChatService {
     return await this.chatRepo.getUserAllChats('userId', limit, lastKey);
   }
 
-  async newChat(res: Response, dto: CreateChatDto) {
+  async newMessage(
+    res: Response,
+    dto: CreateMessageDto,
+    userId?: string,
+    chatId?: string,
+  ) {
     const now = new Date();
     const chat: Chat = {
       createdAt: now,
-      id: '3863e85a-56cd-478a-abd3-5417ef0d7272',
-      title: 'What about this?',
-      userId: 'google-oauth2|102026784250201720394',
+      id: chatId ?? uuid(),
+      title: dto.content,
+      userId,
     };
-    await this.chatRepo.newChat(chat, 'userId');
+    if (userId) await this.chatRepo.put(chat);
     await this.llmService.retrieve(res, dto.content);
     res.end();
   }
+
   deleteChats() {
     return 'OK';
   }
+
   deleteChat(chatId: string) {
     console.log({ sentChatId: chatId });
     return 'OK';
   }
+
   getMessages(chatId: string) {
     console.log({ sentChatId: chatId });
     return [
@@ -58,6 +68,7 @@ export class ChatService {
       },
     ];
   }
+
   rateMessage(rating: MessageRate, dto: RateMessageDto) {
     console.log({ sentData: { rating, dto } });
     return 'OK';

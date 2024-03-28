@@ -1,20 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { dynamoDBDocumentClient } from 'src/aws-config/dynamoDBClient';
-import { v4 as uuid } from 'uuid';
 import { Chat } from './chat.interface';
 import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 const { DYNAMODB_TABLE_NAME, DYNAMODB_MAIN_TABLE_NAME } = process.env;
 @Injectable()
 export class ChatRepository {
-  async newChat(dto: Chat, userId: string) {
+  async put(dto: Chat) {
     const command = new PutCommand({
       TableName: DYNAMODB_MAIN_TABLE_NAME,
       Item: {
-        pk: `USER#${userId}`,
+        pk: `USER#${dto.userId}`,
         sk: `CHAT#${dto.createdAt.toISOString()}`,
-        id: uuid(),
-        userId,
+        id: dto.id,
+        userId: dto.userId,
         title: dto.title,
         createdAt: dto.createdAt.toISOString(),
       },

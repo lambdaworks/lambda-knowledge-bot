@@ -11,7 +11,7 @@ export interface Message {
   releventDocuments: string[];
   role: string;
   createdAt: Date;
-  userId: string;
+  userId?: string;
   chatId: string;
 }
 
