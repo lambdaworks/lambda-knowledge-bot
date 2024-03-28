@@ -1,51 +1,62 @@
 import { Injectable } from '@nestjs/common';
 import { Chat, MessageRate } from './chat.interface';
-import { CreateChatDto, RateMessageDto } from './dto';
 import { LLMService } from 'src/llm/llm.service';
 import { Response } from 'express';
+import { ChatRepository } from './chat.repository';
+import { v4 as uuid } from 'uuid';
+import { CreateMessageDto, RateMessageDto } from './dto/chat.dto';
 
 @Injectable()
 export class ChatService {
-  constructor(private readonly llmService: LLMService) {}
+  constructor(
+    private readonly llmService: LLMService,
+    private readonly chatRepo: ChatRepository,
+  ) {}
 
-  getChats(limit: number, lastKey: string): Chat[] {
+  async getChats(
+    userId: string,
+    limit: number = 20,
+    lastKey?: string,
+  ): Promise<Chat[]> {
     console.log({ sentData: { limit, lastKey } });
-    return [
-      {
-        createdAt: new Date(),
-        id: 'e3c3b6bc-57e5-41c7-901c-2ff13d16a6e8',
-        title: 'What about this?',
-        userId: 'google-oauth2|102026784250201720394',
-      },
-
-      {
-        createdAt: new Date(),
-        id: '12514574-2030-48b4-99a7-350fc0c13241',
-        title: 'What about this?',
-        userId: 'google-oauth2|102026784250201720394',
-      },
-      {
-        createdAt: new Date(),
-        id: '5dc17f07-45c9-46fd-8e9b-76446e06dbd3',
-        title: 'What about this?',
-        userId: 'google-oauth2|102026784250201720394',
-      },
-    ];
+    return await this.chatRepo.getUserAllChats(userId, limit, lastKey);
   }
 
-  async newChat(res: Response, dto: CreateChatDto) {
+  async newMessage(
+    res: Response,
+    dto: CreateMessageDto,
+    userId?: string,
+    chatId?: string,
+  ) {
+    const now = new Date();
+    const chat: Chat = {
+      createdAt: now,
+      id: chatId ?? uuid(),
+      title: dto.content,
+      userId,
+    };
+    if (userId) await this.chatRepo.put(chat);
     await this.llmService.retrieve(res, dto.content);
     res.end();
   }
-  deleteChats() {
+
+  async deleteChats(userId: string) {
+    await this.chatRepo.deleteAllForUser(userId);
     return 'OK';
   }
+
   deleteChat(chatId: string) {
     console.log({ sentChatId: chatId });
     return 'OK';
   }
-  getMessages(chatId: string) {
-    console.log({ sentChatId: chatId });
+
+  async getChatHistory(
+    chatId: string,
+    userId: string,
+    limit: number = 20,
+    lastKey?: string,
+  ) {
+    await this.chatRepo.getAllForUserAndChat(userId, chatId, limit, lastKey);
     return [
       {
         chatId,
@@ -67,6 +78,7 @@ export class ChatService {
       },
     ];
   }
+
   rateMessage(rating: MessageRate, dto: RateMessageDto) {
     console.log({ sentData: { rating, dto } });
     return 'OK';
