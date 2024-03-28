@@ -9,15 +9,8 @@ export const Auth0Guard = (isMaybe: boolean = false) => {
       const req = ctx.switchToHttp().getRequest();
       const authHeader = req.headers?.authorization;
       if (!authHeader) return isMaybe;
-      const userId = extractUserId(authHeader, this.jwtService);
-      req.userId = userId;
       return super.canActivate(ctx);
     }
   }
   return mixin(Auth0GuardMixin);
-};
-
-const extractUserId = (authHeader: string, jwtService: JwtService): string => {
-  const decoded = jwtService.decode(authHeader.substring(7));
-  return decoded.sub;
 };

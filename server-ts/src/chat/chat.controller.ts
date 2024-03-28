@@ -18,8 +18,8 @@ import { CreateChatDto, RateMessageDto } from './dto';
 import { PaginationDto, SentChatIdDto } from './dto/chat.dto';
 import { Response } from 'express';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
-import { RequestWithUser } from 'src/utils/interface';
 import { Auth0Guard } from 'src/auth/auth.guard';
+import { RequestWithUser } from 'src/utils/interface';
 
 @Controller()
 @ApiTags('ChatService')
@@ -33,7 +33,7 @@ export class ChatController {
     @Query() query: PaginationDto,
     @Req() req: RequestWithUser,
   ): Promise<Chat[]> {
-    console.log({ userId: req.userId });
+    console.log(req.user);
     return this.chatService.getChats(query.limit ?? 20, query.lastKey);
   }
   @Post('/chats')
